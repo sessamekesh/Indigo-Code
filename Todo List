@@ -1,0 +1,5 @@
+-Make 'CompetitionPage' and 'ProblemPage' generators
+-Problem DAO
+-Write router function for competition (show splash if no problempath, forward to problem if there is a problempath)
+-Add HTMLFRAG_path to both Competition and Problem
+-More, as you continue to upgrade V0.1

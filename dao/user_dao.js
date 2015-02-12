@@ -18,6 +18,23 @@ function getConnection() {
 	return connection;
 }
 
+// NEXT VERSION: Build in reportQueryActive and
+//  reportQueryEnded so you don't have to manually call them.
+function reportQueryActive() {
+	active_query_count++;
+	console.log('user_dao query count: ' + active_query_count);
+}
+
+function reportQueryEnded() {
+	active_query_count--;
+	console.log('user_dao query count: ' + active_query_count);
+	if (active_query_count == 0) {
+		console.log('Closing connection user_dao...');
+		connection.end();
+		connection = undefined;
+	}
+}
+
 // Callback format: userData, err
 function getUserData(userDesc, callback) {
 	console.log('user_dao: Retrieving user data for');
@@ -26,7 +43,7 @@ function getUserData(userDesc, callback) {
 	if (!userDesc) {
 		console.log('No user description provided. Selecting all users...');
 		// No user description provided - simply fetch all usernames and return them.
-		var query = getConnection().query('SELECT user_name FROM User;');
+		var query = getConnection().query('SELECT id, user_name FROM User;');
 		reportQueryActive();
 		var userList = [];
 		var error_generated = false;
@@ -35,7 +52,7 @@ function getUserData(userDesc, callback) {
 			callback(null, err);
 		});
 		query.on('result', function(result) {
-			userList.push(result.user_name);
+			userList.push({ id: id, user_name: result.user_name });
 		});
 		query.on('end', function() {
 			if (!error_generated) {
@@ -301,21 +318,6 @@ function updateUser(userID, updateFields, callback) {
 			reportQueryEnded();
 			getUserData({ id: userID }, callback);
 		});
-	}
-}
-
-function reportQueryActive() {
-	active_query_count++;
-	console.log('user_dao query count: ' + active_query_count);
-}
-
-function reportQueryEnded() {
-	active_query_count--;
-	console.log('user_dao query count: ' + active_query_count);
-	if (active_query_count == 0) {
-		console.log('Closing connection user_dao...');
-		connection.end();
-		connection = undefined;
 	}
 }
 

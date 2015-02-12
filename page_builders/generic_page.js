@@ -1,5 +1,3 @@
-// TODO: Change this to be more object-like (like the book said)
-
 // Returns a GoronPage with a render() function
 function GoronPage(pageDesc) {
 	console.log('Creating new page for display...');

@@ -3,7 +3,8 @@
 var user = require('./user/user'),
 	statics = require('./statics/statics'),
 	competition = require('./competition/competition'),
-	fs = require('fs');
+	fs = require('fs'),
+	error_page = require('./page_builders/error_page');
 
 var subsystem = {};
 subsystem['/'] = statics;
@@ -52,10 +53,29 @@ function route(pathname, response, request) {
 					response.end();
 				});
 			} else {
-				console.log("File not found. Reporting 404");
-				response.writeHead(404, {"Content-Type": "text/plain"});
-				response.write("404 not found!");
-				response.end();
+				console.log('File not found. Reporting 404');
+
+				var goron404 = error_page.GoronErrorPage(request.session.data.user, '404 - Page Not Found', 'The page you requested could not be loaded. It doesn\'t exist and cannot be generated. Sorry about that.');				if (goron404) {
+					goron404.render(function(content, err) { 
+						if (err) {
+							console.log('Error in generating Goron 404: ' + err);
+							console.log('Using canned 404');
+							response.writeHead(404, {'Content-Type': 'text/plain'});
+							response.write('404 not found!');
+							response.end();
+						} else {
+							response.writeHead(404, {'Content-Type': 'text/html'});
+							response.write(content);
+							response.end();
+						}
+					});
+				} else {
+					console.log('Goron error page function returned null for some reason.');
+					console.log('Using canned 404');
+					response.writeHead(404, {'Content-Type': 'text/html'});
+					response.write(content);
+					response.end();
+				}
 			}
 		});
 	}

@@ -3,6 +3,9 @@
 var subsystem = {},
 	comp_subsystem = {};
 
+var error_page = require('../page_builders/error_page'),
+	competition_dao = require('../dao/competition_dao');
+
 /* --------Competition Subsystem-------- *\
 	- Anything dealing with any competition passes through this gate
 	-- This includes administrative competition functions
@@ -43,13 +46,81 @@ var subsystem = {},
 */
 
 // Callback:
-// void callback(result, compData, authNodes, err)
+// callback(result, compData, authNodes, err)
 // -result: true if authorized, false if not. compData will be null if not authorized
 // -compData: Competition data { id, name, is_private, start_date, end_date }
 // -authNotes: if compData is null, reason they were denied access
 // -err: If an SQL error occurred, what the SQL error was
 function gatekeeper(userData, compID, callback) {
+	console.log('---------------GATEKEEPER----------------');
+	if (userData) {
+		console.log('-- ' + (userData.is_admin ? 'SIR ' + userData.user_name : userData.user_name + ' THE PEASANT') + ' --');
+	} else {
+		console.log('-- FILTHY GUEST');
+	}
+	console.log('-- Requesting access to competition: ' + compID + ' --');
+	console.log('-----JUDGE WISELY OH THOU HOLY JUDGE-----');
 
+	competition_dao.getCompetitionData({ id: compID }, function(compData, err) {
+		if (err) {
+			console.log('Failed to get competition data on grounds: ' + err);
+			callback(false, null, null, 'competition_dao error: ' + err);
+		} else {
+			if (compData) {
+				if (!userData) {
+					auth_guest(compData);
+				} else if (!user.is_admin) {
+					auth_admin(compData);
+				} else {
+					auth_peasant(compData);
+				}
+			} else {
+				// NEXT VERSION: Don't tell the callback (in the authNotes, which is client-facing)
+				//  why they failed - just say they failed (otherwise people can guess competition IDs)
+				callback(false, null, 'No competition found with given ID');
+			}
+		}
+	});
+
+	function auth_admin(compData) {
+		console.log('Authorizing admin to competition...');
+		console.log('Decision: pass (admin, duh. "Right this way, sir.")');
+		callback(true, compData);
+	}
+
+	function auth_peasant(compData) {
+		console.log('Authorizing peasant to competition...');
+		// PASS:
+		// Competition is expired (end_date < now)
+		// Competition is ongoing (start_date < now < end_date)
+		if (Date.parse(compData.end_date) < Date.now()) {
+			console.log('Decision: pass (competition has expired)');
+			callback(true, compData);
+		} else if (Date.parse(compData.end_date) > Date.now() && Date.parse(compData.start_date) < Date.now()) {
+			console.log('Decision: pass (competition is ongoing)');
+			callback(true, compData);
+		} else if (Date.parse(compData.start_date) > Date.now()) {
+			console.log('Decision: reject (competition has not yet started)');
+			callback(false, null, 'Access Denied - competition has not yet started!');
+		} else {
+			console.log('Decision: reject (though we don\'t know why');
+			callback(false, null, 'Access Denied (though we don\'t know why');
+		}
+	}
+
+	function auth_guest(compData) {
+		console.log('Authorizing filthy guest to competition...');
+		if (Date.parse(compData.end_date) < Date.now() && compData.is_public == true) {
+			console.log('Decision: pass (competition has expired and is public)');
+			callback(true, compData);
+		} else if (!compData.is_public) {
+			console.log('Decision: fail (competition is private)');
+			callback(false, null, 'Access Denied (must be logged in to view this competition)');
+		} else {
+			console.log('Decision: fail (competition has not yet passed)');
+			callback(false, null, 'Access denied (competition is ongoing - must be logged in to view!)');
+		}
+	}
 }
 
 function route(response, request, remainingPath) {
@@ -63,12 +134,34 @@ function route(response, request, remainingPath) {
 	// Begin routing...
 	if (remainingPath && remainingPath !== '') {
 		// Check to see if the competition is specified...
-		if (/^[c]{1}\d+/.test(remainingPath)) {
+		if (/^\/[c]{1}\d+/.test(remainingPath)) {
+			console.log('Matches competition description. Checking authorization...');
 			// There is a competition specified. Check authorization,
 			//  route to subsystem if appropriate
-			gatekeeper(request.session.data.user, /^c{1}\d+/.exec(remainingPath).substr(1),
+			gatekeeper(request.session.data.user, /^\/[c]{1}\d+/.exec(remainingPath)[0].substr(1),
 				function(result, compData, authNotes, err) {
 					if (result) {
+						// TODO: replace.
+						// SQL: Store competition page link or something
+						//  I'd like competition pages to be generated.
+						//  Rules for generating comeptition pages:
+						// Sidebar:
+						// --Competition Rules
+						// --Competition Splash
+						// --Problems in Competition
+						// --Submission Queue*
+						// --Scoreboard*
+						// UserDesc:
+						// --User information
+						// --Placement
+						// --Time remaining in competition
+						// --Alerts*
+						// Body:
+						// --If competition splash: provided in competition (htmlfrag)
+						// --Problem pages will be different (though similar)
+
+						// * Use MVVM/Websockets
+
 						if (comp_subsystem[subsys_name]) {
 							if (remainingPath.indexOf('/', 1) > 0) {
 								comp_subsystem[subsys_name].route(response, request, compData, remainingPath.substr(remainingPath.indexOf('/', 1)));
@@ -76,7 +169,7 @@ function route(response, request, remainingPath) {
 								comp_subsystem[subsys_name].route(response, request, compData);
 							}
 						} else {
-							console.log('Subsystem ' + subsys_name + ' not found!');
+							console.log('Competition ' + subsys_name + ' not found!');
 							response.writeHead(404, {'Content-Type': 'text/plain'});
 							response.write('404 not found! (Subsystem - competition)');
 							response.end();
@@ -84,10 +177,53 @@ function route(response, request, remainingPath) {
 					} else {
 						if (err) {
 							console.log('Error authorizing user: ' + err);
-							// Generate authorization failed page
+							var rpage = error_page.GoronErrorPage(request.session.data.user,
+								'User Not Authorized',
+								'There was an unexpected error attempting to authorize the current user. '
+								+ 'The error itself was unexpected, so I\'m afraid I can\'t share the details of it '
+								+ 'with you, this being an early and untested prototype.');
+							if (rpage) {
+								rpage.render(function(content, error) {
+									if (error) {
+										console.log('Could not generate rejection page - ' + error);
+										response.writeHead(300, {'Content-Type': 'text/plain'});
+										response.write('Could not generate page, but you were rejected from authorization for some reason');
+										response.end();
+									} else {
+										response.writeHead(300, {'Content-Type': 'text/html'});
+										response.write(content);
+										response.end();
+									}
+								});
+							} else {
+								console.log('Could not generate rejection page - showing fail message instead');
+								response.writeHead(300, {'Content-Type': 'text/plain'});
+								response.write('Could not generate page for an unknown reason. You were rejected from authorization for some reason');
+								response.end();
+							}
 						} else {
 							console.log('User rejected from competition subsystem: ' + authNotes);
 							// Generate rejection page
+							var rpage = error_page.GoronErrorPage(request.session.data.user, 'User could not be authorized', authNotes);
+							if (rpage) {
+								rpage.render(function(content, error) {
+									if (error) {
+										console.log('Could not generate rejection page - ' + error);
+										response.writeHead(300, {'Content-Type': 'text/plain'});
+										response.write('Could not generate page, but you were rejected from authorization for some reason');
+										response.end();
+									} else {
+										response.writeHead(300, {'Content-Type': 'text/html'});
+										response.write(content);
+										response.end();
+									}
+								});
+							} else {
+								console.log('Could not generate rejection page - showing fail message instead');
+								response.writeHead(300, {'Content-Type': 'text/plain'});
+								response.write('Could not generate page for an unknown reason. You were rejected from authorization for some reason');
+								response.end();
+							}
 						}
 					}
 				});
