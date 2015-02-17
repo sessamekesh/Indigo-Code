@@ -62,7 +62,7 @@ function getCompetitionData(compDesc, callback) {
 		// Grabbing one competition only
 		console.log('Retrieving competition by ID: ' + compDesc.id);
 
-		var query = getConnection().query('SELECT id, name, is_private, start_date, end_date FROM Competition;');
+		var query = getConnection().query('SELECT id, name, is_private, start_date, end_date FROM Competition WHERE id = ?;', compDesc.id);
 		reportQueryActive();
 		var error_generated = false;
 		var result;
@@ -91,4 +91,69 @@ function getCompetitionData(compDesc, callback) {
 	}
 }
 
+function getUpcomingCompetitions(callback) {
+	console.log('competition_dao: Getting upcoming competitions list...');
+	// NEXT VERSION: Do ALL of your queries like this...
+	getConnection().query('SELECT id, name, is_private FROM Competition WHERE start_date > NOW();',
+		function(err, rows) {
+			if (err) {
+				callback(null, 'MYSQL error: ' + err);
+			} else {
+				callback(rows);
+			}
+			reportQueryEnded();
+		});
+	reportQueryActive();
+}
+
+function getOngoingCompetitions(callback) {
+	console.log('competition_dao: Getting ongoing competitions list...');
+	getConnection().query('SELECT id, name, is_private FROM Competition WHERE start_date < NOW() AND end_date > NOW();',
+		function(err, rows) {
+			if (err) {
+				callback(null, 'MYSQL error: ' + err);
+			} else {
+				callback(rows);
+			}
+			reportQueryEnded();
+		});
+	reportQueryActive();
+}
+
+function getPreviousCompetitions(callback) {
+	console.log('competition_dao: Getting previous competitions list...');
+	getConnection().query('SELECT id, name, is_private FROM Competition WHERE end_date < NOW();',
+		function(err, rows) {
+			if (err) {
+				callback(null, 'MYSQL error: ' + err);
+			} else {
+				callback(rows);
+			}
+			reportQueryEnded();
+		});
+	reportQueryActive();
+}
+
+function getHTMLFrag(compID, callback) {
+	console.log('competition_dao: Retrieving HTML Fragment for competition #' + compID);
+
+	var query = getConnection().query('SELECT htmlfrag_data FROM Competition WHERE id = ?;', compID),
+		error_generated = true;
+	reportQueryActive();
+	query.on('error', function(err) {
+		error_generated = true;
+		callback(null, 'SQL - Get HTMLFrag for ' + compID + ': ' + err);
+	});
+	query.on('result', function(result) {
+		callback(result.htmlfrag_data);
+	});
+	query.on('end', function() {
+		reportQueryEnded();
+	});
+}
+
 exports.getCompetitionData = getCompetitionData;
+exports.getHTMLFrag = getHTMLFrag;
+exports.getUpcomingCompetitions = getUpcomingCompetitions;
+exports.getPreviousCompetitions = getPreviousCompetitions;
+exports.getOngoingCompetitions = getOngoingCompetitions;

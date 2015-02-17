@@ -4,7 +4,12 @@ var subsystem = {},
 	comp_subsystem = {};
 
 var error_page = require('../page_builders/error_page'),
-	competition_dao = require('../dao/competition_dao');
+	competition_dao = require('../dao/competition_dao'),
+	competition_page = require('../page_builders/competition_page'),
+	scoreboard = require('./scoreboard'),
+	problem = require('../problem/problem.js');
+
+comp_subsystem['/scoreboard'] = scoreboard;
 
 /* --------Competition Subsystem-------- *\
 	- Anything dealing with any competition passes through this gate
@@ -52,14 +57,14 @@ var error_page = require('../page_builders/error_page'),
 // -authNotes: if compData is null, reason they were denied access
 // -err: If an SQL error occurred, what the SQL error was
 function gatekeeper(userData, compID, callback) {
-	console.log('---------------GATEKEEPER----------------');
+	console.log('----------------------GATEKEEPER-----------------------');
 	if (userData) {
-		console.log('-- ' + (userData.is_admin ? 'SIR ' + userData.user_name : userData.user_name + ' THE PEASANT') + ' --');
+		console.log('-- ' + (userData.is_admin ? 'SIR ' + userData.user_name : userData.user_name + ' THE PEASANT'));
 	} else {
 		console.log('-- FILTHY GUEST');
 	}
-	console.log('-- Requesting access to competition: ' + compID + ' --');
-	console.log('-----JUDGE WISELY OH THOU HOLY JUDGE-----');
+	console.log('-- Requesting access to competition: ' + compID);
+	console.log('------------JUDGE WISELY OH THOU HOLY JUDGE------------');
 
 	competition_dao.getCompetitionData({ id: compID }, function(compData, err) {
 		if (err) {
@@ -67,12 +72,12 @@ function gatekeeper(userData, compID, callback) {
 			callback(false, null, null, 'competition_dao error: ' + err);
 		} else {
 			if (compData) {
-				if (!userData) {
+				if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 					auth_guest(compData);
-				} else if (!user.is_admin) {
-					auth_admin(compData);
-				} else {
+				} else if (!userData.is_admin) {
 					auth_peasant(compData);
+				} else {
+					auth_admin(compData);
 				}
 			} else {
 				// NEXT VERSION: Don't tell the callback (in the authNotes, which is client-facing)
@@ -110,10 +115,10 @@ function gatekeeper(userData, compID, callback) {
 
 	function auth_guest(compData) {
 		console.log('Authorizing filthy guest to competition...');
-		if (Date.parse(compData.end_date) < Date.now() && compData.is_public == true) {
+		if (Date.parse(compData.end_date) < Date.now() && compData.is_private == false) {
 			console.log('Decision: pass (competition has expired and is public)');
 			callback(true, compData);
-		} else if (!compData.is_public) {
+		} else if (compData.is_private) {
 			console.log('Decision: fail (competition is private)');
 			callback(false, null, 'Access Denied (must be logged in to view this competition)');
 		} else {
@@ -138,41 +143,100 @@ function route(response, request, remainingPath) {
 			console.log('Matches competition description. Checking authorization...');
 			// There is a competition specified. Check authorization,
 			//  route to subsystem if appropriate
-			gatekeeper(request.session.data.user, /^\/[c]{1}\d+/.exec(remainingPath)[0].substr(1),
+			var compID = /^\/[c]{1}\d+/.exec(remainingPath)[0].substr(2);
+			if (remainingPath.indexOf('/', 1) > 0) {
+				remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
+			} else {
+				remainingPath = undefined;
+			}
+			var subsys_name = remainingPath;
+			if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+				subsys_name = remainingPath.substr(0, remainingPath.indexOf('/', 1));
+			}
+			if (remainingPath && remainingPath !== '') {
+				console.log('Remaining Path: ' + remainingPath);
+				console.log('Subsystem: ' + subsys_name);
+			}
+			gatekeeper(request.session.data.user, compID,
 				function(result, compData, authNotes, err) {
 					if (result) {
-						// TODO: replace.
-						// SQL: Store competition page link or something
-						//  I'd like competition pages to be generated.
-						//  Rules for generating comeptition pages:
-						// Sidebar:
-						// --Competition Rules
-						// --Competition Splash
-						// --Problems in Competition
-						// --Submission Queue*
-						// --Scoreboard*
-						// UserDesc:
-						// --User information
-						// --Placement
-						// --Time remaining in competition
-						// --Alerts*
-						// Body:
-						// --If competition splash: provided in competition (htmlfrag)
-						// --Problem pages will be different (though similar)
-
-						// * Use MVVM/Websockets
-
-						if (comp_subsystem[subsys_name]) {
-							if (remainingPath.indexOf('/', 1) > 0) {
-								comp_subsystem[subsys_name].route(response, request, compData, remainingPath.substr(remainingPath.indexOf('/', 1)));
+						// Check for forwarding to 'problems' subsystem...
+						if (/^\/[p]{1}\d+/.test(remainingPath)) {
+							var problemID = /^\/[p]{1}\d+/.exec(remainingPath)[0].substr(2);
+							if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+								remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
 							} else {
-								comp_subsystem[subsys_name].route(response, request, compData);
+								remainingPath = undefined;
 							}
+							problem.route(response, request, compData, problemID, remainingPath);
 						} else {
-							console.log('Competition ' + subsys_name + ' not found!');
-							response.writeHead(404, {'Content-Type': 'text/plain'});
-							response.write('404 not found! (Subsystem - competition)');
-							response.end();
+							if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+								// Forward request out
+								if (comp_subsystem[subsys_name]) {
+									comp_subsystem[subsys_name].route(response, request, compData, remainingPath.substr(remainingPath.indexOf('/', 1)));
+								} else {
+									console.log('Subsystem ' + subsys_name + ' not found!');
+									response.writeHead(404, {'Content-Type': 'text/plain'});
+									response.write('404 not found! (Subsystem - competition)');
+									response.end();
+								}
+							} else {
+								// Just generate competition page
+								var comp_page = competition_page.GoronCompetitionPage(request.session.data.user, compData);
+								if (comp_page) {
+									comp_page.render(function (data, err) {
+										if (err) {
+											var errpage = error_page.GoronErrorPage(request.session.data.user,
+												'Unexpected Error Generating Competition Page', err);
+											if (errpage) {
+												errpage.render(function (content, errerr) {
+													if (errerr) {
+														console.log('Could not generate problem page or error page: ' + errerr);
+														response.writeHead(300, {'Content-Type': 'text/plain'});
+														response.write('Could not generate page, somehow generating the competition page failed. Check log.');
+														response.end();
+													} else {
+														response.writeHead(300, {'Content-Type': 'text/html'});
+														response.write(content);
+														response.end();
+													}
+												});
+											} else {
+												console.log('Could not generate rejection page - showing fail message instead');
+												response.writeHead(300, {'Content-Type': 'text/plain'});
+												response.write('Could not generate page for an unknown reason. Failed to create competition page for some reason');
+												response.end();
+											}
+										} else {
+											response.writeHead(300, {'Content-Type': 'text/html'});
+											response.write(data);
+											response.end();
+										}
+									});
+								} else {
+									var errpage = error_page.GoronErrorPage(request.session.data.user,
+										'Unexpected Error Generating Competition Page', 'Could not generate competition page builder');
+									if (errpage) {
+										errpage.render(function (content, errerr) {
+											if (errerr) {
+												console.log('Could not generate problem page or error page: ' + errerr);
+												response.writeHead(300, {'Content-Type': 'text/plain'});
+												response.write('Could not generate page, somehow generating the competition page failed. Check log.');
+												response.end();
+											} else {
+												response.writeHead(300, {'Content-Type': 'text/html'});
+												response.write(content);
+												response.end();
+											}
+										});
+									} else {
+										console.log('Could not generate rejection page - showing fail message instead');
+										response.writeHead(300, {'Content-Type': 'text/plain'});
+										response.write('Could not generate page for an unknown reason. Failed to create competition page for some reason');
+										response.end();
+									}
+								}
+							}
 						}
 					} else {
 						if (err) {

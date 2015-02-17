@@ -1,3 +1,5 @@
+var competition_dao = require('../dao/competition_dao');
+
 // Returns a GoronPage with a render() function
 function GoronPage(pageDesc) {
 	console.log('Creating new page for display...');
@@ -119,8 +121,12 @@ function GoronUserInfo(userData) {
 	console.log('Creating Goron user info tab...');
 	console.log(userData);
 	return {
+		// NEXT VERSION: Do not let userData be anything BUT complete userData
+		//  i.e., no more of this 'Guest' and 'IncorrectLogin'
+		//  Reserve separate things for that.
+		// It is NOT scalable.
 		render: function(callback) {
-			if (!userData || userData === 'Guest') {
+			if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 				console.log('Rendering Goron user tab for a guest');
 				callback('<form action="/user/login" method="post">'
 					+ '\n\t<input type="text" name="username" value="Username" /><br />'
@@ -212,7 +218,7 @@ function GoronBody(content) {
 
 function GoronSidebar(userData) {
 	console.log('Creating Goron sidebar...');
-	if(!userData || userData === 'Guest') {
+	if(!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 		// Guest Sidebar
 		return {
 			render: function(callback) {
@@ -225,15 +231,31 @@ function GoronSidebar(userData) {
 					+ '\n\t</ul>'
 					+ '\n\t<hr>'
 					+ '\n\t<b>Previous Public Competitions</b><br />'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>2014F ACM</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM Homepage</li>'
-					+ '\n\t</ul>'
-					+ '\n</div>';
-				callback(toReturn);
+					+ '\n\t<ul>';
+
+				competition_dao.getPreviousCompetitions(function (res, err) {
+					if (err) {
+						console.log('Error getting previous competitions for guest: ' + err);
+					} else {
+						for (var i = 0; i < res.length; i++) {
+							if (res[i].is_private[0] == false) {
+								toReturn += '\n\t\t<li><a href="/competition/c'
+									+ res[i].id + '">' + res[i].name + '</a></li>';
+							}
+						}
+					}
+					genGuestSidebarLast();
+				});
+
+				function genGuestSidebarLast() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<ul>'
+						+ '\n\t\t<li>ACM Homepage</li>'
+						+ '\n\t</ul>'
+						+ '\n</div>';
+					callback(toReturn);
+				}
 			}
 		};
 	} else if (userData.is_admin == true ){
@@ -248,26 +270,68 @@ function GoronSidebar(userData) {
 					+ '\n\t</ul>'
 					+ '\n\t<hr>'
 					+ '\n\t<b>Upcoming Competitions</b><br />'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM 2016F</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<b>Current Competitions</b>'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM 2015S</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<b>Previous Competitions</b><br />'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>2014F ACM</li>'
-					+ '\n\t\t<li>2014F RapidProblemSolving</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM Homepage</li>'
-					+ '\n\t</ul>'
-					+ '\n</div>';
-				callback(toReturn);
+					+ '\n\t<ul>';
+
+				// Here: insert all competitions...
+				competition_dao.getUpcomingCompetitions(function(res, err) {
+					if (err) {
+						console.log('Error generating upcoming competitions: ' + err);
+					} else {
+						for (var i = 0; i < res.length; i++) {
+							toReturn += '\n\t\t<li>'
+								+ '<a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+						}
+					}
+					doTheNextBit();
+				});
+
+				function doTheNextBit() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<b>Current Competitions</b>'
+						+ '\n\t<ul>';
+
+					competition_dao.getOngoingCompetitions(function(res, err) {
+						if (err) {
+							console.log('Error generating ongoing competitions: ' + err);
+						} else {
+							for (var i = 0; i < res.length; i++) {
+								toReturn += '\n\t\t<li>'
+									+ '<a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+							}
+						}
+						andTheBitAfterThat();
+					});
+				}
+
+				function andTheBitAfterThat() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<b>Previous Competitions</b><br />'
+						+ '\n\t<ul>';
+
+					competition_dao.getPreviousCompetitions(function(res, err) {
+						if (err) {
+							console.log('Error generating previous competitions: ' + err);
+						} else {
+							for (var i = 0; i < res.length; i++) {
+								toReturn += '\n\t\t<li>'
+									+ '<a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+							}
+						}
+						finishIt();
+					});
+				}
+
+				function finishIt() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<ul>'
+						+ '\n\t\t<li>ACM Homepage</li>'
+						+ '\n\t</ul>'
+						+ '\n</div>';
+					callback(toReturn);
+				}
 			}
 		};
 	} else {
@@ -282,21 +346,45 @@ function GoronSidebar(userData) {
 					+ '\n\t</ul>'
 					+ '\n\t<hr>'
 					+ '\n\t<b>Current Competitions</b>'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM 2015S</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<b>Previous Competitions</b><br />'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>2014F ACM</li>'
-					+ '\n\t\t<li>2014F RapidProblemSolving</li>'
-					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<ul>'
-					+ '\n\t\t<li>ACM Homepage</li>'
-					+ '\n\t</ul>'
-					+ '\n</div>';
-				callback(toReturn);
+					+ '\n\t<ul>';
+
+				competition_dao.getOngoingCompetitions(function (res, err) {
+					if (err) {
+						console.log('Error getting ongoing competitions for peasant: ' + err);
+					} else {
+						for (var i = 0; i < res.length; i++) {
+							toReturn += '\n\t\t<li><a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+						}
+					}
+					afterCurrentCompetitions();
+				});
+
+				function afterCurrentCompetitions() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<b>Previous Competitions</b><br />'
+						+ '\n\t<ul>';
+					competition_dao.getPreviousCompetitions(function (res, err) {
+						if (err) {
+							console.log('Error getting previous competitions for peasant: ' + err);
+						} else {
+							for (var i = 0; i < res.length; i++) {
+								toReturn += '\n\t\t<li><a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+							}
+						}
+						afterPreviousCompetitions();
+					});
+				}
+
+				function afterPreviousCompetitions() {
+					toReturn += '\n\t</ul>'
+						+ '\n\t<hr>'
+						+ '\n\t<ul>'
+						+ '\n\t\t<li>ACM Homepage</li>'
+						+ '\n\t</ul>'
+						+ '\n</div>';
+					callback(toReturn);
+				}
 			}
 		};
 	}

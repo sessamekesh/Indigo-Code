@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      div { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      div input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      div button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script>
+      var socket = io('/server-time');
+
+      socket.on('server_timestamp', function(msg) {
+        var field = document.getElementById('messages');
+        field.innerHTML += '<li>' + msg + '</li>';
+      });
+
+      var send_msg = function () {
+        socket.emit('request_time');
+        document.getElementById('m').value = '';
+      }
+    </script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <div>
+      <input id="m" autocomplete="off" /><button onclick="send_msg();">Send</button>
+    </div>
+  </body>
+</html>
