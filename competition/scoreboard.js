@@ -18,28 +18,7 @@ function route(response, request, compData, remainingPath) {
 		if (comp_subsystem[subsys_name]) {
 			comp_subsystem[subsys_name].route(response, request, compData, remainingPath.substr(remainingPath.indexOf('/', 1)));
 		} else {
-			var errPage = error_page.GoronErrorPage(request.session.data.user,
-				'404 - Page Not Found', 'Subsystem ' + subsys_name + ' not found!');
-			if (errPage) {
-				errPage.render(function (content, err) {
-					if (err) {
-						console.log('scoreboard: could not generate 404 error page: ' + err);
-						response.writeHead(404, {'Content-Type': 'text/plain'});
-						response.write('404 not found! (competition ' + compData.id + ' scoreboard)');
-						response.end();
-					} else {
-						response.writeHead(300, {'Content-Type': 'text/html'});
-						response.write(content);
-						response.end();
-					}
-				});
-			} else {
-				console.log('scoreboard: Could not generate error page! Showing manual fail...');
-				response.writeHead(300, {'Content-Type': 'text/plain'});
-				response.writeHead(404, {'Content-Type': 'text/plain'});
-				response.write('404 not found! (competition ' + compData.id + ' scoreboard)');
-				response.end();
-			}
+			error_page.ShowErrorPage(response, request, '404 - Page Not Found', 'Subsystem ' + subsys_name + ' not found!');
 		}
 	} else {
 		// Use vanilla scoreboard system...
@@ -57,19 +36,14 @@ function showScoreboard(response, request, compData) {
 	});
 
 	if (!scoreboard_page) {
-		// NEXT VERSION: The 'Error Page' object is awkward to do full validation on,
-		//  try to make it a bit more elegant?
-		error_page.GoronErrorPage(request.session.data.user,
-			'Internal Error', 'Could not generate scoreboard page object - check logs')
-		.render(function (content, err) {
+		error_page.ShowErrorPage(response, request, 'Internal Error', 'Could not generate scoreboard page object - check logs');
+	} else {
+		scoreboard_page.render(function (content, err) {
 			if (err) {
-				console.log('scoreboard: Could not generate scoreboard: ' + err);
-				response.writeHead(404, {'Content-Type': 'text/plain'});
-				response.write('404 not found! (competition ' + compData.id + ' scoreboard)');
-				response.end();
+				console.log('scoreboard: Error rendering scoreboard: ' + err);
+				error_page.ShowErrorPage(response, request, 'Rendering Error', 'Error rendering scoreboard_page. Check logs');
 			} else {
-				console.log('scoreboard: Displaying scoreboard...');
-				response.writeHead(300, {'Content-Type': 'text/html'});
+				response.writeHead(200, {'Content-Type': 'text/html'});
 				response.write(content);
 				response.end();
 			}

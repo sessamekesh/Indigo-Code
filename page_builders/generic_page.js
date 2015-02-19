@@ -119,7 +119,6 @@ function GoronPage(pageDesc) {
 
 function GoronUserInfo(userData) {
 	console.log('Creating Goron user info tab...');
-	console.log(userData);
 	return {
 		// NEXT VERSION: Do not let userData be anything BUT complete userData
 		//  i.e., no more of this 'Guest' and 'IncorrectLogin'

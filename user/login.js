@@ -63,11 +63,11 @@ function route(response, request, remainingPath) {
 
 							if (request.session.data.lastPage) {
 								console.log('Redirecting to last page - ' + request.session.data.lastPage);
-								response.writeHead(302, {'Location': request.session.data.lastPage});
+								response.writeHead(303, {'Location': request.session.data.lastPage});
 								response.end();
 							} else {
 								console.log('No last page found. Redirecting to index page');
-								response.writeHead(302, {'Location': '/'});
+								response.writeHead(303, {'Location': '/'});
 								response.end();
 							}
 						});

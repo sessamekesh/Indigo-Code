@@ -153,10 +153,6 @@ function route(response, request, remainingPath) {
 			if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
 				subsys_name = remainingPath.substr(0, remainingPath.indexOf('/', 1));
 			}
-			if (remainingPath && remainingPath !== '') {
-				console.log('Remaining Path: ' + remainingPath);
-				console.log('Subsystem: ' + subsys_name);
-			}
 			gatekeeper(request.session.data.user, compID,
 				function(result, compData, authNotes, err) {
 					if (result) {
@@ -170,10 +166,16 @@ function route(response, request, remainingPath) {
 							}
 							problem.route(response, request, compData, problemID, remainingPath);
 						} else {
-							if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+							if (subsys_name) {
+								if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+									remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
+								} else {
+									remainingPath = undefined;
+								}
+								console.log('competition: Forwarding path out to subsystem ' + subsys_name);
 								// Forward request out
 								if (comp_subsystem[subsys_name]) {
-									comp_subsystem[subsys_name].route(response, request, compData, remainingPath.substr(remainingPath.indexOf('/', 1)));
+									comp_subsystem[subsys_name].route(response, request, compData, remainingPath);
 								} else {
 									console.log('Subsystem ' + subsys_name + ' not found!');
 									response.writeHead(404, {'Content-Type': 'text/plain'});
@@ -186,112 +188,33 @@ function route(response, request, remainingPath) {
 								if (comp_page) {
 									comp_page.render(function (data, err) {
 										if (err) {
-											var errpage = error_page.GoronErrorPage(request.session.data.user,
-												'Unexpected Error Generating Competition Page', err);
-											if (errpage) {
-												errpage.render(function (content, errerr) {
-													if (errerr) {
-														console.log('Could not generate problem page or error page: ' + errerr);
-														response.writeHead(300, {'Content-Type': 'text/plain'});
-														response.write('Could not generate page, somehow generating the competition page failed. Check log.');
-														response.end();
-													} else {
-														response.writeHead(300, {'Content-Type': 'text/html'});
-														response.write(content);
-														response.end();
-													}
-												});
-											} else {
-												console.log('Could not generate rejection page - showing fail message instead');
-												response.writeHead(300, {'Content-Type': 'text/plain'});
-												response.write('Could not generate page for an unknown reason. Failed to create competition page for some reason');
-												response.end();
-											}
+											error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Error generating competition page: ' + err);
 										} else {
+											console.log('competition.js: Sending response for competition');
 											response.writeHead(300, {'Content-Type': 'text/html'});
 											response.write(data);
 											response.end();
 										}
 									});
 								} else {
-									var errpage = error_page.GoronErrorPage(request.session.data.user,
-										'Unexpected Error Generating Competition Page', 'Could not generate competition page builder');
-									if (errpage) {
-										errpage.render(function (content, errerr) {
-											if (errerr) {
-												console.log('Could not generate problem page or error page: ' + errerr);
-												response.writeHead(300, {'Content-Type': 'text/plain'});
-												response.write('Could not generate page, somehow generating the competition page failed. Check log.');
-												response.end();
-											} else {
-												response.writeHead(300, {'Content-Type': 'text/html'});
-												response.write(content);
-												response.end();
-											}
-										});
-									} else {
-										console.log('Could not generate rejection page - showing fail message instead');
-										response.writeHead(300, {'Content-Type': 'text/plain'});
-										response.write('Could not generate page for an unknown reason. Failed to create competition page for some reason');
-										response.end();
-									}
+									error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Could not generate competition page builder');
 								}
 							}
 						}
 					} else {
 						if (err) {
-							console.log('Error authorizing user: ' + err);
-							var rpage = error_page.GoronErrorPage(request.session.data.user,
-								'User Not Authorized',
+							console.log('competition: Error authorizing user: ' + err);
+							error_page.ShowErrorPage(response, request, 'User Not Authorized',
 								'There was an unexpected error attempting to authorize the current user. '
 								+ 'The error itself was unexpected, so I\'m afraid I can\'t share the details of it '
 								+ 'with you, this being an early and untested prototype.');
-							if (rpage) {
-								rpage.render(function(content, error) {
-									if (error) {
-										console.log('Could not generate rejection page - ' + error);
-										response.writeHead(300, {'Content-Type': 'text/plain'});
-										response.write('Could not generate page, but you were rejected from authorization for some reason');
-										response.end();
-									} else {
-										response.writeHead(300, {'Content-Type': 'text/html'});
-										response.write(content);
-										response.end();
-									}
-								});
-							} else {
-								console.log('Could not generate rejection page - showing fail message instead');
-								response.writeHead(300, {'Content-Type': 'text/plain'});
-								response.write('Could not generate page for an unknown reason. You were rejected from authorization for some reason');
-								response.end();
-							}
 						} else {
-							console.log('User rejected from competition subsystem: ' + authNotes);
+							console.log('competition: User rejected from competition subsystem: ' + authNotes);
 							// Generate rejection page
-							var rpage = error_page.GoronErrorPage(request.session.data.user, 'User could not be authorized', authNotes);
-							if (rpage) {
-								rpage.render(function(content, error) {
-									if (error) {
-										console.log('Could not generate rejection page - ' + error);
-										response.writeHead(300, {'Content-Type': 'text/plain'});
-										response.write('Could not generate page, but you were rejected from authorization for some reason');
-										response.end();
-									} else {
-										response.writeHead(300, {'Content-Type': 'text/html'});
-										response.write(content);
-										response.end();
-									}
-								});
-							} else {
-								console.log('Could not generate rejection page - showing fail message instead');
-								response.writeHead(300, {'Content-Type': 'text/plain'});
-								response.write('Could not generate page for an unknown reason. You were rejected from authorization for some reason');
-								response.end();
-							}
+							error_page.ShowErrorPage(response, request, 'User Not Authorized', authNotes);
 						}
 					}
 				});
-
 		} else {
 			// Check against subsystems in the regular fashion.
 			//  This is for static competition pages.

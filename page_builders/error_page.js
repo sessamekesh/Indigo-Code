@@ -61,4 +61,53 @@ function GoronErrorPage(userData, errName, errMessage) {
 	});
 }
 
-exports.GoronErrorPage = GoronErrorPage;
+function ShowErrorPage(response, request, errName, errMessage) {
+	console.log('error_page: Showing error page with safe function');
+
+	var nextMessage = image_message_combos[next_msg].msg,
+		nextWidth = image_message_combos[next_msg].width,
+		nextHeight = image_message_combos[next_msg].height,
+		nextSrc = image_message_combos[next_msg].img;
+	next_msg = (next_msg + 1) % image_message_combos.length;
+
+	var pg = generic_page.GoronPage({
+		title: '(Goron) ' + errName,
+		header: generic_page.GoronHeader({
+			title: 'Error: ' + errName,
+			subtitle: '(Goron) ' + errMessage,
+			user_infor: generic_page.GoronUserInfo(request.session.data.user)
+		}),
+		sidebar: generic_page.GoronSidebar(request.session.data.user),
+		body: {
+			render: function(callback) {
+			callback('<img src="' + nextSrc + '" width="' + nextWidth + '" height="' + nextHeight + '" style="float: left; margin: 8px; border-radius: 15px;" />'
+				+ '\n<h1>' + nextMessage + '</h1>'
+				+ '\n<h2>' + errMessage + '</h2>');
+			}
+		}
+	});
+
+	if (pg) {
+		pg.render(function (content, err) {
+			if (err) {
+				console.log('error_page: Error rendering error page: ' + err);
+				response.writeHead(200, {'Content-Type': 'text/plain'});
+				response.write('Error ' + errName + ': ' + errMessage + '\n');
+				response.write('Also, the ErrorPage generator broke. Check log.');
+				response.end();
+			} else {
+				response.writeHead(200, {'Content-Type': 'text/html'});
+				response.write(content);
+				response.end();
+			}
+		});
+	} else {
+		console.log('error_page: Somehow, page object was not properly generated.');
+		response.writeHead(200, {'Content-Type': 'text/plain'});
+		response.write('Error ' + errName + ': ' + errMessage + '\n');
+		response.write('Also, the ErrorPage generator broke. Check log. Or don\'t, because I have no idea what caused the problem.');
+		response.end();
+	}
+}
+
+exports.ShowErrorPage = ShowErrorPage;

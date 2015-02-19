@@ -62,7 +62,9 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			sidebarString = '',
 			bodyString = '',
 			userInfoObject = GoronCompetitionUserInfo(userData, compData),
-			user_info_scripts;
+			required_client_includes = {},
+			user_info_scripts = '',
+			body_scripts = '';
 
 		if (!userInfoObject) {
 			callback(null, 'Failed to generate user info object.');
@@ -80,8 +82,11 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 				+ '\n\t\t<h1 id="title">' + compData.name + '</h1>'
 				+ '\n\t\t<h2 id="subtitle">USU ACM</h2>'
 				+ '\n\t</div>'
-				+ '\n\t<div id="login_bit">';
+				+ '\n\t<div id="login_bit">';\
 			user_info_scripts = userInfoObject.generate_scripts();
+			for (var required_include in user_info_scripts.required_includes) {
+				required_client_includes[required_include] = 'Y';
+			}
 			userInfoObject.render(function(data, error) {
 				if (error) {
 					callback(null, error);
@@ -109,6 +114,12 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 					renderSidebar();
 				});
 			} else {
+				if (bodyData.generate_scripts) {
+					body_scripts = bodyData.generate_scripts();
+					for (var req_incl in body_scripts.required_includes) {
+						required_client_includes[req_incl] = 'Y';
+					}
+				}
 				// We were provided a body object, use it!
 				bodyData.render(function (content, err) {
 					if (err) {
@@ -149,14 +160,18 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 				+ '\n\t\t<meta charset="utf-8">'
 				+ '\n\t\t<link rel="stylesheet" type="text/css" href="/style.css">';
 
-			for (var i = 0; i < user_info_scripts.required_includes.length; i++) {
-				htmlString += '\n\t\t<script src="' + user_info_scripts.required_includes[i] + '"></script>';
+			for (var required_include in required_client_includes) {
+				htmlString += '\n\t\t<script src="' + required_include + '"></script>';
 			}
 
 			htmlString += '\n\t\t<script>';
 			var user_info_script_lines = user_info_scripts.script_text.split('\n');
 			for (var i = 0; i < user_info_script_lines.length; i++) {
 				htmlString += '\n\t\t\t' + user_info_script_lines[i];
+			}
+			var body_script_lines = body_scripts.script_text.split('\n');
+			for (var i = 0; i < body_script_lines.length; i++) {
+				htmlString += '\n\t\t\t' + body_script_lines[i];
 			}
 			htmlString += '\n\t\t</script>'
 				+ '\n\t</head>'
@@ -190,6 +205,7 @@ function GoronCompetitionUserInfo(userData, compData) {
 	var toReturn = {};
 
 	if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
+
 		toReturn.generate_scripts = function() {
 			console.log('Generating scripts for guest...');
 			if (compData.start_date < Date.now() && compData.end_date > Date.now() && compData.is_private == false) {

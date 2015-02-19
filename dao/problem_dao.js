@@ -43,4 +43,34 @@ function getProblemsInCompetition(compID, callback) {
 	reportQueryActive();
 }
 
+function getProblemData(problemID, callback) {
+	console.log('problem_dao: Retrieving problem data for problem ' + problemID);
+
+	if (!problemID) {
+		console.log('problem_dao: Returning error, no problem ID reported');
+	} else {
+		// id, name, compID, desc_path, content_type
+		var query = getConnection().query('SELECT Problem.id, Problem.name, '
+			+ 'competition_id AS compID, description_file_path AS desc_path, '
+			+ 'content_type FROM Problem LEFT JOIN ContentType '
+			+ 'ON ContentType.id = description_file_type WHERE Problem.id = ?;',
+			problemID,
+			function(err, rows) {
+				if (err) {
+					callback(null, 'problem_dao: MYSQL error: ' + err);
+				} else {
+					if (rows.length <= 0 || rows.length > 1) {
+						callback(null, 'problem_dao: MYSQL query returned ' + rows.length + ' results, expected 1');
+					} else {
+						callback(rows[0]);
+					}
+				}
+				reportQueryEnded();
+			}
+		);
+		reportQueryActive();
+	}
+}
+
 exports.getProblemsInCompetition = getProblemsInCompetition;
+exports.getProblemData = getProblemData;
