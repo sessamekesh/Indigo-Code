@@ -48,13 +48,13 @@ function reportSubmissionReceived(lang_id, problem_id, user_id, submission_time,
 	reportQueryActive();
 }
 
-function reportSubmissionResult(submission_id, source_code_data, result, notes, callback) {
+function reportSubmissionResult(submission_id, result, notes, callback) {
 	console.log('submission_dao: Reporting submission results');
 	getConnection().query(
 		'UPDATE Submission SET '
-		+ 'result = ?, source_code = ?, notes = ?'
-		+ ' WHERE id = ?';,
-		[result, source_code_data, notes, submission_id],
+		+ 'result = ?, notes = ?'
+		+ ' WHERE id = ?',
+		[result, notes, submission_id],
 		function(error, res) {
 			if (error) {
 				callback(null, error);

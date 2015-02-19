@@ -3,7 +3,8 @@
 var error_page = require('../page_builders/error_page'),
 	formidable = require('formidable'),
 	submission_dao = require('../dao/submission_dao'),
-	language_dao = require('../dao/language_dao');
+	language_dao = require('../dao/language_dao'),
+	owl_router = require('../lang_subsystems/owl_router');
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
@@ -57,13 +58,14 @@ function judge_submission(response, request, compData, problemData) {
 			response.end();
 
 			// (4) Begin judge process
-			beginJudgeProcess(submission_id, problemData.id, fields.language, newPath, original_filename, recordResult);
+			beginJudgeProcess(submission_id, problemData, fields.language, newPath, original_filename, recordResult);
 		}
 	}
 
 	// (5) Record judgement result
 	function recordResult(resultData, error) {
 		// (6) Broadcast message via socket
+		// TODO KIP: Broadcast this message
 	}
 }
 
@@ -90,7 +92,7 @@ function moveFile(oldPath, newPath, callback) {
 // Callback:
 //  - result: { result: 'AC'/'TLE'/'WA'..., source_code: ... notes: ... }
 //  - error: some error description
-function beginJudgeProcess(submissionID, problemID, langID, path, originalFilename, callback) {
+function beginJudgeProcess(submissionID, problemData, langID, path, originalFilename, callback) {
 	console.log('judge: Beginning judge process for submission ' + submissionID);
 
 	language_dao.getLanguageData(langID, function (result, err) {
@@ -98,21 +100,39 @@ function beginJudgeProcess(submissionID, problemID, langID, path, originalFilena
 			console.log('judge: ERR SQL error retrieving language data: ' + err);
 			callback(null, 'Error retrieving language data.');
 		} else {
-			// We know which system to use - get problem data
-			getProblemData();
+			// We know which system to use - route to subsystem
+			routeToJudgementSubsystem(result);
 		}
 	});
 
-	function getProblemData() {
-		console.log('judge: retrieving problem data for ' + problemID);
-		// TODO KIP: Resume here.
+	function routeToJudgementSubsystem(languageData) {
+		// Determine if a subsystem exists to achieve that goal
+		//  If so, route to that subsystem.
+		//  If not, give an error to the user.
+		owl_router.judgeSubmission(submissionID, languageData.subsys_name,
+			problemData, path, originalFilename, function (res, notes, err) {
+				if (err) {
+					callback(null, 'judge: ERR judging submission: ' + err);
+				} else {
+					recordResults(res, notes);
+				}
+			}
+		);
 	}
 
-	// Determine if a subsystem exists to achieve that goal
-	//  If so, route to that subsystem.
-	//  If not, give an error to the user.
-
 	// Callback for test: do the callback described above.
+	function recordResults(result, notes) {
+		submission_dao.reportSubmissionResult(submission_id, result, notes, function (error) {
+			if (error) {
+				callback(null, 'judge: ERR recording results: ' + err);
+			} else {
+				callback({
+					result: result,
+					notes: notes
+				});
+			}
+		});
+	}
 }
 
 /*

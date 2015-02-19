@@ -82,7 +82,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 				+ '\n\t\t<h1 id="title">' + compData.name + '</h1>'
 				+ '\n\t\t<h2 id="subtitle">USU ACM</h2>'
 				+ '\n\t</div>'
-				+ '\n\t<div id="login_bit">';\
+				+ '\n\t<div id="login_bit">';
 			user_info_scripts = userInfoObject.generate_scripts();
 			for (var required_include in user_info_scripts.required_includes) {
 				required_client_includes[required_include] = 'Y';
@@ -169,9 +169,11 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			for (var i = 0; i < user_info_script_lines.length; i++) {
 				htmlString += '\n\t\t\t' + user_info_script_lines[i];
 			}
-			var body_script_lines = body_scripts.script_text.split('\n');
-			for (var i = 0; i < body_script_lines.length; i++) {
-				htmlString += '\n\t\t\t' + body_script_lines[i];
+			if (body_scripts) {
+				var body_script_lines = body_scripts.script_text.split('\n');
+				for (var i = 0; i < body_script_lines.length; i++) {
+					htmlString += '\n\t\t\t' + body_script_lines[i];
+				}
 			}
 			htmlString += '\n\t\t</script>'
 				+ '\n\t</head>'

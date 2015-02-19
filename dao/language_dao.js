@@ -49,7 +49,7 @@ function getLanguageData(languageID, callback) {
 	getConnection().query('SELECT id, name, subsys_name FROM Language WHERE id = ?;', languageID, function (err, rows) {
 		if (err) {
 			callback(null, err);
-		else if (rows.length != 1) {
+		} else if (rows.length != 1) {
 			callback(null, 'Number of rows returned was ' + rows.length + ', not 1.');
 		} else {
 			callback(rows[0]);
