@@ -52,7 +52,7 @@ function getProblemData(problemID, callback) {
 		// id, name, compID, desc_path, content_type
 		var query = getConnection().query('SELECT Problem.id, Problem.name, '
 			+ 'competition_id AS compID, description_file_path AS desc_path, '
-			+ 'content_type FROM Problem LEFT JOIN ContentType '
+			+ 'default_time_limit, content_type FROM Problem LEFT JOIN ContentType '
 			+ 'ON ContentType.id = description_file_type WHERE Problem.id = ?;',
 			problemID,
 			function(err, rows) {

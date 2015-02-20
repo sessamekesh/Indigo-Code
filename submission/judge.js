@@ -4,12 +4,13 @@ var error_page = require('../page_builders/error_page'),
 	formidable = require('formidable'),
 	submission_dao = require('../dao/submission_dao'),
 	language_dao = require('../dao/language_dao'),
-	owl_router = require('../lang_subsystems/owl_router');
+	owl_router = require('../lang_subsystems/owl_router'),
+	fs = require('fs');
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
 
-	if (remainingPath || remainingPath != '') {
+	if (remainingPath && remainingPath != '') {
 		console.log('Error - non-empty remaining path, ' + remainingPath);
 		error_page.ShowErrorPage(response, request, 'Security Error', 'A path that should not be reached has been reached. Access denied.');
 	} else {
@@ -21,7 +22,8 @@ function judge_submission(response, request, compData, problemData) {
 	console.log('judge: Preparing to judge submission...');
 
 	var form = new formidable.IncomingForm(),
-		newPath, oldPath, newPath, original_filename;
+		newPath, oldPath, original_filename,
+		submissionID;
 	form.parse(request, function (error, fields, files) {
 		if (error) {
 			console.log('Error parsing form: ' + error);
@@ -39,31 +41,35 @@ function judge_submission(response, request, compData, problemData) {
 						error_page.ShowErrorPage(response, request, 'SQL Error', 'Error reporting submission received. Check logs!');
 					} else {
 						// (2) Receive submission, move files to staging area
-						moveFile(oldPath, './submits/s' + submission_id, afterFileMoved);
+						newPath = './data/submits/s' + submission_id;
+						moveFile(oldPath, newPath, afterFileMoved);
+						submissionID = submission_id;
 					}
 				}
 			);
 		}
-	});
 
-	// (3) Show submission page to user, setup socket
-	function afterFileMoved(error) {
-		if (error) {
-			console.log('Error moving file: ' + error);
-			error_page.ShowErrorPage(response, request, 'Internal Error', 'Unable to move submission to judge environment. Check logs.');
-		} else {
-			// (3) Show submission page to user (RESPONSE)
-			//  (a) Setup socket (server-side)
-			response.writeHead(303, {'Location': '/competition/c' + compData.id + '/p' + problemData.id + '/submissions'});
-			response.end();
+		// (3) Show submission page to user, setup socket
+		function afterFileMoved(error) {
+			if (error) {
+				console.log('Error moving file: ' + error);
+				error_page.ShowErrorPage(response, request, 'Internal Error', 'Unable to move submission to judge environment. Check logs.');
+			} else {
+				// (3) Show submission page to user (RESPONSE)
+				//  (a) Setup socket (server-side)
+				response.writeHead(303, {'Location': '/competition/c' + compData.id + '/p' + problemData.id + '/submissions'});
+				response.end();
 
-			// (4) Begin judge process
-			beginJudgeProcess(submission_id, problemData, fields.language, newPath, original_filename, recordResult);
+				// (4) Begin judge process
+				beginJudgeProcess(submissionID, problemData, fields.language, newPath, original_filename, recordResult);
+			}
 		}
-	}
+	});
 
 	// (5) Record judgement result
 	function recordResult(resultData, error) {
+		console.log('judge: Result is to be recorded here.');
+		console.log(resultData);
 		// (6) Broadcast message via socket
 		// TODO KIP: Broadcast this message
 	}
@@ -109,7 +115,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 		// Determine if a subsystem exists to achieve that goal
 		//  If so, route to that subsystem.
 		//  If not, give an error to the user.
-		owl_router.judgeSubmission(submissionID, languageData.subsys_name,
+		owl_router.judgeSubmission(submissionID, languageData,
 			problemData, path, originalFilename, function (res, notes, err) {
 				if (err) {
 					callback(null, 'judge: ERR judging submission: ' + err);
@@ -122,7 +128,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 
 	// Callback for test: do the callback described above.
 	function recordResults(result, notes) {
-		submission_dao.reportSubmissionResult(submission_id, result, notes, function (error) {
+		submission_dao.reportSubmissionResult(submissionID, result, notes, function (error) {
 			if (error) {
 				callback(null, 'judge: ERR recording results: ' + err);
 			} else {

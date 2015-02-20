@@ -33,8 +33,8 @@ function reportSubmissionReceived(lang_id, problem_id, user_id, submission_time,
 	console.log('submission_dao: Reporting a submission received');
 	getConnection().query(
 		'INSERT INTO Submission'
-		+ '(lang_id, problem_id, user_id, result, source_code, submission_time, notes)'
-		+ 'VALUES(?, ?, ?, \'Q\', \'\', ?, \'\');',
+		+ '(lang_id, problem_id, user_id, result, submission_time, notes)'
+		+ 'VALUES(?, ?, ?, \'Q\', ?, \'\');',
 		[lang_id, problem_id, user_id, submission_time],
 		function (error, res) {
 			if (error) {

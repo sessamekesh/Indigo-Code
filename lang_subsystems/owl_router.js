@@ -14,13 +14,15 @@ var subsystems = {
 };
 
 // Callback: result, notes, err
-function judgeSubmission(submission_id, lang_system, problemData, source_path, original_filename, callback) {
-	console.log('owl_router: Received request to judge submission ' + submission_id + ' with language ' + lang_system + ', pertaining to problem ' + problemData.name);
+function judgeSubmission(submission_id, languageData, problemData, source_path, original_filename, callback) {
+	console.log('owl_router: Received request to judge submission ' + submission_id + ' with language ' + languageData.name);
+	console.log('Problem: ' + problemData.name + ' Language Subsystem: ' + languageData.subsys_name);
+	console.log('Source Path: ' + source_path + ' Original Filename: ' + original_filename);
 
-	if (subsystems[lang_system]) {
-		subsystems[lang_system].judge(submission_id, problemData, source_path, original_filename, callback);
+	if (subsystems[languageData.subsys_name]) {
+		subsystems[languageData.subsys_name].judge(submission_id, languageData, problemData, source_path, original_filename, callback);
 	} else {
-		callback(null, null, 'Could not find subsystem ' + lang_system);
+		callback(null, null, 'Could not find subsystem ' + languageData.subsys_name);
 	}
 }
 

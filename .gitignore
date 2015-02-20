@@ -1,3 +1,6 @@
+# Binaries and Raw Data
+data/**/*
+
 # Logs
 logs
 *.log
