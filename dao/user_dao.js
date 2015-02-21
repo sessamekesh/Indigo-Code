@@ -87,7 +87,7 @@ function getUserData(userDesc, callback) {
 		} else if(userDesc.id) {
 			console.log('Using userID');
 			// Grab user by id - use internally, requires no password authentication
-			var query = getConnection().query('SELECT id, user_name, name, tagline, is_admin FROM User WHERE id = ?;',
+			var query = getConnection().query('SELECT id, email_address, can_share_email, user_name, name, tagline, is_admin FROM User WHERE id = ?;',
 				userDesc.id);
 			reportQueryActive();
 			var error_generated = false;
@@ -102,7 +102,9 @@ function getUserData(userDesc, callback) {
 					name: res.name,
 					user_name: res.user_name,
 					tagline: res.tagline,
-					is_admin: res.is_admin[0]
+					is_admin: res.is_admin[0],
+					email: res.email_address,
+					can_share_email: res.can_share_email[0]
 				};
 			});
 			query.on('end', function() {
@@ -204,6 +206,10 @@ function addUser(userDesc, callback) {
 		callback(null, 'No name property of userDesc passed - cannot create user');
 	} else if (!userDesc.password) {
 		callback(null, 'No password property of userDesc passed - cannot create user');
+	} else if (!userDesc.email) {
+		callback(null, 'No email property of userDesc passed - cannot create user');
+	} else if (!/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}\b/.test(userDesc.email)) {
+		callback(null, 'Not a valid email addresss!');
 	} else {
 		// Make sure there is no user with given username...
 		getUserData({ user_name: userDesc.user_name }, function(user, err) {
@@ -243,8 +249,8 @@ function addUser(userDesc, callback) {
 		console.log('Inserting data...');
 		console.log(userDesc);
 		console.log('pw_hash: ' + pw_hash);
-		var insert_query = getConnection().query('INSERT INTO User (user_name, name, pass_hash, tagline) VALUES (?, ?, ?, ?);',
-			[userDesc.user_name, userDesc.name, pw_hash, userDesc.tagline]);
+		var insert_query = getConnection().query('INSERT INTO User (user_name, name, pass_hash, tagline, email_address) VALUES (?, ?, ?, ?, ?);',
+			[userDesc.user_name, userDesc.name, pw_hash, userDesc.tagline, userDesc.email]);
 		reportQueryActive();
 		var error_generated = false;
 		var toReturn;

@@ -1,11 +1,11 @@
 'use strict';
 
 var problem_page = require('../page_builders/problem_page'),
-	problem_dao = require('../dao/problem_dao'),
-	error_page = require('../page_builders/error_page'),
-	fs = require('fs'),
-	submit = require('./submit'),
-	judge = require('../submission/judge');
+problem_dao = require('../dao/problem_dao'),
+error_page = require('../page_builders/error_page'),
+fs = require('fs'),
+submit = require('./submit'),
+judge = require('../submission/judge');
 
 // prob_subsystem: response, request, compData, problemData, remainingPath
 var prob_subsystem = {
@@ -16,25 +16,31 @@ var prob_subsystem = {
 function route(response, request, compData, problemID, remainingPath) {
 	console.log('problem.js: Routing request for problem ' + compData.id + ':' + problemID);
 
-	if (!remainingPath || remainingPath === '') {
-		showProblemPage(response, request, compData, problemID);
-	} else if (remainingPath.indexOf('/desc') == 0) {
-		// Load an asset...
-		loadProblemDescription(response, request, problemID);
-	} else {
-		var subsys_path = remainingPath;
-		if (subsys_path.indexOf('/', 1) > 0) {
-			subsys_path = remainingPath.substr(0, subsys_path.indexOf('/', 1));
-			remainingPath = remainingPath.substr(subsys_path.indexOf('/', 1));
+	problem_dao.getProblemData(problemID, function (problemData, err) {
+		if (err) {
+			console.log('problem.js: Could not load page because of error in DAO: ' + err);
+			error_page.ShowErrorPage(response, request, 'Internal Data Error', 'Internal Data error, could not load page - please check logs');
+		} else if (problemData.comp_id != compData.id) {
+			// TODO KIP: route to 'I see what you did there!' hacker avoidance
+			//  page.
+			response.writeHead(200, {'Content-Type': 'text/html'});
+			response.write('I see what you did there! <a href="/competition/c' + compData.id + '">Don\'t.</a>');
+			response.end();
 		} else {
-			remainingPath = undefined;
-		}
-
-		problem_dao.getProblemData(problemID, function (problemData, err) {
-			if (err) {
-				console.log('problem.js: Could not load page because of error in DAO: ' + err);
-				error_page.ShowErrorPage(response, request, 'Internal Data Error', 'Internal Data error, could not load page - please check logs');
+			if (!remainingPath || remainingPath === '') {
+				showProblemPage(response, request, compData, problemID);
+			} else if (remainingPath.indexOf('/desc') == 0) {
+				// Load an asset...
+				loadProblemDescription(response, request, problemID);
 			} else {
+				var subsys_path = remainingPath;
+				if (subsys_path.indexOf('/', 1) > 0) {
+					subsys_path = remainingPath.substr(0, subsys_path.indexOf('/', 1));
+					remainingPath = remainingPath.substr(subsys_path.indexOf('/', 1));
+				} else {
+					remainingPath = undefined;
+				}
+
 				if (prob_subsystem[subsys_path]) {
 					console.log('--- Subysstem Path: ' + subsys_path);
 					console.log('--- Remaining Path: ' + remainingPath);
@@ -43,8 +49,8 @@ function route(response, request, compData, problemID, remainingPath) {
 					error_page.ShowErrorPage(response, request, '404 Not Found', 'Could not find the file specified');
 				}
 			}
-		});
-	}
+		}
+	});
 }
 
 function showProblemPage(response, request, compData, problemID) {

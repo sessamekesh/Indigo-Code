@@ -37,6 +37,8 @@ function GenerateRegistrationPage(request, fields) {
 			+ '\n\t<input type="password" name="confirm_password" value=""><br />'
 			+ '\n\t<label for="tagline">Tagline*</label>'
 			+ '\n\t<input type="text" name="tagline" value="' + ((fields.tagline) ? fields.tagline : '') + '"><br />'
+			+ '\n\t<label for="email">Email Address</label>'
+			+ '\n\t<input type="text" name="email" value=""><br />'
 			+ '\n\t<input type="submit" name="submit" value="Register!"><br />'
 			+ '\n</form><br />'
 			+ '\n<i>* Your tagline will appear by your name to all users who view your public information<br />'

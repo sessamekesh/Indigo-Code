@@ -96,7 +96,8 @@ function registerUser(response, request) {
 						user_name: fields.username,
 						password: fields.password,
 						name: fields.name,
-						tagline: fields.tagline
+						tagline: fields.tagline,
+						email: fields.email
 					}, function(userData, err) {
 						if (err) {
 							console.log('Error in inserting user data - ' + err);

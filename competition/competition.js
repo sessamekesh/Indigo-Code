@@ -11,41 +11,7 @@ var error_page = require('../page_builders/error_page'),
 
 comp_subsystem['/scoreboard'] = scoreboard;
 
-/* --------Competition Subsystem-------- *\
-	- Anything dealing with any competition passes through this gate
-	-- This includes administrative competition functions
-	-- This includes viewing problems
-	-- This includes submissions
-
-	- This gate is where users are authorized to access a competition
-	----- PASS CONDITIONS -----
-	: Competition is public and expired
-	: Competition is ongoing, user is an admin or peasant
-	: Competition is expired and private, user is an admin or peasant
-	: Competition is upcoming, user is an admin
-
-	----- FAIL CONDITIONS -----
-	: Competition is non-public and user is a guest
-	: Competition is upcoming and user is a peasant or guest
-	: Competition is ongoing and user is a guest
-
-	------ Competition Subsystems -----
-	The function 'route' changes for competition subsystems. Any subsystems
-	 that are part of a specific competition (denoted by 'c' followed by a number,
-	 like c01, c2, or c123) are instead routed through the comp_subsystem object.
-	This behaves like the subsystem object, but the route function should instead have
-	 this prototype:
-
-	route(respone, request, remainingPath, compData)
-
-	 where compData is an object with the following properties:
-	 {
-		id, name, is_private, start_date, end_date
-	 }
-
-	This is a nice caching method, don't you think?
-
-	----------- Improvements for V0.3 -----------
+/* 	----------- Improvements for V0.3 -----------
 	- Cache user authorization statuses - instead of hitting MySQL database each time
 	++ Cache competitions in system itself (store for some time all data, check against cached values?)
 */

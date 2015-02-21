@@ -5,7 +5,8 @@ var error_page = require('../page_builders/error_page'),
 	submission_dao = require('../dao/submission_dao'),
 	language_dao = require('../dao/language_dao'),
 	owl_router = require('../lang_subsystems/owl_router'),
-	fs = require('fs');
+	fs = require('fs'),
+	SUBMISSION_TIMEOUT_TIME = 30000;
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
@@ -13,6 +14,11 @@ function route(response, request, compData, problemData, remainingPath) {
 	if (remainingPath && remainingPath != '') {
 		console.log('Error - non-empty remaining path, ' + remainingPath);
 		error_page.ShowErrorPage(response, request, 'Security Error', 'A path that should not be reached has been reached. Access denied.');
+	} else if (request.session.data.user === undefined
+		|| request.session.data.user === 'Guest'
+		|| request.session.data.user === 'IncorrectLogin') {
+		console.log('Error - not logged in person tried to submit!');
+		error_page.ShowErrorPage(response, request, 'Access Denied', 'You must be logged in to submit solutions to problems');
 	} else {
 		judge_submission(response, request, compData, problemData);
 	}
@@ -33,8 +39,12 @@ function judge_submission(response, request, compData, problemData) {
 			original_filename = files.submission_file.name;
 			
 			// (1) Record submission data to SQL
+			console.log(Date.now());
+			// TODO KIP: Do a 'setTimeout function'
+			//  for like 30 seconds - if the status has not changed from
+			//  'Q', remove it and prompt user to try again.
 			submission_dao.reportSubmissionReceived(fields.language,
-				problemData.id, request.session.data.user.id, Date.now(),
+				problemData.id, request.session.data.user.id, new Date().valueOf() / 1000,
 				function (submission_id, error) {
 					if (error) {
 						console.log('judge: ERR SQL Error reporting received submission: ' + error);
@@ -44,6 +54,18 @@ function judge_submission(response, request, compData, problemData) {
 						newPath = './data/submits/s' + submission_id;
 						moveFile(oldPath, newPath, afterFileMoved);
 						submissionID = submission_id;
+
+						setTimeout(function () {
+							submission_dao.checkSubmissionTimeout(submission_id,
+								function() { // Timeout
+									console.log('judge: Submission ' + submission_id + ' has timed out!');
+									// TODO KIP: Notify socket here that submision timed out due to internal error
+								},
+								function (error){
+									console.log('judge: Failed to check submission timeout - ' + error);
+								}
+							);
+						}, SUBMISSION_TIMEOUT_TIME);
 					}
 				}
 			);
@@ -140,66 +162,5 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 		});
 	}
 }
-
-/*
-function judge_submission(response, request) {
-	console.log('Submission received!!! :D :D :D');
-
-	var subDesc, subData;
-	// Get submission description
-
-	var form = new formidable.IncomingForm();
-	console.log('Parsing form...');
-	form.parse(request, function(error, fields, files) {
-		console.log('Apparently, parsing is finished');
-		if (error) {
-			console.log('Error: ' + error);
-			response.writeHead(200, {'Content-Type': 'text/plain'});
-			response.write('Failed to parse incoming form - ' + error);
-			response.end();
-			return;
-		} else if (!request.session.data.userData.submitting_for) {
-			console.log('Error - submitting_for variable did not reach judge_submission (requestHandlers.js)');
-			response.writeHead(200, {'Content-Type': 'text/plain'});
-			response.write('Backend error - please notify developers (and check log)');
-			response.end();
-			return;
-		}
-
-		// Add on the selected language to the submission description...
-		request.session.data.userData.submitting_for.lang_id = fields.language;
-
-		// We have our submission data...
-		judge.CreateSubmissionJudgePage(
-			request.session.data.userData, // userData
-			request.session.data.userData.submitting_for, // subDesc
-			files.submissionfile.path, // subData
-			files.submissionfile.name, // fileName
-			function(page, err) { // callback
-				if (err) {
-					console.log('Error in starting judge process - ' + err);
-					response.writeHead(200, {'Content-Type': 'text/plain'});
-					response.write('Could not start judge process - ' + err);
-					response.end();
-				} else {
-					page.render(function(contents, err) {
-						if (err) {
-							console.log('Error in rendering judge page - ' + err);
-							response.writeHead(200, {'Content-Type': 'text/plain'});
-							response.write('Could not render judge process page - ' + err);
-							response.end();
-						} else {
-							console.log('Writing rendered judge page');
-							response.writeHead(200, {'Content-Type': 'text/html'});
-							response.write(contents);
-							response.end();
-						}
-					});
-				}
-			}
-		);
-	});
-}
-*/
 
 exports.route = route;
