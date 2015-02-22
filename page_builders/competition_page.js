@@ -33,26 +33,14 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 		return null;
 	}
 
-	console.log('Attempting to create socket /CT' + compData.id);
-	socket_router.AddSocketRouter({
-		namespace: '/CT' + compData.id,
-		on_connect: function(socket) {
-			userName = (userData) ? userData.user_name : 'Guest';
-			console.log('New connection from ' + userName + ' requesting time remaining for competition ' + compData.name);
 
-			socket.on('r_time_remaining', function (tr) {
-				socket.emit('time_remaining', (compData.end_date - Date.now()));
-			});
-
-			socket.on('r_time_until_start', function (tr) {
-				socket.emit('time_until_start', (compData.start_date - Date.now()));
-			});
-
-			socket.on('disconnect', function() {
-				console.log('/CT' + compData.id + ' connection from ' + userName + ' closed.');
-			});
-		}
-	});
+	if (compData.start_date < Date.now() && compData.end_date > Date.now()) {
+		console.log('competition_page: Requesting time remaining socket for' + compData.id);
+		require('../sockets/time_remaining_socket').requestTimeRemainingSocket(compData);
+	} else if (compData.start_date > Date.now()) {
+		console.log('competition_page: Requesting time until start socket for ' + compData.id);
+		require('../sockets/time_until_start_socket').requestTimeUntilStartSocket(compData);
+	}
 
 	var toReturn = {};
 
@@ -85,7 +73,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 				+ '\n\t<div id="login_bit">';
 			user_info_scripts = userInfoObject.generate_scripts();
 			for (var required_include in user_info_scripts.required_includes) {
-				required_client_includes[required_include] = 'Y';
+				required_client_includes[user_info_scripts.required_includes[required_include]] = 'Y';
 			}
 			userInfoObject.render(function(data, error) {
 				if (error) {
@@ -201,7 +189,6 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 }
 
 function GoronCompetitionUserInfo(userData, compData) {
-	console.log('Creating goron competition user info tab...');
 	console.log(userData);
 
 	var toReturn = {};
@@ -237,7 +224,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 		};
 
 		toReturn.render = function(callback) {
-			console.log('Rendering competition user tab for guest...');
 			var user_info_code = '<form action="/user/login" method="post">'
 				+ '\n\t<input type="text" name="username" value="Username" /><br />'
 				+ '\n\t<input type="password" name="password" value="" /><br />'
@@ -246,8 +232,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 				+ '\n</form>';
 			if (compData.start_date < Date.now() && compData.end_date > Date.now() && compData.is_private == false) {
 				// Set up a socket to show how much time is remaining.
-				user_info_code += '\n<br />'
-					+ '\n<span id="ctr" onclick="trs.emit(\'r_time_remaining\');">TR</span>';
 			} else {
 				// No such socket
 			}
@@ -259,7 +243,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 		}
 
 		toReturn.render = function(callback) {
-			console.log('Rendering Goron user tab for an incorrect login');
 			callback('<span>Incorrect login credentials!</span><br />'
 				+ '\n<form action="/user/login" method="post">'
 				+ '\n\t<input type="text" name="username" value="Username" /><br />'
@@ -294,11 +277,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 						+ '\n\t\tctr_f.innerHTML = \'<b>Time is up!</b>\';'
 						+ '\n\t}'
 						+ '\n});'
-						+ '\n\nvar requestTimeRemaining = function () {'
-						+ '\n\ttrs.emit(\'r_time_remaining\');'
-						+ '\n\tif (running) { setTimeout(requestTimeRemaining, 1000); }'
-						+ '\n}'
-						+ '\n\nsetTimeout(requestTimeRemaining, 1);'
 				};
 			} else if (compData.start_date > Date.now()) {
 				// Upcoming competition
@@ -306,7 +284,7 @@ function GoronCompetitionUserInfo(userData, compData) {
 					// TODO: Add 'going' field, that stops requesting time remaining after
 					//  the competition has started / ended.
 					required_includes: ['https://cdn.socket.io/socket.io-1.2.0.js'],
-						script_text: 'var trs = io(\'/CT' + compData.id + '\'),'
+						script_text: 'var trs = io(\'/CS' + compData.id + '\'),'
 						+ '\n\trunning = true;'
 						+ '\n\ntrs.on(\'time_until_start\', function(tr) {'
 						+ '\n\tconsole.log(\'Time until start event fired, with param: \' + tr);'
@@ -324,11 +302,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 						+ '\n\t\tctr_f.innerHTML = \'<b>Competition has started! Refresh page to view!</b>\';'
 						+ '\n\t}'
 						+ '\n});'
-						+ '\n\nvar requestTimeRemaining = function () {'
-						+ '\n\ttrs.emit(\'r_time_until_start\');'
-						+ '\n\tif (running) { setTimeout(requestTimeRemaining, 1000); }'
-						+ '\n}'
-						+ '\n\nsetTimeout(requestTimeRemaining, 1);'
 				}
 			} else {
 				return { required_includes: [], script_text: '' };
@@ -377,11 +350,6 @@ function GoronCompetitionUserInfo(userData, compData) {
 					+ '\n\t\tctr_f.innerHTML = \'<b>Time is up!</b>\';'
 					+ '\n\t}'
 					+ '\n});'
-					+ '\n\nvar requestTimeRemaining = function () {'
-					+ '\n\ttrs.emit(\'r_time_remaining\');'
-					+ '\n\tif (running) { setTimeout(requestTimeRemaining, 1000); }'
-					+ '\n}'
-					+ '\n\nsetTimeout(requestTimeRemaining, 1);'
 			};
 		}
 
@@ -514,3 +482,5 @@ function GoronCompetitionSidebar(userData, compData) {
 }
 
 exports.GoronCompetitionPage = GoronCompetitionPage;
+exports.GoronCompetitionUserInfo = GoronCompetitionUserInfo;
+exports.GoronCompetitionSidebar = GoronCompetitionSidebar;

@@ -1,0 +1,9 @@
+This is the documentation. Don't worry, before I release it formally I'll document everything. It's all in a physical notebook which I keep by my bed.
+
+Socket Namespaces:
+
+-COMPETITION
+--CT: Time until competition ends (ongoing competition)
+--CS: Time until competition begins (upcoming competition)
+--PR: Problem Results. Responsible for sending freshly solved submission results
++++ submission_finished

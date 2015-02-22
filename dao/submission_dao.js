@@ -99,16 +99,17 @@ function checkSubmissionTimeout(submission_id, timeout_callback, error_callback)
 function getProblemSubmissions(problemID, start, end, callback) {
 	console.log('submission_dao: Retrieving submissions for problem ID ' + problemID);
 	getConnection().query(
-		'SELECT User.user_name AS user_name, User.tagline AS user_tagline, Language.name AS lang_name, Problem.name AS problem_name, result, notes'
+		'SELECT Submission.id AS submission_id, submission_time, User.user_name AS user_name, User.tagline AS user_tagline,'
+		+ ' Language.name AS lang_name, Problem.name AS problem_name, result, notes'
 		+ ' FROM Submission'
 		+ ' LEFT JOIN User ON Submission.user_id = User.id'
 		+ ' LEFT JOIN Problem ON Submission.problem_id = Problem.id'
 		+ ' LEFT JOIN Language ON Language.id = Submission.lang_id'
 		+ ' WHERE Submission.problem_id = ? ORDER BY Submission.submission_time DESC'
-			+ (start !== undefined && end !== undefined) ? ' LIMIT ?, ?;' : '',
-		(start !== undefined && end !== undefined)
-			? [problemID, start, end]
-			: problemID,
+			+ ((start !== undefined && end !== undefined) ? ' LIMIT ?, ?;' : ';'),
+		((start !== undefined && end !== undefined)
+			? [problemID, start, (end - start)]
+			: problemID),
 		function (err, result) {
 			if (err) {
 				callback(null, err);

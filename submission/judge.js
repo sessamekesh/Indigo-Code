@@ -6,7 +6,8 @@ var error_page = require('../page_builders/error_page'),
 	language_dao = require('../dao/language_dao'),
 	owl_router = require('../lang_subsystems/owl_router'),
 	fs = require('fs'),
-	SUBMISSION_TIMEOUT_TIME = 30000;
+	result_listener_socket = require('../sockets/result_listener_socket'),
+	SUBMISSION_TIMEOUT_TIME = 45000;
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
@@ -89,11 +90,13 @@ function judge_submission(response, request, compData, problemData) {
 	});
 
 	// (5) Record judgement result
-	function recordResult(resultData, error) {
+	function recordResult(result, notes) {
 		console.log('judge: Result is to be recorded here.');
-		console.log(resultData);
+		console.log(result);
 		// (6) Broadcast message via socket
-		// TODO KIP: Broadcast this message
+		// TODO KIP: This is where you discriminate which notes are not
+		//  to be viewed by the user, and which ones are to be viewed.
+		result_listener_socket.broadcastResult(problemData.id, result.submission_id, result.result, result.notes);
 	}
 }
 
@@ -155,6 +158,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 				callback(null, 'judge: ERR recording results: ' + err);
 			} else {
 				callback({
+					submission_id: submissionID,
 					result: result,
 					notes: notes
 				});

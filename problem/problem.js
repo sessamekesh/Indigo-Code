@@ -10,7 +10,8 @@ judge = require('../submission/judge');
 // prob_subsystem: response, request, compData, problemData, remainingPath
 var prob_subsystem = {
 	'/submit': submit,
-	'/plea_to_the_gods_of_programming': judge // This is where you put submission receival
+	'/plea_to_the_gods_of_programming': judge, // This is where you put submission receival
+	'/submissions': require('../submission/submission_page')
 };
 
 function route(response, request, compData, problemID, remainingPath) {
@@ -35,15 +36,16 @@ function route(response, request, compData, problemID, remainingPath) {
 			} else {
 				var subsys_path = remainingPath;
 				if (subsys_path.indexOf('/', 1) > 0) {
-					subsys_path = remainingPath.substr(0, subsys_path.indexOf('/', 1));
-					remainingPath = remainingPath.substr(subsys_path.indexOf('/', 1));
+					subsys_path = remainingPath.substr(0, remainingPath.indexOf('/', 1));
+					remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
 				} else {
 					remainingPath = undefined;
 				}
 
+				console.log('--- Subysstem Path: ' + subsys_path);
+				console.log('--- Remaining Path: ' + remainingPath);
+
 				if (prob_subsystem[subsys_path]) {
-					console.log('--- Subysstem Path: ' + subsys_path);
-					console.log('--- Remaining Path: ' + remainingPath);
 					prob_subsystem[subsys_path].route(response, request, compData, problemData, remainingPath);
 				} else {
 					error_page.ShowErrorPage(response, request, '404 Not Found', 'Could not find the file specified');

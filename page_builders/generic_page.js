@@ -1,11 +1,15 @@
 var competition_dao = require('../dao/competition_dao');
 
+// NEXT VERSION: Don't do it this way. Just... don't.
+
 // Returns a GoronPage with a render() function
 function GoronPage(pageDesc) {
 	console.log('Creating new page for display...');
 
 	var page = {},
-		version = 'USU ACM Competition Framework 0.2 - Goron';
+		version = 'USU ACM Competition Framework 0.2 - Goron',
+		script_dependencies = [],
+		script_text;
 
 	if (!pageDesc) {
 		console.log('Cannot create page - no description provided!');
@@ -48,39 +52,153 @@ function GoronPage(pageDesc) {
 		renderHead();
 
 		function renderHead() {
-			pageDesc.header.render(function(content, err) {
-				console.log('Rendering header for ' + pageDesc.title + '...');
-				if (err) {
-					callback(null, err);
+			console.log('generic_page: Entered renderHead');
+			if (pageDesc.header.gen_dependencies !== undefined) {
+				pageDesc.header.gen_dependencies(function (dependencies, err) {
+					if (!err) {
+						for (var i = 0; i < dependencies.length; i++) {
+							script_dependencies.push(dependencies[i]);
+						}
+					} else {
+						console.log('generic_page: Error generating dependencies for head: ' + err);
+					}
+					check_scripts();
+				});
+			} else {
+				check_scripts();
+			}
+
+			function check_scripts() {
+				if (pageDesc.header.gen_scripts !== undefined) {
+					pageDesc.header.gen_scripts(function (scriptText, err) {
+						if (err) {
+							console.log('generic_page: Error generating scripts for head: ' + err);
+						} else {
+							if (script_text === undefined) {
+								script_text = scriptText;
+							} else {
+								script_text += scriptText;
+							}
+						}
+						finish();
+					});
 				} else {
-					headString = content;
-					renderBody();
+					finish();
 				}
-			});
+			}
+
+			function finish() {
+				console.log('generic_page: Entered renderHead FINISH');
+				pageDesc.header.render(function(content, err) {
+					if (err) {
+						console.log('generic_page: ERR rendering header: ' + err);
+						callback(null, err);
+					} else {
+						headString = content;
+						renderBody();
+					}
+				});
+			}
 		}
 
 		function renderBody() {
-			pageDesc.body.render(function(content, err) {
-				console.log('Rendering body for ' + pageDesc.title + '...');
-				if (err) {
-					callback(null, err);
+			console.log('generic_page: Entered renderBody');
+			if (pageDesc.body.gen_dependencies !== undefined) {
+				pageDesc.body.gen_dependencies(function (dependencies, err) {
+					if (!err) {
+						for (var i = 0; i < dependencies.length; i++) {
+							script_dependencies.push(dependencies[i]);
+						}
+					} else {
+						console.log('generic_page: Error generating dependencies for head: ' + err);
+					}
+					check_scripts();
+				});
+			} else {
+				check_scripts();
+			}
+
+			function check_scripts() {
+				if (pageDesc.body.gen_scripts !== undefined) {
+					pageDesc.body.gen_scripts(function (scriptText, err) {
+						if (err) {
+							console.log('generic_page: Error generating scripts for head: ' + err);
+						} else {
+							if (script_text === undefined) {
+								script_text = scriptText;
+							} else {
+								script_text += scriptText;
+							}
+						}
+						finish();
+					});
 				} else {
-					bodyString = content;
-					renderSidebar();
+					finish();
 				}
-			});
+			}
+
+			function finish() {
+				console.log('generic_page: Entered renderBody FINISH');
+				pageDesc.body.render(function(content, err) {
+					console.log('Rendering body for ' + pageDesc.title + '...');
+					if (err) {
+						callback(null, err);
+					} else {
+						bodyString = content;
+						renderSidebar();
+					}
+				});
+			}
 		}
 
 		function renderSidebar() {
-			pageDesc.sidebar.render(function(content, err) {
-				console.log('Rendering sidebar for ' + pageDesc.title + '...');
-				if (err) {
-					callback(null, err);
+			console.log('generic_page: Entered renderSidebar');
+			if (pageDesc.sidebar.gen_dependencies !== undefined) {
+				pageDesc.sidebar.gen_dependencies(function (dependencies, err) {
+					if (!err) {
+						for (var i = 0; i < dependencies.length; i++) {
+							script_dependencies.push(dependencies[i]);
+						}
+					} else {
+						console.log('generic_page: Error generating dependencies for head: ' + err);
+					}
+					check_scripts();
+				});
+			} else {
+				check_scripts();
+			}
+
+			function check_scripts() {
+				if (pageDesc.sidebar.gen_scripts !== undefined) {
+					pageDesc.sidebar.gen_scripts(function (scriptText, err) {
+						if (err) {
+							console.log('generic_page: Error generating scripts for head: ' + err);
+						} else {
+							if (script_text === undefined) {
+								script_text = scriptText;
+							} else {
+								script_text += scriptText;
+							}
+						}
+						finish();
+					});
 				} else {
-					sidebarString = content;
-					compile();
+					finish();
 				}
-			});
+			}
+
+			function finish() {
+				console.log('generic_page: Entered renderSidebar FINISH');
+				pageDesc.sidebar.render(function(content, err) {
+					console.log('Rendering sidebar for ' + pageDesc.title + '...');
+					if (err) {
+						callback(null, err);
+					} else {
+						sidebarString = content;
+						compile();
+					}
+				});
+			}
 		}
 
 		function compile() {
@@ -90,8 +208,22 @@ function GoronPage(pageDesc) {
 				+ '\n\t<head>'
 				+ '\n\t\t<title>' + pageDesc.title + '</title>'
 				+ '\n\t\t<meta charset="utf-8">'
-				+ '\n\t\t<link rel="stylesheet" type="text/css" href="' + pageDesc.stylesheet + '">'
-				+ '\n\t</head>'
+				+ '\n\t\t<link rel="stylesheet" type="text/css" href="' + pageDesc.stylesheet + '">';
+
+			for (var i = 0; i < script_dependencies.length; i++) {
+				htmlString += '\n\t\t<script src="' + script_dependencies[i] + '"></script>';
+			}
+
+			if (script_text !== undefined) {
+				var script_text_lines = script_text.split('\n');
+				htmlString += '\n\t\t<script>';
+				for (var i = 0; i < script_text_lines.length; i++) {
+					htmlString += '\n\t\t\t' + script_text_lines[i];
+				}
+				htmlString += '\n\t\t</script>';
+			}
+
+			htmlString += '\n\t</head>'
 				+ '\n\t<body>'
 				+ '\n\t<div id="container">';
 			var headLines = headString.split('\n');
