@@ -88,4 +88,3 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		callback('AC', 'AC on ' + test_array.length + ' tests');
 	}
 }
-// TODO KIP: Write function test (model after cpp98)

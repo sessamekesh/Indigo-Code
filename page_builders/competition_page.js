@@ -469,7 +469,7 @@ function GoronCompetitionSidebar(userData, compData) {
 					} else {
 						for (var i = 0; i < res.length; i++) {
 							toReturn += '\n\t\t<li><a href="/competition/c' + compData.id + '/p' + res[i].id + '">'
-								+ res[i].name + '</a></li>';
+								+ res[i].name + '</a> (<a href="/competition/c' + compData.id + '/p' + res[i].id + '/submit">submit</a>)</li>';
 						}
 					}
 

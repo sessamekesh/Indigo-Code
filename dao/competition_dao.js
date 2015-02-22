@@ -57,12 +57,12 @@ function getCompetitionData(compDesc, callback) {
 				callback(competition_list);
 			}
 			reportQueryEnded();
-		})
+		});
 	} else if (compDesc.id) {
 		// Grabbing one competition only
 		console.log('Retrieving competition by ID: ' + compDesc.id);
 
-		var query = getConnection().query('SELECT id, name, is_private, start_date, end_date FROM Competition WHERE id = ?;', compDesc.id);
+		var query = getConnection().query('SELECT id, name, is_private, start_date, end_date, max_team_size, incorrect_submission_time_penalty FROM Competition WHERE id = ?;', compDesc.id);
 		reportQueryActive();
 		var error_generated = false;
 		var result;
@@ -76,7 +76,9 @@ function getCompetitionData(compDesc, callback) {
 				name: res.name,
 				is_private: res.is_private[0],
 				start_date: res.start_date,
-				end_date: res.end_date
+				end_date: res.end_date,
+				team_size: res.max_team_size,
+				incorrect_submission_time_penalty: res.incorrect_submission_time_penalty
 			};
 		});
 		query.on('end', function() {
@@ -91,19 +93,41 @@ function getCompetitionData(compDesc, callback) {
 	}
 }
 
-function getUpcomingCompetitions(callback) {
+//////////////////////////////////////////////////
+// 
+// getUpcomingCompetitions
+//  timeframe: Time in seconds that is allowable (null for any period in future)
+//
+//////////////////////////////////////////////////
+function getUpcomingCompetitions(timeframe, callback) {
 	console.log('competition_dao: Getting upcoming competitions list...');
-	// NEXT VERSION: Do ALL of your queries like this...
-	getConnection().query('SELECT id, name, is_private FROM Competition WHERE start_date > NOW();',
-		function(err, rows) {
-			if (err) {
-				callback(null, 'MYSQL error: ' + err);
-			} else {
-				callback(rows);
-			}
-			reportQueryEnded();
-		});
-	reportQueryActive();
+	var queryText;
+
+	if (timeframe === undefined || timeframe === null || timeframe === 0) {
+		// NEXT VERSION: Do ALL of your queries like this...
+		getConnection().query('SELECT id, name, is_private FROM Competition WHERE start_date > NOW();',
+			function(err, rows) {
+				if (err) {
+					callback(null, 'MYSQL error: ' + err);
+				} else {
+					callback(rows);
+				}
+				reportQueryEnded();
+			});
+		reportQueryActive();
+	} else {
+		getConnection().query('SELECT id, name, is_private FROM Competition WHERE start_date > NOW() AND DATE_SUB(start_date, INTERVAL ? SECOND) < NOW();',
+			timeframe,
+			function(err, rows) {
+				if (err) {
+					callback(null, 'MYSQL error: ' + err);
+				} else {
+					callback(rows);
+				}
+				reportQueryEnded();
+			});
+		reportQueryActive();
+	}
 }
 
 function getOngoingCompetitions(callback) {

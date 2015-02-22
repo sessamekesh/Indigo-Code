@@ -1,4 +1,5 @@
-var competition_dao = require('../dao/competition_dao');
+var competition_dao = require('../dao/competition_dao'),
+	UPCOMING_TIME_WINDOW = 60 * 60 * 0.5; // 1/2 hour
 
 // NEXT VERSION: Don't do it this way. Just... don't.
 
@@ -52,7 +53,6 @@ function GoronPage(pageDesc) {
 		renderHead();
 
 		function renderHead() {
-			console.log('generic_page: Entered renderHead');
 			if (pageDesc.header.gen_dependencies !== undefined) {
 				pageDesc.header.gen_dependencies(function (dependencies, err) {
 					if (!err) {
@@ -88,7 +88,6 @@ function GoronPage(pageDesc) {
 			}
 
 			function finish() {
-				console.log('generic_page: Entered renderHead FINISH');
 				pageDesc.header.render(function(content, err) {
 					if (err) {
 						console.log('generic_page: ERR rendering header: ' + err);
@@ -102,7 +101,6 @@ function GoronPage(pageDesc) {
 		}
 
 		function renderBody() {
-			console.log('generic_page: Entered renderBody');
 			if (pageDesc.body.gen_dependencies !== undefined) {
 				pageDesc.body.gen_dependencies(function (dependencies, err) {
 					if (!err) {
@@ -138,7 +136,6 @@ function GoronPage(pageDesc) {
 			}
 
 			function finish() {
-				console.log('generic_page: Entered renderBody FINISH');
 				pageDesc.body.render(function(content, err) {
 					console.log('Rendering body for ' + pageDesc.title + '...');
 					if (err) {
@@ -152,7 +149,6 @@ function GoronPage(pageDesc) {
 		}
 
 		function renderSidebar() {
-			console.log('generic_page: Entered renderSidebar');
 			if (pageDesc.sidebar.gen_dependencies !== undefined) {
 				pageDesc.sidebar.gen_dependencies(function (dependencies, err) {
 					if (!err) {
@@ -188,7 +184,6 @@ function GoronPage(pageDesc) {
 			}
 
 			function finish() {
-				console.log('generic_page: Entered renderSidebar FINISH');
 				pageDesc.sidebar.render(function(content, err) {
 					console.log('Rendering sidebar for ' + pageDesc.title + '...');
 					if (err) {
@@ -404,7 +399,7 @@ function GoronSidebar(userData) {
 					+ '\n\t<ul>';
 
 				// Here: insert all competitions...
-				competition_dao.getUpcomingCompetitions(function(res, err) {
+				competition_dao.getUpcomingCompetitions(0, function(res, err) {
 					if (err) {
 						console.log('Error generating upcoming competitions: ' + err);
 					} else {
@@ -475,20 +470,40 @@ function GoronSidebar(userData) {
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
 					+ '\n\t</ul>'
-					+ '\n\t<hr>'
-					+ '\n\t<b>Current Competitions</b>'
-					+ '\n\t<ul>';
+					+ '\n\t<hr>';
 
-				competition_dao.getOngoingCompetitions(function (res, err) {
+				competition_dao.getUpcomingCompetitions(UPCOMING_TIME_WINDOW, function (res, err) {
 					if (err) {
-						console.log('Error getting ongoing competitions for peasant: ' + err);
+						console.log('generic_page: ERR getting upcoming competitions for peasant: ' + err);
 					} else {
-						for (var i = 0; i < res.length; i++) {
-							toReturn += '\n\t\t<li><a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+						console.log('DEBUG REMOVE: Getting upcoming: ');
+						console.log(res);
+						if (res.length > 0) {
+							toReturn += '\n\t<b>Upcoming Competitions</b>'
+								+ '\n\t<ul>';
+							for (var i = 0; i < res.length; i++) {
+								toReturn += '\n\t\t<li><a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+							}
+							toReturn += '\n\t</ul>';
 						}
 					}
-					afterCurrentCompetitions();
+					afterUpcomingCompetitions();
 				});
+
+				function afterUpcomingCompetitions() {
+					toReturn += '\n\t<b>Current Competitions</b>'
+						+ '\n\t<ul>';
+					competition_dao.getOngoingCompetitions(function (res, err) {
+						if (err) {
+							console.log('Error getting ongoing competitions for peasant: ' + err);
+						} else {
+							for (var i = 0; i < res.length; i++) {
+								toReturn += '\n\t\t<li><a href="/competition/c' + res[i].id + '">' + res[i].name + '</a></li>';
+							}
+						}
+						afterCurrentCompetitions();
+					});
+				}
 
 				function afterCurrentCompetitions() {
 					toReturn += '\n\t</ul>'

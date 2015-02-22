@@ -7,3 +7,12 @@ Socket Namespaces:
 --CS: Time until competition begins (upcoming competition)
 --PR: Problem Results. Responsible for sending freshly solved submission results
 +++ submission_finished
+
+-PROBLEM RESULTS
+--TLE: Time Limit Exceeded
+--BE: Build Error (do not dock)
+--RE: Runtime Error
+--WA: Wrong answer
+--IE: Internal Error (do not dock)
+--Q: Result Pending
+--AC: Answer Correct

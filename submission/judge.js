@@ -7,6 +7,7 @@ var error_page = require('../page_builders/error_page'),
 	owl_router = require('../lang_subsystems/owl_router'),
 	fs = require('fs'),
 	result_listener_socket = require('../sockets/result_listener_socket'),
+	scores_dao = require('../dao/scores_dao'),
 	SUBMISSION_TIMEOUT_TIME = 45000;
 
 function route(response, request, compData, problemData, remainingPath) {
@@ -40,7 +41,6 @@ function judge_submission(response, request, compData, problemData) {
 			original_filename = files.submission_file.name;
 			
 			// (1) Record submission data to SQL
-			console.log(Date.now());
 			// TODO KIP: Do a 'setTimeout function'
 			//  for like 30 seconds - if the status has not changed from
 			//  'Q', remove it and prompt user to try again.
@@ -91,12 +91,13 @@ function judge_submission(response, request, compData, problemData) {
 
 	// (5) Record judgement result
 	function recordResult(result, notes) {
-		console.log('judge: Result is to be recorded here.');
+		console.log('judge: Result is to be recorded here. Also, score is being updated.');
 		console.log(result);
 		// (6) Broadcast message via socket
-		// TODO KIP: This is where you discriminate which notes are not
-		//  to be viewed by the user, and which ones are to be viewed.
 		result_listener_socket.broadcastResult(problemData.id, result.submission_id, result.result, result.notes);
+
+		// (7) Update scores
+		scores_dao.updateScore(request.session.data.user.id, compData.id, compData.incorrect_submission_time_penalty);
 	}
 }
 

@@ -7,9 +7,6 @@ var generic_page = require('../page_builders/generic_page'),
 	result_listener_socket = require('../sockets/result_listener_socket');
 
 exports.route = function(response, request, compData, problemData, remainingPath) {
-	// TODO KIP: If there exists a /2, /3, etc..., use that to show the next
-	//  results (i.e., results 50-100, 100-150, etc.)
-
 	// TODO KIP: What if there is just a '/' ? Change that everywhere!
 	if (remainingPath === undefined || remainingPath === '' || remainingPath === '/') {
 		showSubmissionPage(response, request, compData, problemData, 0);
@@ -65,7 +62,7 @@ function submissionPageBody(problemData, page_num) {
 
 	// NEXT VERSION: Use static scripts, yo. This is miserable.
 	function gen_scripts(callback) {
-		// Todo: This is also where you would put a flash on submission received and
+		// TODO FRONTEND: This is also where you would put a flash on submission received and
 		//  all that front-end jazz.
 		var listener_script =
 			  'var res_listener = io(\'/PR' + problemData.id + '\'),'
