@@ -5,6 +5,9 @@ Framework for hosting coding competitions using Node.JS
 The framework itself only relies on the following dependencies:
 - nodejs (install <a href="http://nodejs.org/">here</a>)
 - mysql (sudo apt-get install mysql-server)
+- g++
+- javac
+- python
 
 Though, the NodeJS code itself requires on the following packages:
 - bcrypt (npm install bcrypt)
@@ -24,6 +27,7 @@ I'll get around to this before the first release, I'm sure.
 # Competition Results
 - AC: Answer Correct
 - WA: Wrong Answer
+- TLA: Time Limit Exceeded
 - RE: Runtime Error
 - BE: Build Error
 - TE: Testing Error

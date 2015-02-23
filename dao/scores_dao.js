@@ -1,7 +1,8 @@
 'use strict';
 
 var mysql = require('mysql'),
-	credentials = require('./credentials');
+	credentials = require('./credentials'),
+	problem_dao = require('./problem_dao');
 
 var connection,
 	active_query_count = 0;
@@ -21,11 +22,11 @@ function reportQueryActive() {
 function reportQueryEnded() {
 	active_query_count--;
 	if (active_query_count == 0) {
-		console.log('Closing connection problem_dao...');
+		console.log('Closing connection scores_dao...');
 		connection.end();
 		connection = undefined;
 	} else if (active_query_count < 0) {
-		console.log('problem_dao: wierd bug: somehow less than 0 connections are open');
+		console.log('scores_dao: wierd bug: somehow less than 0 connections are open');
 	}
 }
 
@@ -141,5 +142,48 @@ exports.updateScore = function(userID, competitionID, incorrect_submission_time_
 			);
 			reportQueryActive();
 		}
+	}
+}
+
+exports.getScoreboardData = function(compData, start, finish, callback) {
+	console.log('scores_dao: Getting scoreboard for competition ' + compData.name);
+	var query_text = 'SELECT User.user_name AS user_name, User.tagline AS tagline, '
+		+ 'Score.score AS score, Score.time_penalty AS time_penalty, ',
+		query_params = [];
+	// Add on a field for each problem
+	problem_dao.getProblemsInCompetition(compData.id, function (res, err) {
+		if (err) {
+			callback(null, 'Could not retrieve problems in competition: ' + err);
+		} else {
+			for (var i = 0; i < res.length; i++) {
+				query_text += 'IF((SELECT COUNT(*) FROM Submission WHERE problem_id = ? AND result = \'AC\') > 0, \'SOLVED\', '
+						+ 'IF((SELECT COUNT(*) FROM Submission WHERE problem_id = ? AND result <> \'AC\') < 0, \'ATTEMPTING\', \'EMPTY\')) AS '
+						+ '? ';
+				query_params.push(res[i].id);
+				query_params.push(res[i].id);
+				query_params.push('ps_' + res[i].id)
+			}
+			finishGeneratingAndPerformQuery();
+		}
+		reportQueryEnded();
+	});
+	reportQueryActive();
+
+	function finishGeneratingAndPerformQuery() {
+		query_text += 'FROM Score LEFT JOIN User ON Score.user_id = User.id '
+			+ 'WHERE competition_id = ? ORDER BY score DESC, time_penalty ASC LIMIT ?, ?;';
+		query_params.push(compData.id);
+		query_params.push(start);
+		query_params.push(finish - start);
+
+		getConnection().query(query_text, query_params, function (err, rows) {
+			if (err) {
+				callback (null, 'Could not retrieve scoreboard data - ' + err);
+			} else {
+				callback(rows);
+			}
+			reportQueryEnded();
+		});
+		reportQueryActive();
 	}
 }

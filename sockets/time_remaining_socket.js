@@ -5,37 +5,43 @@ var time_remaining_sockets = {},
 	TIMER_DELAY = 1111;
 
 exports.requestTimeRemainingSocket = function(compData) {
-	console.log('time_remaining_sockets: Checking ' + compData.id + '...');
 	if (time_remaining_sockets[compData.id] === undefined) {
+		console.log('time_remaining_sockets: Does not exist. Creating...');
 		time_remaining_sockets[compData.id] = {
 			n_connections: 0,
+			is_broadcasting: false,
 			socket: {
 				namespace: '/CT' + compData.id,
 				on_connect: function (socket) {
 					time_remaining_sockets[compData.id].n_connections++;
 					if (time_remaining_sockets[compData.id].n_connections === 1) {
-						console.log('time_remaining_sockets: Starting remaining time socket /CT' + compData.id);
-						beginBroadcasting(time_remaining_sockets[compData.id].io, compData);
+						if (!time_remaining_sockets[compData.id].is_broadcasting) {
+							time_remaining_sockets[compData.id].is_broadcasting = true;
+							beginBroadcasting(time_remaining_sockets[compData.id].io, compData);
+						}
 					}
 					socket.on('disconnect', function () {
 						time_remaining_sockets[compData.id].n_connections--;
-						if (time_remaining_sockets[compData.id].n_connections == 0) {
-							console.log('time_remaining_sockets: /CT' + compData.id + ' ceasing broadcasting; connections closed');
-						}
 					});
 				}
 			}
 		};
 
 		time_remaining_sockets[compData.id].io = socket_router.AddSocketRouter(time_remaining_sockets[compData.id].socket);
+	} else {
+		console.log('time_remaining_sockets: Exists. Not creating.')
 	}
 }
 
 function beginBroadcasting(socket, compData) {
-	if (time_remaining_sockets[compData.id].io !== undefined && time_remaining_sockets[compData.id].n_connections > 0) {
+	if (time_remaining_sockets[compData.id].io !== undefined && time_remaining_sockets[compData.id].is_broadcasting === true) {
 		time_remaining_sockets[compData.id].io.emit('time_remaining', (compData.end_date - Date.now()));
 		setTimeout(function() {
 			beginBroadcasting(socket, compData);
 		}, TIMER_DELAY);
+
+		if (time_remaining_sockets[compData.id].n_connections <= 0) {
+			time_remaining_sockets[compData.id].is_broadcasting = false;
+		}
 	}
 }

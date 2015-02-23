@@ -199,10 +199,11 @@ function GoronPage(pageDesc) {
 		function compile() {
 			htmlString = '<!DOCTYPE html>'
 				+ '\n<!-- PAGE GENERATOR VERSION: ' + version + ' -->'
-				+ '\n<html>'
+				+ '\n<html lang="en">'
 				+ '\n\t<head>'
 				+ '\n\t\t<title>' + pageDesc.title + '</title>'
 				+ '\n\t\t<meta charset="utf-8">'
+				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale: 1">'
 				+ '\n\t\t<link rel="stylesheet" type="text/css" href="' + pageDesc.stylesheet + '">';
 
 			for (var i = 0; i < script_dependencies.length; i++) {
@@ -220,7 +221,7 @@ function GoronPage(pageDesc) {
 
 			htmlString += '\n\t</head>'
 				+ '\n\t<body>'
-				+ '\n\t<div id="container">';
+				+ '\n\t<div id="container-fluid">';
 			var headLines = headString.split('\n');
 			for (var i = 0; i < headLines.length; i++) {
 				htmlString += '\n\t' + headLines[i];

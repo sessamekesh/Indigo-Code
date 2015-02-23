@@ -142,10 +142,11 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 
 			htmlString = '<!DOCTYPE html>'
 				+ '\n<!-- PAGE GENERATOR VERSION: USU ACM Competition Framework 0.2 - Goron -->'
-				+ '\n<html>'
+				+ '\n<html lang="en">'
 				+ '\n\t<head>'
 				+ '\n\t\t<title>USU ACM Competition: ' + compData.name + '</title>'
 				+ '\n\t\t<meta charset="utf-8">'
+				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale: 1">'
 				+ '\n\t\t<link rel="stylesheet" type="text/css" href="/style.css">';
 
 			for (var required_include in required_client_includes) {
@@ -166,7 +167,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			htmlString += '\n\t\t</script>'
 				+ '\n\t</head>'
 				+ '\n\t<body>'
-				+ '\n\t<div id="container">';
+				+ '\n\t<div id="container-fluid">';
 			var headLines = headString.split('\n');
 			for (var i = 0; i < headLines.length; i++) {
 				htmlString += '\n\t' + headLines[i];
