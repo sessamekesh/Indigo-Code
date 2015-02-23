@@ -6,7 +6,8 @@ var user = require('./user/user'),
 	fs = require('fs'),
 	error_page = require('./page_builders/error_page');
 
-var subsystem = {};
+var subsystem = {},
+	redirecting_pages = {};
 subsystem['/'] = statics;
 subsystem['/index'] = statics;
 subsystem['/user'] = user;
@@ -44,6 +45,8 @@ function route(pathname, response, request) {
 						type = 'text/html';
 					} else if (type === '.js') {
 						type = 'text/javascript';
+					} else if (type === '.gif') {
+						type = 'image/gif';
 					} else {
 						type = 'text/plain';
 					}

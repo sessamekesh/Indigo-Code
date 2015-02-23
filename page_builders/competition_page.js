@@ -65,12 +65,12 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 
 		function renderHead() {
 			console.log('Rendering header...');
-			headString = '<div id="header">'
-				+ '\n\t<div id="words_and_whatnot">'
+			headString = '<div id="header" class="row">'
+				+ '\n\t<div id="words_and_whatnot" class="col-md-10">'
 				+ '\n\t\t<h1 id="title">' + compData.name + '</h1>'
 				+ '\n\t\t<h2 id="subtitle">USU ACM</h2>'
 				+ '\n\t</div>'
-				+ '\n\t<div id="login_bit">';
+				+ '\n\t<div id="login_bit" class="col-md-2">';
 			user_info_scripts = userInfoObject.generate_scripts();
 			for (var required_include in user_info_scripts.required_includes) {
 				required_client_includes[user_info_scripts.required_includes[required_include]] = 'Y';
@@ -119,6 +119,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 					renderSidebar();
 				});
 			}
+			bodyString = '<div id="content" class="col-md-10">\n' + bodyString + '\n</div>';
 		}
 
 		function renderSidebar() {
@@ -146,8 +147,11 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 				+ '\n\t<head>'
 				+ '\n\t\t<title>USU ACM Competition: ' + compData.name + '</title>'
 				+ '\n\t\t<meta charset="utf-8">'
-				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale: 1">'
-				+ '\n\t\t<link rel="stylesheet" type="text/css" href="/style.css">';
+				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale=1">'
+				+ '\n\t\t<link rel="stylesheet" href="/bootstrap-3.3.2-dist/css/bootstrap.css">'
+				+ '\n\t\t<link rel="stylesheet" href="/style.css">'
+				+ '\n\t\t<script src="/jquery-1.11.2.min.js"></script>'
+				+ '\n\t\t<script src="/bootstrap-3.3.2-dist/js/bootstrap.js"></script>';
 
 			for (var required_include in required_client_includes) {
 				htmlString += '\n\t\t<script src="' + required_include + '"></script>';
@@ -167,11 +171,12 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			htmlString += '\n\t\t</script>'
 				+ '\n\t</head>'
 				+ '\n\t<body>'
-				+ '\n\t<div id="container-fluid">';
+				+ '\n\t<div id="container" class="container-fluid">';
 			var headLines = headString.split('\n');
 			for (var i = 0; i < headLines.length; i++) {
 				htmlString += '\n\t' + headLines[i];
 			}
+			htmlString += '\n\t<div class="row">';
 			var sidebarLines = sidebarString.split('\n');
 			for (var i = 0; i < sidebarLines.length; i++) {
 				htmlString += '\n\t' + sidebarLines[i];
@@ -180,7 +185,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			for (var i = 0; i < bodyLines.length; i++) {
 				htmlString +='\n\t' + bodyLines[i];
 			}
-			htmlString += '\n\t</div>\n\t</body>\n</html>';
+			htmlString += '\n\t</div>\n\t</div>\n\t</body>\n</html>';
 
 			callback(htmlString);
 		}
@@ -225,11 +230,13 @@ function GoronCompetitionUserInfo(userData, compData) {
 		};
 
 		toReturn.render = function(callback) {
-			var user_info_code = '<form action="/user/login" method="post">'
-				+ '\n\t<input type="text" name="username" value="Username" /><br />'
-				+ '\n\t<input type="password" name="password" value="" /><br />'
-				+ '\n\t<input type="submit" name="login" value="Login" />'
-				+ '\n\t<input type="submit" id="reg_button" name="register" value="Register" />'
+			var user_info_code = '<form action="/user/login" method="post" role="form">'
+				+ '\n\t<div class="form-group">'
+				+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+				+ '\n\t\t<input type="password" name="password" class="form-control" value="" /><br />'
+				+ '\n\t\t<input type="submit" class="btn" name="login" value="Login" />'
+				+ '\n\t\t<input type="submit" class="btn" id="reg_button" name="register" value="Register" />'
+				+ '\n\t</div>'
 				+ '\n</form>';
 			if (compData.start_date < Date.now() && compData.end_date > Date.now() && compData.is_private == false) {
 				// Set up a socket to show how much time is remaining.
@@ -244,12 +251,14 @@ function GoronCompetitionUserInfo(userData, compData) {
 		}
 
 		toReturn.render = function(callback) {
-			callback('<span>Incorrect login credentials!</span><br />'
-				+ '\n<form action="/user/login" method="post">'
-				+ '\n\t<input type="text" name="username" value="Username" /><br />'
-				+ '\n\t<input type="password" name="password" value="" /><br />'
-				+ '\n\t<input type="submit" name="login" value="Login" />'
-				+ '\n\t<input type="submit" name="register" value="Register" />'
+			callback('<p>Incorrect login credentials!</p>'
+				+ '<form action="/user/login" method="post" role="form">'
+				+ '\n\t<div class="form-group">'
+				+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+				+ '\n\t\t<input type="password" name="password" class="form-control" value="" /><br />'
+				+ '\n\t\t<input type="submit" class="btn" name="login" value="Login" />'
+				+ '\n\t\t<input type="submit" class="btn" id="reg_button" name="register" value="Register" />'
+				+ '\n\t</div>'
 				+ '\n</form>');
 		}
 	} else if (userData.is_admin == true) {
@@ -311,19 +320,19 @@ function GoronCompetitionUserInfo(userData, compData) {
 
 		toReturn.render = function(callback) {
 			console.log('Rendering competition user tab for admin ' + userData.user_name);
-			var userInfoText = '<span>Hello, sir <b>' + userData.user_name + '</b></span><br />'
-				+ '\n<i>' + userData.tagline + '</i>'
-				+ '\n<form action="/user/logout" method="post">'
-				+ '\n\t<input type="submit" value="Logout" />'
+			var userInfoText = '<p>Hello, sir <b>' + userData.user_name + '</b></p>'
+				+ '\n<p><i>' + userData.tagline + '</i></p>'
+				+ '\n<form action="/user/logout" method="post" role="form">'
+				+ '\n\t<div class="form-group">'
+				+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
+				+ '\n\t</div>'
 				+ '\n</form>\n<br />';
 			if (compData.start_date > Date.now()) {
 				// Display time until competition starts
-				userInfoText += '\n<br />'
-					+ '\n<span id="ctr">TR</span>';
+				userInfoText += '\n<p id="ctr">TR</p>';
 			} else if (compData.end_date > Date.now()) {
 				// Display time until competition is over
-				userInfoText += '\n<br />'
-					+ '\n<span id="ctr">TR</span>';
+				userInfoText += '\n<p id="ctr">TR</p>';
 			}
 			callback(userInfoText);
 		}
@@ -356,19 +365,19 @@ function GoronCompetitionUserInfo(userData, compData) {
 
 		toReturn.render = function(callback) {
 			console.log('Rendering competition user tab for peasant ' + userData.user_name);
-			var userInfoText = '<span>Hello, ' + userData.user_name + '</span><br />'
-				+ '\n<i>' + userData.tagline + '</i>'
-				+ '\n<form action="/user/logout" method="post">'
-				+ '\n\t<input type="submit" value="Logout" />'
+			var userInfoText = '<p>Hello, ' + userData.user_name + '</p>'
+				+ '\n<p><i>' + userData.tagline + '</i></p>'
+				+ '\n<form action="/user/logout" method="post" role="form">'
+				+ '\n\t<div class="form-group">'
+				+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
+				+ '\n\t</div>'
 				+ '\n</form>\n<br />';
 			if (compData.start_date > Date.now()) {
 				// Display time until competition starts
-				userInfoText += '\n<br />'
-					+ '\n<span id="ctr">TR</span>';
+				userInfoText += '\n<p id="ctr">TR</p>';
 			} else if (compData.end_date > Date.now()) {
 				// Display time until competition is over
-				userInfoText += '\n<br />'
-					+ '\n<span id="ctr">TR</span>';
+				userInfoText += '\n<p id="ctr">TR</p>';
 			}
 			callback(userInfoText);
 		}
@@ -385,7 +394,7 @@ function GoronCompetitionSidebar(userData, compData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for guest');
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
@@ -422,7 +431,7 @@ function GoronCompetitionSidebar(userData, compData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for admin ' + userData.user_name);
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
@@ -453,7 +462,7 @@ function GoronCompetitionSidebar(userData, compData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for peasant ' + userData.user_name);
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'

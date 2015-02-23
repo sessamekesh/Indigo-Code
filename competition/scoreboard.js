@@ -50,7 +50,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 			});
 
 			function generateTableHeader(scores_data) {
-				toCallback += '<table>'
+				toCallback += '<table class="table">'
 					+'\n\t<tr>'
 					+ '\n\t\t<th>User</th>';
 				problem_dao.getProblemsInCompetition(compData.id, function (res, err) {
@@ -60,7 +60,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 						for (var i = 0; i < res.length; i++) {
 							toCallback += '<th>' + res[i].name + '</th>';
 						}
-						toCallback += '\n\t</tr>';
+						toCallback += '\n\t<th>Score</th><th>Time Penalty</th></tr>';
 						generateTableBody(scores_data, res);
 					}
 				});
@@ -71,9 +71,23 @@ function showScoreboard(response, request, compData, pageNumber) {
 					toCallback += '\n\t<tr>'
 						+ '\n\t\t<td>' + scores_data[i].user_name + '</td>';
 					for (var j = 0; j < problems_list.length; j++) {
-						toCallback += '<td></td>';
+						toCallback += '<td>';
+						if (scores_data[i]['ps_' + problems_list[j].id] === 'SOLVED') {
+							toCallback += '<img src="http://www.codechef.com/misc/tick-icon.gif" alt="Passed">';
+						} else if (scores_data[i]['ps_' + problems_list[j].id] === 'ATTEMPTING') {
+							toCallback += '<img src="http://www.codechef.com/misc/cross-icon.gif" alt="Attempted">';
+						} else if (scores_data[i]['ps_' + problems_list[j].id] === 'EMPTY') {
+							// Not Attempted
+						} else {
+							toCallback += 'ERR ' + scores_data[i]['ps_' + problems_list[j].id];
+						}
+						toCallback += '</td>';
+						toCallback += '<td>' + scores_data[i].score + '</td>';
+						toCallback += '<td>' + scores_data[i].time_penalty + '</td>';
 					}
+					toCallback += '\n\t</tr>';
 				}
+				toCallback += '\n</table>'
 				callback(toCallback);
 			}
 		}

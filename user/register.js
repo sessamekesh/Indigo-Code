@@ -44,8 +44,8 @@ function registerUser(response, request) {
 			user_name: request.session.data.registration_attempt.user_name,
 			name: request.session.data.registration_attempt.name,
 			tagline: request.session.data.registration_attempt.tagline,
-			error: request.session.data.registration_attempt.error
-		});
+			email: request.session.data.registration_attempt.email
+		}, request.session.data.registration_attempt.error_list);
 		if (page) {
 			page.render(function(content, err) {
 				if (err) {
@@ -78,16 +78,67 @@ function registerUser(response, request) {
 				response.write('Register function invoked, but it failed due to an error :(');
 				response.end();
 			} else {
+				// ..... Check possible errors .....
+				var err_list = {},
+					err_exists = false;
+
 				if (fields.password !== fields.confirm_password) {
-					console.log('Redirecting to registration form - password not correctly confirmed');
+					err_exists = true;
+					if (!err_list['password']) {
+						err_list['password'] = { 'message': 'Passwords do not match', 'type': 'error'};
+					} else {
+						err_list['password']['message'] += '\nPasswords to not match';
+					}
+				}
+
+				if(!(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}/.test(fields.email))) {
+					err_exists = true;
+					if (!err_list['email']) {
+						err_list['email'] = { 'message': 'Not a valid email address', 'type': 'error'};
+					} else {
+						err_list['email']['message'] += '\nNot a valid email address';
+					}
+				}
+
+				if (fields.username === '' || fields.username === undefined) {
+					err_exists = true;
+					if (!err_list['username']) {
+						err_list['username'] = { 'message': 'Must provide a user name', 'type': 'error'};
+					} else {
+						err_list['username']['message'] += '\nMust provide a user name';
+					}
+				}
+
+				if (fields.password === '' || fields.password === undefined) {
+					err_exists = true;
+					if (!err_list['password']) {
+						err_list['password'] = { 'message': 'Must provide a password', 'type': 'error'};
+					} else {
+						err_list['password']['message'] += '\nMust provide a password';
+					}
+				}
+
+				if (fields.name === '' || fields.name === undefined) {
+					err_exists = true;
+					if (!err_list['name']) {
+						err_list['name'] = { 'message': 'Must provide a name', 'type': 'error'};
+					} else {
+						err_list['name']['message'] += '\nMust provide a name';
+					}
+				}
+
+				// ..... Done error checking .....
+
+				if (err_exists) {
 					// Whoops! Something's off indeed!
 					request.session.data.registration_attempt = {
 						error: 'Password does not match confirm_password field',
 						user_name: fields.username,
 						name: fields.name,
-						tagline: fields.tagline
+						tagline: fields.tagline,
+						error_list: err_list,
+						email: fields.email
 					};
-
 					// Recursively call function, this time with registration_attempt var set.
 					registerUser(response, request);
 				} else {console.log('Passing registration data on to user_dao...');
@@ -100,10 +151,14 @@ function registerUser(response, request) {
 						email: fields.email
 					}, function(userData, err) {
 						if (err) {
-							console.log('Error in inserting user data - ' + err);
-							response.writeHead(200, {'Content-Type': 'text/plain'});
-							response.write('Registration failed on database insert - check log');
-							response.end();
+							request.session.data.registration_attempt = {
+								error: 'Password does not match confirm_password field',
+								user_name: fields.username,
+								name: fields.name,
+								tagline: fields.tagline,
+								error_list: { 'generic': { 'message': 'Error: ' + err, 'type': 'error'}}
+							};
+							registerUser(response, request);
 						} else {
 							request.session.data.user = userData;
 							console.log('User data of new user:');

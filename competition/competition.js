@@ -97,6 +97,8 @@ function gatekeeper(userData, compID, callback) {
 function route(response, request, remainingPath) {
 	console.log('Subsystem competition activated - remaining path: ' + remainingPath);
 
+	request.session.data.lastPage = require('url').parse(request.url).pathname;
+
 	var subsys_name = remainingPath;
 	if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
 		subsys_name = remainingPath.substr(0, remainingPath.indexOf('/', 1));

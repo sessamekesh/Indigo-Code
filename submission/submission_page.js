@@ -92,7 +92,7 @@ function submissionPageBody(problemData, page_num) {
 	}
 
 	function render(callback) {
-		var body_text = '<table class="submissions">'
+		var body_text = '<table class="table table-striped">'
 			+ '\n\t<tr class="table_header">'
 			+ '\n\t\t<th>ID</th><th>Team</th><th>Language</th><th>Date&frasl;Time</th><th>Result</th>';
 			+ '\n\t</tr>';
@@ -110,7 +110,14 @@ function submissionPageBody(problemData, page_num) {
 
 		function render_table(results) {
 			for (var i = 0; i < results.length; i++) {
-				body_text += '\n\t<tr id="tr_sub_' + results[i].submission_id + '">'
+
+				body_text += '\n\t<tr id="tr_sub_' + results[i].submission_id + '"';
+
+				if (results[i].result == 'AC') {
+					body_text += ' class="success" ';
+				}
+
+				body_text += '>'
 					+ '\n\t\t<td>' + results[i].submission_id + '</td>'
 					+ '\n\t\t<td>' + results[i].user_name + '<br /><i>' + results[i].user_tagline + '</i></td>'
 					+ '\n\t\t<td>' + results[i].lang_name + '</td>'

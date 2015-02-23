@@ -208,7 +208,7 @@ function addUser(userDesc, callback) {
 		callback(null, 'No password property of userDesc passed - cannot create user');
 	} else if (!userDesc.email) {
 		callback(null, 'No email property of userDesc passed - cannot create user');
-	} else if (!/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}\b/.test(userDesc.email)) {
+	} else if (!/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}/.test(userDesc.email)) {
 		callback(null, 'Not a valid email addresss!');
 	} else {
 		// Make sure there is no user with given username...

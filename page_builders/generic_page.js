@@ -203,8 +203,11 @@ function GoronPage(pageDesc) {
 				+ '\n\t<head>'
 				+ '\n\t\t<title>' + pageDesc.title + '</title>'
 				+ '\n\t\t<meta charset="utf-8">'
-				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale: 1">'
-				+ '\n\t\t<link rel="stylesheet" type="text/css" href="' + pageDesc.stylesheet + '">';
+				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale=1">'
+				+ '\n\t\t<link rel="stylesheet" href="/bootstrap-3.3.2-dist/css/bootstrap.css">'
+				+ '\n\t\t<link rel="stylesheet" href="/style.css">'
+				+ '\n\t\t<script src="/jquery-1.11.2.min.js"></script>'
+				+ '\n\t\t<script src="/bootstrap-3.3.2-dist/js/bootstrap.js"></script>';
 
 			for (var i = 0; i < script_dependencies.length; i++) {
 				htmlString += '\n\t\t<script src="' + script_dependencies[i] + '"></script>';
@@ -221,11 +224,12 @@ function GoronPage(pageDesc) {
 
 			htmlString += '\n\t</head>'
 				+ '\n\t<body>'
-				+ '\n\t<div id="container-fluid">';
+				+ '\n\t<div id="container" class="container-fluid">';
 			var headLines = headString.split('\n');
 			for (var i = 0; i < headLines.length; i++) {
 				htmlString += '\n\t' + headLines[i];
 			}
+			htmlString += '\n\t<div class="row">';
 			var sidebarLines = sidebarString.split('\n');
 			for (var i = 0; i < sidebarLines.length; i++) {
 				htmlString += '\n\t' + sidebarLines[i];
@@ -234,6 +238,7 @@ function GoronPage(pageDesc) {
 			for (var i = 0; i < bodyLines.length; i++) {
 				htmlString += '\n\t' + bodyLines[i];
 			}
+			htmlString += '\n\t</div>';
 			htmlString += '\n\t</div>';
 			htmlString += '\n\t</body>';
 			htmlString += '\n</html>';
@@ -255,34 +260,42 @@ function GoronUserInfo(userData) {
 		render: function(callback) {
 			if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 				console.log('Rendering Goron user tab for a guest');
-				callback('<form action="/user/login" method="post">'
-					+ '\n\t<input type="text" name="username" value="Username" /><br />'
-					+ '\n\t<input type="password" name="password" value="" /><br />'
-					+ '\n\t<input type="submit" name="login" value="Login" />'
-					+ '\n\t<input type="submit" id="reg_button" name="register" value="Register" />'
+				callback('<form action="/user/login" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+					+ '\n\t\t<input type="password" class="form-control" name="password" value="" /><br />'
+					+ '\n\t\t<input type="submit" class="btn pull-left" name="login" value="Login" />'
+					+ '\n\t\t<input type="submit" class="btn pull-right" id="reg_button" name="register" value="Register" />'
+					+ '\n\t</div>'
 					+ '\n</form>');
 			} else if (userData === 'IncorrectLogin') {
 				console.log('Rendering Goron user tab for an incorrect login');
-				callback('<span>Incorrect login credentials!</span><br />'
-					+ '\n<form action="/user/login" method="post">'
-					+ '\n\t<input type="text" name="username" value="Username" /><br />'
-					+ '\n\t<input type="password" name="password" value="" /><br />'
-					+ '\n\t<input type="submit" name="login" value="Login" />'
-					+ '\n\t<input type="submit" name="register" value="Register" />'
+				callback('<p>Incorrect login credentials!</p>'
+					+ '\n<form action="/user/login" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+					+ '\n\t\t<input type="password" class="form-control" name="password" value="" /><br />'
+					+ '\n\t\t<input type="submit" class="btn pull-left" name="login" value="Login" />'
+					+ '\n\t\t<input type="submit" class="btn pull-right" name="register" value="Register" />'
+					+ '\n\t</div>'
 					+ '\n</form>');
 			} else if (userData.is_admin == true) {
 				console.log('Rendering Goron user tab for an admin');
-				callback('<span>Hello, sir <b>' + userData.user_name + '</b></span><br />'
-					+ '\n<i>' + userData.tagline + '</i>'
-					+ '\n<form action="/user/logout" method="post">'
-					+ '\n\t<input type="submit" value="Logout" />'
+				callback('<p>Hello, sir <b>' + userData.user_name + '</b></p>'
+					+ '\n<p><i>' + userData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
+					+ '\n\t</div>'
 					+ '\n</form>');
 			} else {
 				console.log('Rendering Goron user tab for a peasant');
-				callback('<span>Hello, <b>' + userData.user_name + '</b></span><br />'
-					+ '\n<i>' + userData.tagline + '</i>'
-					+ '\n<form action="/user/logout" method="post">'
-					+ '\n\t<input type="submit" value="Logout" />'
+				callback('<p>Hello, <b>' + userData.user_name + '</b></p>'
+					+ '\n<p><i>' + userData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
+					+ '\n\t</div>'
 					+ '\n</form>');
 			}
 		}
@@ -312,12 +325,12 @@ function GoronHeader(headerDesc) {
 	 return {
 	 	render: function(callback) {
 	 		console.log('Rendering header...');
-	 		var headText = '<div id="header">'
-	 			+ '\n\t<div id="words_and_whatnot">'
-	 			+ '\n\t\t<h1 id="title">' + headerDesc.title + '</h1>'
-	 			+ '\n\t\t<h2 id="subtitle">' + headerDesc.subtitle + '</h2>'
+	 		var headText = '<div id="header" class="row">'
+	 			+ '\n\t<div id="words_and_whatnot" class="col-md-10">'
+	 			+ '\n\t\t<h1 id="title" class="text-center">' + headerDesc.title + '</h1>'
+	 			+ '\n\t\t<h2 id="subtitle" class="text-center">' + headerDesc.subtitle + '</h2>'
 	 			+ '\n\t</div>'
-	 			+ '\n\t<div id="login_bit">';
+	 			+ '\n\t<div id="login_bit" class="col-md-2">';
 	 		headerDesc.user_info.render(function(dat, err) {
 	 			if (err) {
 	 				callback(null, err);
@@ -338,7 +351,7 @@ function GoronHeader(headerDesc) {
 function GoronBody(content) {
 	return {
 		render: function(callback) {
-			callback('<div id="content">\n\t' + content + '\n</div>');
+			callback('<div id="content" class="col-md-10">\n\t' + content + '\n</div>');
 		}
 	};
 }
@@ -350,7 +363,7 @@ function GoronSidebar(userData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for guest');
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
@@ -390,7 +403,7 @@ function GoronSidebar(userData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for admin ' + userData.user_name);
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
@@ -466,7 +479,7 @@ function GoronSidebar(userData) {
 		return {
 			render: function(callback) {
 				console.log('Rendering Goron sidebar for peasant ' + userData.user_name);
-				var toReturn = '<div id="sidebar">';
+				var toReturn = '<div id="sidebar" class="col-md-2">';
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'

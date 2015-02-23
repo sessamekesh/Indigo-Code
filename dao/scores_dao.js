@@ -75,10 +75,6 @@ exports.updateScore = function(userID, competitionID, incorrect_submission_time_
 				} else if (res.length != 1) {
 					console.log('scores_dao ERROR: Unexpected number of columns returned on checking lastAC time penalty ' + res.length);
 				} else {
-					console.log('scores_dao ACPEN success');
-					console.log('scores_dao DEBUG REMOVE: Time of start: ' + (res[0].start_time));
-					console.log('scores_dao DEBUG REMOVE: Time of last succ: ' + res[0].submission_time);
-					console.log('scores_dao DEBUG REMOVE: Time elapsed since competition begin: ' + (res[0].submission_time - res[0].start_time));
 					//time_penalty = (res[0].submission_time - res[0].start_time);
 					// NOTE: This is in milliseconds, so get it to minutes... yeah.
 					time_penalty = (res[0].submission_time - res[0].start_time);
