@@ -33,7 +33,7 @@ function reportQueryEnded() {
 
 function getLanguageList(callback) {
 	console.log('language_dao: Getting list of languages supported by the framework.');
-	getConnection().query('SELECT id, name, subsys_name FROM Language;', function (err, rows) {
+	getConnection().query('SELECT id, name, subsys_name FROM Language ORDER BY name ASC;', function (err, rows) {
 		if (err) {
 			callback(null, err);
 		} else {
@@ -46,7 +46,7 @@ function getLanguageList(callback) {
 
 function getLanguageData(languageID, callback) {
 	console.log('language_dao: Getting data for language with id ' + languageID);
-	getConnection().query('SELECT id, name, subsys_name FROM Language WHERE id = ?;', languageID, function (err, rows) {
+	getConnection().query('SELECT id, name, subsys_name, num_uses FROM Language WHERE id = ?;', languageID, function (err, rows) {
 		if (err) {
 			callback(null, err);
 		} else if (rows.length != 1) {
@@ -59,5 +59,14 @@ function getLanguageData(languageID, callback) {
 	reportQueryActive();
 }
 
+function reportLanguageUsed(languageID) {
+	console.log('language_dao: Reporting language ' + languageID + ' as being used again...');
+	getConnection().query('UPDATE Language SET num_uses = num_uses + 1 WHERE id = ?;', languageID, function (err, res) {
+		reportQueryEnded();
+	});
+	reportQueryActive();
+}
+
 exports.getLanguageList = getLanguageList;
 exports.getLanguageData = getLanguageData;
+exports.reportLanguageUsed = reportLanguageUsed;

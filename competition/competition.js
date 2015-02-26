@@ -37,6 +37,10 @@ function gatekeeper(userData, compID, callback) {
 			console.log('Failed to get competition data on grounds: ' + err);
 			callback(false, null, null, 'competition_dao error: ' + err);
 		} else {
+			console.log('competition: DEBUG: Competition data:');
+			console.log(compData);
+			console.log(compData.start_date.getTime() + ", " + compData.end_date.getTime());
+			console.log('Now: ' + Date.now());
 			if (compData) {
 				if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 					auth_guest(compData);
@@ -72,7 +76,20 @@ function gatekeeper(userData, compID, callback) {
 			callback(true, compData);
 		} else if (Date.parse(compData.start_date) > Date.now()) {
 			console.log('Decision: reject (competition has not yet started)');
-			callback(false, null, 'Access Denied - competition has not yet started!');
+			var timeRemaining = Math.floor((compData.start_date.getTime() - Date.now()) / 1000);
+			if (timeRemaining > 48 * 60 * 60) {
+				callback(false, null, 'Access Denied - competition has not yet started!<br />Competition will not start for more than 24 hours.');
+			} else {
+				var secs = timeRemaining % 60,
+					mins = Math.floor((timeRemaining - secs) / 60) % 60,
+					hrs = Math.floor((timeRemaining - secs - (mins * 60)) / 360) % 24,
+					secs_txt = ('00' + secs).slice(-2),
+					mins_txt = ('00' + mins).slice(-2),
+					hrs_txt = ('00' + hrs).slice(-2);
+				callback(false, null, 'Access Denied - competition has not yet started.<br />'
+					+ 'Competition will begin in ' + hrs_txt + ':' + mins_txt + ':' + secs_txt);
+			}
+
 		} else {
 			console.log('Decision: reject (though we don\'t know why');
 			callback(false, null, 'Access Denied (though we don\'t know why');

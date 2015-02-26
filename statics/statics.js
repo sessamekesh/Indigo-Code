@@ -40,7 +40,7 @@ function route(response, request, remainingPath) {
 				user_info: generic_page.GoronUserInfo(request.session.data.user)
 			}),
 			sidebar: generic_page.GoronSidebar(request.session.data.user),
-			body: generic_page.GoronBody('Replace with "Body From Fragment" or something')
+			body: generic_page.GoronBodyFromFragment('index')
 		});
 		if (page) {
 			page.render(function (content, err) {

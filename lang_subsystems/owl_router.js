@@ -6,12 +6,18 @@
 'use strict';
 
 var test_case_dao = require('../dao/test_case_dao'),
-	time_limit_dao = require('../dao/time_limit_dao');
+	time_limit_dao = require('../dao/time_limit_dao'),
+	language_dao = require('../dao/language_dao');
 
 var subsystems = {
 	cpp98: require('./cpp98'),
 	python: require('./python'),
-	java1_7: require('./java1_7')
+	java1_7: require('./java1_7'),
+	java1_8: require('./java1_8'),
+	c: require('./c'),
+	nodejs: require('./nodejs'),
+	cpp11: require('./cpp11'),
+	golang: require('./golang')
 };
 
 // Callback: result, notes, err
@@ -21,6 +27,7 @@ function judgeSubmission(submission_id, languageData, problemData, source_path, 
 	console.log('Source Path: ' + source_path + ' Original Filename: ' + original_filename);
 
 	if (subsystems[languageData.subsys_name]) {
+		language_dao.reportLanguageUsed(languageData.id);
 		getTimeLimit(problemData, languageData.id, function (res, err) {
 			if (err) {
 				callback('IE', err);

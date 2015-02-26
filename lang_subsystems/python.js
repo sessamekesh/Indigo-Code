@@ -13,7 +13,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		if (err) {
 			console.log('ERR moving file to add py extension');
 			console.log('--Source Path: ' + source_path);
-			console.log('--New Path: ' + source_path + '.cpp');
+			console.log('--New Path: ' + source_path + '.py');
 			console.log('--Error: ' + err);
 			callback('IE', 'Staging error');
 		} else {

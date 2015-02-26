@@ -37,7 +37,7 @@ exports.requestTimeUntilStartSocket = function(compData) {
 
 function beginBroadcasting(socket, compData) {
 	if (time_until_start_sockets[compData.id].io !== undefined && time_until_start_sockets[compData.id].n_connections > 0 && time_until_start_sockets[compData.id].is_broadcasting === true) {
-		time_until_start_sockets[compData.id].io.emit('time_until_start', (compData.end_date - Date.now()));
+		time_until_start_sockets[compData.id].io.emit('time_until_start', (compData.start_date.getTime() - (Date.now())));
 		setTimeout(function() {
 			beginBroadcasting(socket, compData);
 		}, TIMER_DELAY);

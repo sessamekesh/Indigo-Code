@@ -35,7 +35,7 @@ exports.requestTimeRemainingSocket = function(compData) {
 
 function beginBroadcasting(socket, compData) {
 	if (time_remaining_sockets[compData.id].io !== undefined && time_remaining_sockets[compData.id].is_broadcasting === true) {
-		time_remaining_sockets[compData.id].io.emit('time_remaining', (compData.end_date - Date.now()));
+		time_remaining_sockets[compData.id].io.emit('time_remaining', (compData.end_date.getTime() - (Date.now())));
 		setTimeout(function() {
 			beginBroadcasting(socket, compData);
 		}, TIMER_DELAY);

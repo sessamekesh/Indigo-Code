@@ -50,7 +50,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 			});
 
 			function generateTableHeader(scores_data) {
-				toCallback += '<table class="table">'
+				toCallback += '<div id="content" class="col-md-10"><table class="table">'
 					+'\n\t<tr>'
 					+ '\n\t\t<th>User</th>';
 				problem_dao.getProblemsInCompetition(compData.id, function (res, err) {
@@ -82,12 +82,13 @@ function showScoreboard(response, request, compData, pageNumber) {
 							toCallback += 'ERR ' + scores_data[i]['ps_' + problems_list[j].id];
 						}
 						toCallback += '</td>';
-						toCallback += '<td>' + scores_data[i].score + '</td>';
-						toCallback += '<td>' + scores_data[i].time_penalty + '</td>';
 					}
+
+					toCallback += '<td>' + scores_data[i].score + '</td>';
+					toCallback += '<td>' + scores_data[i].time_penalty + '</td>';
 					toCallback += '\n\t</tr>';
 				}
-				toCallback += '\n</table>'
+				toCallback += '\n</table></div>'
 				callback(toCallback);
 			}
 		}

@@ -92,7 +92,7 @@ function submissionPageBody(problemData, page_num) {
 	}
 
 	function render(callback) {
-		var body_text = '<table class="table table-striped">'
+		var body_text = '<div id="content" class="col-md-10">\n<table class="table table-striped">'
 			+ '\n\t<tr class="table_header">'
 			+ '\n\t\t<th>ID</th><th>Team</th><th>Language</th><th>Date&frasl;Time</th><th>Result</th>';
 			+ '\n\t</tr>';
@@ -125,7 +125,7 @@ function submissionPageBody(problemData, page_num) {
 					+ '\n\t\t<td id="td_res_' + results[i].submission_id + '">' + results[i].result + '</td>'
 					+ '\n\t</tr>';
 			}
-			body_text += '\n</table>';
+			body_text += '\n</table>\n</div>';
 			finish_rendering();
 		}
 

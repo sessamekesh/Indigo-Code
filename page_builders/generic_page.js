@@ -1,4 +1,5 @@
 var competition_dao = require('../dao/competition_dao'),
+	fs = require('fs'),
 	UPCOMING_TIME_WINDOW = 60 * 60 * 0.5; // 1/2 hour
 
 // NEXT VERSION: Don't do it this way. Just... don't.
@@ -356,6 +357,23 @@ function GoronBody(content) {
 	};
 }
 
+function GoronBodyFromFragment(fragmentName) {
+	return {
+		render: function (callback) {
+			var tr = '<div id="content" class="col-md-10">\n\t';
+
+			fs.readFile('./data/frags/' + fragmentName + '.html', function (err, data) {
+				if (err) {
+					console.log('generic_page: Error reading fragment ' + fragmentName + ': ' + err);
+					callback(tr + 'Unknown error loading page!\n\t</div>');
+				} else {
+					callback(tr + data + '\n\t</div>');
+				}
+			});
+		}
+	}
+}
+
 function GoronSidebar(userData) {
 	console.log('Creating Goron sidebar...');
 	if(!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
@@ -555,3 +573,4 @@ exports.GoronSidebar = GoronSidebar;
 exports.GoronUserInfo = GoronUserInfo;
 exports.GoronHeader = GoronHeader;
 exports.GoronBody = GoronBody;
+exports.GoronBodyFromFragment = GoronBodyFromFragment;

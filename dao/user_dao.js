@@ -2,7 +2,8 @@
 
 var mysql = require('mysql'),
 	credentials = require('./credentials'),
-	bcrypt = require('bcrypt');
+	bcrypt = require('bcrypt'),
+	entities = require('entities');
 
 var connection,
 	active_query_count = 0,
@@ -67,7 +68,7 @@ function getUserData(userDesc, callback) {
 			// Traditional login (return everything)
 			// Grab the associated password hash...
 			var hash_query = getConnection().query('SELECT pass_hash FROM User WHERE user_name = ?;',
-				userDesc.user_name);
+				entities.encodeHTML(userDesc.user_name));
 			reportQueryActive();
 			var hash_error_generated = false;
 			var hash_result;
@@ -118,7 +119,7 @@ function getUserData(userDesc, callback) {
 			// Grab user only using user_name: unauthenticated, only return
 			//  non-sensitive data about them.
 			var query = getConnection().query('SELECT id, user_name, tagline, is_admin FROM User WHERE user_name = ?;',
-				userDesc.user_name);
+				entities.encodeHTML(userDesc.user_name));
 			reportQueryActive();
 			var error_generated = false;
 			var result;
@@ -159,7 +160,7 @@ function getUserData(userDesc, callback) {
 					if (res === true) {
 						console.log('Authentication success. Returning user data...');
 						var query = getConnection().query('SELECT id, user_name, name, tagline, is_admin FROM User WHERE user_name = ?;',
-							userDesc.user_name);
+							entities.encodeHTML(userDesc.user_name));
 						var result;
 						reportQueryActive();
 						var error_generated = false;
@@ -250,7 +251,7 @@ function addUser(userDesc, callback) {
 		console.log(userDesc);
 		console.log('pw_hash: ' + pw_hash);
 		var insert_query = getConnection().query('INSERT INTO User (user_name, name, pass_hash, tagline, email_address) VALUES (?, ?, ?, ?, ?);',
-			[userDesc.user_name, userDesc.name, pw_hash, userDesc.tagline, userDesc.email]);
+			[entities.encodeHTML(userDesc.user_name), entities.encodeHTML(userDesc.name), pw_hash, entities.encodeHTML(userDesc.tagline), userDesc.email]);
 		reportQueryActive();
 		var error_generated = false;
 		var toReturn;
@@ -290,7 +291,7 @@ function updateUser(userID, updateFields, callback) {
 			first = false;
 		}
 		if (updateFields.user_name) {
-			queryAddons.push(updateFields.user_name);
+			queryAddons.push(entities.encodeHTML(updateFields.user_name));
 			queryString += (first) ? 'user_name' : ', user_name';
 			valuesBit += (first) ? '?' : ', ?';
 		}
@@ -300,7 +301,7 @@ function updateUser(userID, updateFields, callback) {
 			valuesBit += (first) ? '?' : ', ?';
 		}
 		if (updateFields.tagline) {
-			queryAddons.push(updateFields.tagline);
+			queryAddons.push(entities.encodeHTML(updateFields.tagline));
 			queryString += (first) ? 'tagline' : ', tagline';
 			valuesBit += (first) ? '?' : ', ?';
 		}
@@ -329,3 +330,4 @@ function updateUser(userID, updateFields, callback) {
 
 exports.getUserData = getUserData;
 exports.addUser = addUser;
+exports.updateUser = updateUser;

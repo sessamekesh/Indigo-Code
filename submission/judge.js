@@ -8,7 +8,8 @@ var error_page = require('../page_builders/error_page'),
 	fs = require('fs'),
 	result_listener_socket = require('../sockets/result_listener_socket'),
 	scores_dao = require('../dao/scores_dao'),
-	SUBMISSION_TIMEOUT_TIME = 45000;
+	SUBMISSION_TIMEOUT_TIME = 45000,
+	WAIT_BEFORE_SEND_PING_TIME = 1100;
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
@@ -91,13 +92,22 @@ function judge_submission(response, request, compData, problemData) {
 
 	// (5) Record judgement result
 	function recordResult(result, notes) {
+
 		console.log('judge: Result is to be recorded here. Also, score is being updated.');
 		console.log(result);
 		// (6) Broadcast message via socket
-		result_listener_socket.broadcastResult(problemData.id, result.submission_id, result.result, result.notes);
+		//  after two seconds - so it doesn't complete too fast.
+		setTimeout(function () {
+			result_listener_socket.broadcastResult(problemData.id, result.submission_id, result.result, result.notes);
+		}, WAIT_BEFORE_SEND_PING_TIME);
 
-		// (7) Update scores
-		scores_dao.updateScore(request.session.data.user.id, compData.id, compData.incorrect_submission_time_penalty);
+		// (7) Update scores (if competition is ongoing)
+		if (compData.start_date.getTime() < Date.now() &&
+			compData.end_date.getTime() > Date.now()) {
+			scores_dao.updateScore(request.session.data.user.id, compData.id, compData.incorrect_submission_time_penalty);
+		} else {
+			console.log('judge: Submission not scored because competition is not ongoing!');
+		}
 	}
 }
 
@@ -130,7 +140,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 	language_dao.getLanguageData(langID, function (result, err) {
 		if (err) {
 			console.log('judge: ERR SQL error retrieving language data: ' + err);
-			callback(null, 'Error retrieving language data.');
+			callback('IE', 'Error retrieving language data.');
 		} else {
 			// We know which system to use - route to subsystem
 			routeToJudgementSubsystem(result);
@@ -144,7 +154,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 		owl_router.judgeSubmission(submissionID, languageData,
 			problemData, path, originalFilename, function (res, notes, err) {
 				if (err) {
-					callback(null, 'judge: ERR judging submission: ' + err);
+					callback('IE', 'judge: ERR judging submission: ' + err);
 				} else {
 					recordResults(res, notes);
 				}
@@ -156,7 +166,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 	function recordResults(result, notes) {
 		submission_dao.reportSubmissionResult(submissionID, result, notes, function (error) {
 			if (error) {
-				callback(null, 'judge: ERR recording results: ' + err);
+				callback('IE', 'judge: ERR recording results: ' + err);
 			} else {
 				callback({
 					submission_id: submissionID,

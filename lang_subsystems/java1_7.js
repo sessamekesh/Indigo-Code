@@ -42,7 +42,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		var className = new_path.substr(new_path.lastIndexOf('/') + 1);
 			className = className.substr(0, className.lastIndexOf('.'));
 		console.log('java1_7.js: Building class ' + className);
-		exec('javac ' + new_path, { timeout: 5000 }, function (err, stdout, stderr) {
+		exec('./lang_subsystems/bin/jdk1.7.0_75/bin/javac ' + new_path, { timeout: 5000 }, function (err, stdout, stderr) {
 			if (err) {
 				console.log('java1_7: Build error: ' + err);
 				callback('BE', 'Could not build project: ' + err);
@@ -72,7 +72,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 			cleanup_and_report_success(test_array);
 		} else {
 			var out_file = '../../sandbox/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = 'java ' + class_name + ' < ../../test_cases/tc' + test_array[test_index].id + '.in > ' + out_file;
+				cmd = '../../../lang_subsystems/bin/jdk1.7.0_75/bin/java ' + class_name + ' < ../../test_cases/tc' + test_array[test_index].id + '.in > ' + out_file;
 			exec(cmd, { timeout: time_limit, cwd: wd }, function (err, stdout, stderr) {
 				if (err) {
 					if (err.signal === 'SIGTERM') {
