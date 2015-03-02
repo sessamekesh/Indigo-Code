@@ -5,7 +5,8 @@ var submission_number = 0,
 	fs = require('fs'),
 	port = 8080,
 	owl_router = require('./owl_router'),
-	exec = require('child_process').exec;
+	exec = require('child_process').exec,
+	entities = require('entities');
 
 var server = net.createServer({ allowHalfOpen: true }, function (conn) {
 	var fname = './sandbox/' + submission_number + '.tar.gz';
@@ -68,7 +69,7 @@ function judgeSubmission(fname, callback) {
 				if (err) {
 					console.log('judgeSubmission ERR: Error judging submission: ' + err);
 				} else {
-					callback(res, notes);
+					callback(entities.encodeHTML(res), entities.encodeHTML(notes));
 				}
 
 				// Either way, remove the directory we were using...

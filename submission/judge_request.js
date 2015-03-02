@@ -275,15 +275,17 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 	//  answer.
 	function send_package(package_data, tarball_name, dirname) {
 
-		var out_stream = fs.createReadStream('./data/sandbox/' + tarball_name);
-		submission_socket.on('data', report_result_received);
-
-		out_stream.on('error', function (err) {
+		var package_in_stream = fs.createReadStream('./data/sandbox/' + tarball_name),
+			json_return_string = '';
+		// TODO KIP: Change this to piping, you're not sure you receive all data...
+		submission_socket.on('data', function (dat) { json_return_string += dat; });
+		submission_socket.on('end', function () { report_result_received(json_return_string); });
+		package_in_stream.on('error', function (err) {
 			console.log('---judge_request ' + submission_id + ': ERR streaming data: ' + err);
 		});
-		out_stream.on('open', function() {
-			out_stream.pipe(submission_socket);
-			out_stream.on('end', function() {
+		package_in_stream.on('open', function() {
+			package_in_stream.pipe(submission_socket);
+			package_in_stream.on('end', function() {
 				console.log('---judge_request ' + submission_id + ': Finished writing to socket');
 				cleanup(tarball_name, dirname);
 			});
@@ -308,6 +310,5 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 		console.log('---judge_request ' + submission_id + ': Result received: ' + data);
 		var result = JSON.parse(data);
 		callback(result.result, result.notes);
-		setTimeout(function () { submission_socket.end(); console.log('---judge_request ' + submission_id + ': Socket ended!'); }, 15000);
 	}
 }

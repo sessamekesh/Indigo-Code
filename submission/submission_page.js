@@ -4,7 +4,16 @@ var generic_page = require('../page_builders/generic_page'),
 	submission_dao = require('../dao/submission_dao'),
 	competition_page = require('../page_builders/competition_page'),
 	error_page = require('../page_builders/error_page'),
-	result_listener_socket = require('../sockets/result_listener_socket');
+	result_listener_socket = require('../sockets/result_listener_socket'),
+	results_key = {
+		'AC': 'Correct',
+		'WA': 'Wrong Answer',
+		'TLE': 'Time Limit Exceeded',
+		'RE': 'Runtime Error',
+		'IE': 'Internal Server Error<br /><i>(You will not be docked)</i>',
+		'BE': 'Build Error<br /><i>(You will not be docked)</i>',
+		'Q': 'Judging...'
+	};
 
 exports.route = function(response, request, compData, problemData, remainingPath) {
 	// TODO KIP: What if there is just a '/' ? Change that everywhere!
@@ -57,7 +66,7 @@ function submissionPageBody(problemData, page_num) {
 
 	function gen_dependencies(callback) {
 		result_listener_socket.requestResultListener(problemData);
-		callback(['https://cdn.socket.io/socket.io-1.2.0.js']);
+		callback(['https://cdn.socket.io/socket.io-1.2.0.js', 'http://code.jquery.com/ui/1.11.3/jquery-ui.js']);
 	}
 
 	// NEXT VERSION: Use static scripts, yo. This is miserable.
@@ -91,11 +100,14 @@ function submissionPageBody(problemData, page_num) {
 				+ '\n\t\tctr_f.innerHTML = \'<b>Time is up!</b>\';'
 				+ '\n\t}'
 			+ '\n});'
+			+ '\nfunction showModal(sub_id) {'
+			+ '\n\t$(function() { $("#td_notes_" + sub_id).dialog({ modal: true, buttons: { Ok: function () { $(this).dialog("close"); }} }); });'
+			+ '\n}';
 		callback(listener_script);
 	}
 
 	function render(callback) {
-		var body_text = '<div id="content" class="col-md-10">\n<table class="table table-striped">'
+		var body_text = '<div id="content" class="col-md-10">\n<table class="table table-hover">'
 			+ '\n\t<tr class="table_header">'
 			+ '\n\t\t<th>ID</th><th>Team</th><th>Language</th><th>Date&frasl;Time</th><th>Result</th>';
 			+ '\n\t</tr>';
@@ -116,8 +128,10 @@ function submissionPageBody(problemData, page_num) {
 
 				body_text += '\n\t<tr id="tr_sub_' + results[i].submission_id + '"';
 
-				if (results[i].result == 'AC') {
+				if (results[i].result === 'AC') {
 					body_text += ' class="success" ';
+				} else if (results[i].result === 'WA' || results[i].result === 'TLE' || results[i].result === 'WA' || results[i].result === 'RE') {
+					body_text += ' class="warning" ';
 				}
 
 				body_text += '>'
@@ -126,8 +140,8 @@ function submissionPageBody(problemData, page_num) {
 					+ '\n\t\t<td>' + results[i].lang_name + '</td>'
 					+ '\n\t\t<td>' + formatDate(new Date(results[i].submission_time)) + '</td>'
 					+ '\n\t\t<td>'
-						+ '<a href="#" id="td_res_' + results[i].submission_id + '" onclick="alert(document.getElementById(\'td_notes_' + results[i].submission_id + '\').innerHTML);">' + results[i].result + '</a>'
-						+ '<div style="display: none;" id="td_notes_' + results[i].submission_id + '">' + results[i].notes + '</div></td>'
+						+ '<button class="btn btn-default btn-mini" id="td_res_' + results[i].submission_id + '" onclick="showModal(' + results[i].submission_id + ');">' + results_key[results[i].result] + '</a>'
+						+ '<div style="display: none;" id="td_notes_' + results[i].submission_id + '" title="Notes for submission ' + results[i].submission_id + '"><p>' + results[i].notes + '</p></div></td>'
 					+ '\n\t</tr>';
 			}
 			body_text += '\n</table>\n</div>';

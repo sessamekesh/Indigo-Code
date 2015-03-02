@@ -208,6 +208,7 @@ function GoronPage(pageDesc) {
 				+ '\n\t\t<link rel="stylesheet" href="/bootstrap-3.3.2-dist/css/bootstrap.css">'
 				+ '\n\t\t<link rel="stylesheet" href="/style.css">'
 				+ '\n\t\t<link rel="icon" type="image/png" href="/UsuLogo.png" />'
+				+ '\n\t\t<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">'
 				+ '\n\t\t<script src="/jquery-1.11.2.min.js"></script>'
 				+ '\n\t\t<script src="/bootstrap-3.3.2-dist/js/bootstrap.js"></script>';
 
