@@ -69,8 +69,11 @@ function submissionPageBody(problemData, page_num) {
 			  + '\n\ttrs = io(\'/CT2\');'
 			+ '\nres_listener.on(\'submission_finished\', function (res) {'
 				+ '\n\tconsole.log(\'Received submission \' + res.id + \' with result: \' + res.result + \' and notes: \' + res.notes);'
-				+ '\n\tvar etm_r = document.getElementById(\'td_res_\' + res.id);'
+				+ '\n\tvar etm_r = document.getElementById(\'td_res_\' + res.id),'
+				+ '\n\t\tetm_n = document.getElementById(\'td_notes_\' + res.id);'
 				+ '\n\tetm_r.innerHTML = res.result;'
+				+ '\n\tetm_n.innerHTML = res.notes;'
+				+ '\n\tconsole.log(JSON.stringify(res));'
 			+ '\n});'
 			+ '\ntrs.on(\'time_remaining\', function(tr) {'
 				+ '\n\tconsole.log(\'Time remaining event fired, with param: \' + tr);'
@@ -122,7 +125,9 @@ function submissionPageBody(problemData, page_num) {
 					+ '\n\t\t<td>' + results[i].user_name + '<br /><i>' + results[i].user_tagline + '</i></td>'
 					+ '\n\t\t<td>' + results[i].lang_name + '</td>'
 					+ '\n\t\t<td>' + formatDate(new Date(results[i].submission_time)) + '</td>'
-					+ '\n\t\t<td id="td_res_' + results[i].submission_id + '">' + results[i].result + '</td>'
+					+ '\n\t\t<td>'
+						+ '<a href="#" id="td_res_' + results[i].submission_id + '" onclick="alert(document.getElementById(\'td_notes_' + results[i].submission_id + '\').innerHTML);">' + results[i].result + '</a>'
+						+ '<div style="display: none;" id="td_notes_' + results[i].submission_id + '">' + results[i].notes + '</div></td>'
 					+ '\n\t</tr>';
 			}
 			body_text += '\n</table>\n</div>';

@@ -1,23 +1,21 @@
 'use strict';
 
 var fs = require('fs'),
-	exec = require('child_process').exec,
-	test_case_dao = require('../dao/test_case_dao'),
-	time_limit_dao = require('../dao/time_limit_dao');
+	exec = require('child_process').exec;
 
 // NEXT VERSION: Error IDs - on report error to console, attach an ID
 //  so you can quickly grep for it.
 
 // callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, callback) {
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
 	console.log('----------C JUDGE----------');
 
-	// Append .cpp to submission type...
+	// Append .c to submission type...
 	exec('mv ' + source_path + ' ' + source_path + '.c', { timeout: 5000 }, function(error, stdout, stder) {
 		if (error) {
-			console.log('ERR in moving file to add cpp extension');
+			console.log('c.js: ERR in moving file to add c extension');
 			console.log('--Source Path: ' + source_path);
-			console.log('--New Path: ' + source_path + '.cpp');
+			console.log('--New Path: ' + source_path + '.c');
 			console.log('--Error: ' + error);
 			callback('IE', 'Internal Error (you will not be docked)');
 		} else {
@@ -25,37 +23,25 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		}
 	});
 
+	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
+
 	// Compile code...
 	function compile_submission() {
-		var executable_name = './data/sandbox/' + submission_id + '.exe';
-		var cmd = 'gcc ' + source_path + '.c -o ' + './data/sandbox/' + submission_id + '.exe';
+		var executable_path = sandbox_dir + '/' + submission_id + '.exe';
+		var cmd = 'gcc ' + source_path + '.c -o ' + executable_path;
 		exec(cmd, { timeout: 5000 }, function (error, stdout, stderr) {
 			if (error) {
 				console.log('ERR in buliding code: ' + error);
 				callback('BE', 'Error buliding code: ' + error);
 			} else {
-				console.log('Result of command ' + cmd + ':');
-				console.log('----stdout----');
-				console.log(stdout);
-				console.log('----stderr----');
-				console.log(stderr);
-
-				run_test_cases(executable_name);
+				run_test_cases(executable_path);
 			}
 		});
 	}
 
 	// Run against test cases...
 	function run_test_cases(executable_fname) {
-		test_case_dao.getTestCases(problemData.id, function (res, err) {
-			if (err) {
-				console.log('Error running test cases - ' + err);
-				callback('IE', 'Internal Error (you will not be docked)');
-				cleanup(executable_fname);
-			} else {
-				run_test_case(executable_fname, 0, res);
-			}
-		});
+		run_test_case(executable_fname, 0, test_cases);
 	}
 
 	function run_test_case(executable_fname, test_index, test_array) {
@@ -63,8 +49,8 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 			cleanup(executable_fname);
 			callback('AC', 'AC on ' + test_array.length + ' tests');
 		} else {
-			var out_file = './data/sandbox/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = './' + executable_fname + ' < ./data/test_cases/tc' + test_array[test_index].id + '.in > ' + out_file;
+			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
+				cmd = './' + executable_fname + ' < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
 			// TODO KIP Modify these systems to have a max_buffer size
 			var cp = exec(cmd, { timeout: time_limit }, function (error, stdout, stderr) {
 				if (error) {
@@ -79,7 +65,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 						cleanup(executable_fname);
 					}
 				} else {
-					console.log('cpp98: Successfully ran test case ' + test_array[test_index].id);
+					console.log('c.js: Successfully ran test case ' + test_array[test_index].id);
 					compare_results(executable_fname, test_index, test_array, out_file);
 				}
 			});
@@ -88,11 +74,11 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 
 	// Compare test cases...
 	function compare_results(executable_fname, test_index, test_array, out_file) {
-		var cmd = './data/comparison_programs/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + './data/test_cases/tc' + test_array[test_index].id + '.out';
+		var cmd = sandbox_dir + '/cp' + test_array[test_index].comparison_program_id
+			+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
 		exec (cmd, { timout: 5000 }, function (error, stdout, stderr) {
 			if (error) {
-				console.log('cpp98: Error running comparison program: ' + error);
+				console.log('c.js: Error running comparison program: ' + error);
 				callback('IE', 'Comparison error: ' + error.message);
 				cleanup(executable_fname);
 			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
@@ -110,7 +96,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 	function removeCompletedTestCase(out_file) {
 		exec ('rm ' + out_file, { timeout: 5000 }, function (err, stdout, stderr) {
 			if (err) {
-				console.log('cpp98: Error removing test output: ' + out_file + ': ' + err);
+				console.log('c.js: Error removing test output: ' + out_file + ': ' + err);
 			}
 		});
 	}
@@ -119,7 +105,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		// Remove executable from sandbox...
 		exec ('rm ' + executable_fname, { timeout: 5000 }, function (error, stdout, stderr) {
 			if (error) {
-				console.log('cpp98: Error: Could not remove executable ' + executable_fname + ': ' + error);
+				console.log('c.js: Error: Could not remove executable ' + executable_fname + ': ' + error);
 			}
 		});
 	}

@@ -1,0 +1,28 @@
+import java.util.Scanner;
+
+
+public class fib_slow {
+
+	public static int fibb(int n) {
+		if (n < 2) {
+			return 1;
+		} else {
+			return fibb(n - 1) + fibb(n - 2);
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		Scanner in = new Scanner(System.in);
+		
+		int nCases = in.nextInt();
+		
+		for (int i = 0; i < nCases; i++) {
+			System.out.println(fibb(in.nextInt()));
+		}
+		
+		in.close();
+
+	}
+
+}

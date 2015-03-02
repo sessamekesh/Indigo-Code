@@ -8,32 +8,124 @@ var language_dao = require('../dao/language_dao'),
 	fs = require('fs'),
 	exec = require('child_process').exec,
 	test_case_dao = require('../dao/test_case_dao'),
-	time_limit_dao = require('../dao/time_limit_dao');
+	time_limit_dao = require('../dao/time_limit_dao'),
+	wait_block = false;
 
 var submission_server_data = {
-	//host: '192.168.56.101',
-	host: '129.123.210.40',
+	host: '192.168.56.101',
+	//host: '129.123.210.40',
 	port: 8080
 },
 	SUBMISSION_TIMOUT = 45000;
+
+// TODO KIP: Move these to a configuration file of sorts.
+//  Virtual machines... hooray...
+// TODO KIP: There is a way to spawn virtual machines, but not
+//  to shut them down... change this...
+var vm_name = 'SubmissionServer',
+	snapshot_name = 'Server Startup';
 
 // Callback: result, notes, err
 //  The notes out of this function will be user-facing.
 exports.judgeSubmission = function (submission_id, languageData, problemData, source_path, original_filename, callback) {
 	console.log('judge_request: Submission received for judgement: ' + submission_id + ' on problem ' + problemData.name);
 
+	var submission_socket;
+
+	check_can_start();
+
+	function check_can_start() {
+		if (wait_block === true) {
+			// TODO KIP: Verify this, this could be a huge source of bugs...
+			setTimeout(check_can_start, 800);
+		} else {
+			enum_vms(create_connection);
+		}
+	}
+
+	// (0) Make sure VM is running...
+	function enum_vms(cb) {
+		exec('VBoxManage list runningvms', function (error, stdout, stderr) {
+			if (error) {
+				console.log('judge_request: Could not check VMs: ' + error);
+				callback('IE', 'Could not verify VM with server is running');
+			} else {
+				// Scan output for the VM we want...
+				if (stdout.search(vm_name) < 0) {
+					// Try to create VM...
+					console.log('judge_request: Restoring VM...');
+					restore_vm_snapshot(cb, callback);
+				} else {
+					console.log('judge_request: VM found, creating connection');
+					cb();
+				}
+			}
+		});
+	}
+
+	function restore_vm_snapshot(cb, cb2) {
+		exec('VBoxManage snapshot \'' + vm_name + '\' restore \'' + snapshot_name + '\'',
+			function (error, stdout, stderr) {
+				if (error) {
+					console.log('judge_request: Could not restore VM snapshot: ' + error);
+					cb2('IE', 'Could not reboot VM...');
+				} else {
+					start_vm(cb, cb2);
+				}
+			}
+		);
+	}
+
+	function start_vm(cb, cb2) {
+		exec('VBoxManage startvm \'' + vm_name + '\'',
+			function (error, stdout, stderr) {
+				if (error) {
+					console.log('judge_request: Could not start VM: ' + error);
+					cb2('IE', 'Could not reboot VM...');
+				} else {
+					// TODO KIP: Make it so that this doesn't have to be so terribly
+					//  long...
+					setTimeout(cb, 600);
+				}
+			}
+		);
+	}
+
 	// (1) Try to create a connection to the server specified
-	var submission_socket = net.createConnection(submission_server_data.port, submission_server_data.host);
-	console.log('---judge_request ' + submission_id + ': Socket created');
-	submission_socket.on('connect', function() {
-		console.log('---judge_request ' + submission_id + ': Socket connected');
-		gather_resources();
-	}).on('end', function() {
-		console.log('---judge_request ' + submission_id + ': Socket closed');
-	}).on('error', function(err) {
-		console.log('---judge_request ' + submission_id + ': Error opening socket: ' + err);
-		callback('IE', 'Could not connect to submission server');
-	});
+	function create_connection() {
+		submission_socket = net.createConnection(submission_server_data.port, submission_server_data.host);
+		console.log('---judge_request ' + submission_id + ': Socket created');
+		submission_socket.on('connect', function() {
+			console.log('---judge_request ' + submission_id + ': Socket connected');
+			gather_resources();
+		}).on('end', function() {
+			console.log('---judge_request ' + submission_id + ': Socket closed');
+		}).on('error', function(err) {
+			// This VERY LIKELY means the VM has been fork bombed.
+			//  Notify the user, and restart the vm.
+			console.log('---judge_request ' + submission_id + ': Error opening socket: ' + err);
+			wait_block = true;
+			exec('VBoxManage controlvm \'' + vm_name + '\' poweroff', { timeout: 15000 }, function (error, stdout, stderr) {
+				if (error) {
+					if (error.signal === 'SIGTERM') {
+						console.log('judge_request: Shutdown of server took too long!');
+						wait_block = false;
+					} else {
+						console.log('judge_request: Shutdown of server failed! ' + error);
+						wait_block = false;
+					}
+				} else {
+					restore_vm_snapshot(function() {
+						wait_block = false;
+					}, function (junk, error) {
+						console.log('judge_request: Could not reboot server: ' + error);
+						wait_block = false;
+					});
+				}
+			});
+			callback('IE', 'Could not connect to server. Attempting server reboot, try again in a few seconds (will never take more than 30 seconds)...');
+		});
+	}
 
 	// (2) Gather all resources required to judge submission
 	//  Test data
@@ -136,14 +228,14 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 					console.log('---judge_request ' + submission_id + ': ERR exporting JSON package data: ' + err);
 					callback('IE', 'Could not write package JSON for submission server (S' + submission_id + ')');
 				} else {
-					create_package(to_export);
+					create_package(to_export, dirname);
 				}
 			});
 		}
 	}
 
 	// (3) Create a submission package with that data (compressed file)
-	function create_package(package_data) {
+	function create_package(package_data, dirname) {
 		var tarball_name = package_data.package_name + '.tar.gz';
 		exec('tar cvzf ' + tarball_name + ' ' + package_data.package_name + '/',
 			{ timeout: 5000, cwd: './data/sandbox/' },
@@ -152,7 +244,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 					console.log('---judge_request ' + submission_id + ': ERR compressing package: ' + error);
 					callback('IE', 'Could not prepare package to send to submission server: Could not compress (S' + submission_id + ')');
 				} else {
-					send_package(package_data, tarball_name);
+					send_package(package_data, tarball_name, dirname);
 				}
 			});
 	}
@@ -160,7 +252,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 	// (5) Send submission package across the network
 	// (7) Listen for results. On results received, mark submission
 	//  answer.
-	function send_package(package_data, tarball_name) {
+	function send_package(package_data, tarball_name, dirname) {
 
 		var out_stream = fs.createReadStream('./data/sandbox/' + tarball_name);
 		submission_socket.on('data', report_result_received);
@@ -172,13 +264,13 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 			out_stream.pipe(submission_socket);
 			out_stream.on('end', function() {
 				console.log('---judge_request ' + submission_id + ': Finished writing to socket');
-				cleanup();
+				cleanup(tarball_name, dirname);
 			});
 		});
 	}
 
 	// (6) Cleanup submission package and directory from sandbox.
-	function cleanup(tarball_name) {
+	function cleanup(tarball_name, dirname) {
 		if (dirname === undefined || dirname === null || dirname === '.' || dirname === '/' || dirname === '~' || dirname === '') {
 			return;
 		}

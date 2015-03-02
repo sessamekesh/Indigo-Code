@@ -5,10 +5,6 @@
 
 'use strict';
 
-var test_case_dao = require('../dao/test_case_dao'),
-	time_limit_dao = require('../dao/time_limit_dao'),
-	language_dao = require('../dao/language_dao');
-
 var subsystems = {
 	cpp98: require('./cpp98'),
 	python: require('./python'),
@@ -21,38 +17,16 @@ var subsystems = {
 };
 
 // Callback: result, notes, err
-function judgeSubmission(submission_id, languageData, problemData, source_path, original_filename, callback) {
+function judgeSubmission(submission_id, languageData, problemData, source_path, original_filename, time_limit, test_cases, callback) {
 	console.log('owl_router: Received request to judge submission ' + submission_id + ' with language ' + languageData.name);
 	console.log('Problem: ' + problemData.name + ' Language Subsystem: ' + languageData.subsys_name);
 	console.log('Source Path: ' + source_path + ' Original Filename: ' + original_filename);
 
 	if (subsystems[languageData.subsys_name]) {
-		language_dao.reportLanguageUsed(languageData.id);
-		getTimeLimit(problemData, languageData.id, function (res, err) {
-			if (err) {
-				callback('IE', err);
-			} else {
-				console.log('Time limit: ' + res);
-				subsystems[languageData.subsys_name].judge(submission_id, languageData, problemData, res, source_path, original_filename, callback);
-			}
-		});
+		subsystems[languageData.subsys_name].judge(submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback);
 	} else {
 		callback(null, null, 'Could not find subsystem ' + languageData.subsys_name);
 	}
-}
-
-function getTimeLimit(problemData, languageID, callback) {
-
-	console.log('Fetching time limit for problem ' + problemData.name + ' with language ' + languageID);
-	time_limit_dao.getTimeLimit(problemData.id, languageID, function (res, err) {
-		if (err) {
-			callback(null, 'Failed to get time limit: ' + err);
-		} else if (res === 'USE_DEFAULT') {
-			callback(problemData.time_limit);
-		} else {
-			callback(res);
-		}
-	});
 }
 
 exports.judgeSubmission = judgeSubmission;

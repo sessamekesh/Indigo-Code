@@ -45,7 +45,8 @@ exports.broadcastResult = function (problemID, submissionID, result, notes) {
 				{
 					id: submissionID,
 					problem_id: problemID,
-					result: result
+					result: result,
+					notes: notes
 				}
 			);
 		}

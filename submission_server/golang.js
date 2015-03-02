@@ -1,17 +1,16 @@
 'use strict';
 
 var fs = require('fs'),
-	exec = require('child_process').exec,
-	test_case_dao = require('../dao/test_case_dao');
+	exec = require('child_process').exec;
 
 // Callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, callback) {
-	console.log('----------GO JUDGE----------');
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
+	console.log('----------GOLANG JUDGE----------');
 
-	// Append .py to submission type...
+	// Append .go to submission type...
 	exec('mv ' + source_path + ' ' + source_path + '.go', { timeout: 5000 }, function (err, stdout, stderr) {
 		if (err) {
-			console.log('go.js: ERR moving file to add py extension');
+			console.log('golang: ERR moving file to add go extension');
 			console.log('--Source Path: ' + source_path);
 			console.log('--New Path: ' + source_path + '.go');
 			console.log('--Error: ' + err);
@@ -21,24 +20,19 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		}
 	});
 
+	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
+
 	// Run against test cases...
 	function run_test_cases() {
-		test_case_dao.getTestCases(problemData.id, function (res, err) {
-			if (err) {
-				console.log('go: Error retreiving test cases - ' + err);
-				callback('IE', 'Error retreiving list of test cases');
-			} else {
-				run_test_case(0, res);
-			}
-		});
+		run_test_case(0, test_cases);
 	}
 
 	function run_test_case(test_index, test_array) {
 		if (test_index >= test_array.length) {
 			cleanup_and_report_success(test_array);
 		} else {
-			var out_file = './data/sandbox/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = 'go run ' + source_path + '.go < ./data/test_cases/tc' + test_array[test_index].id + '.in > ' + out_file;
+			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
+				cmd = 'go run ' + source_path + '.go < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
 			exec(cmd, { timeout: time_limit }, function (err, stdout, stderr) {
 				if (err) {
 					if (err.signal === 'SIGTERM') {
@@ -46,7 +40,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 						callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
 						removeCompletedTestCase(out_file);
 					} else {
-						console.log('go.js: Error in executing command ' + cmd + ': ' + err);
+						console.log('golang: Error in executing command ' + cmd + ': ' + err);
 						callback('RE', err.message);
 						removeCompletedTestCase(out_file);
 					}
@@ -58,11 +52,11 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 	}
 
 	function compare_results(test_index, test_array, out_file) {
-		var cmd = './data/comparison_programs/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + './data/test_cases/tc' + test_array[test_index].id + '.out';
+		var cmd = sandbox_dir + '/cp' + test_array[test_index].comparison_program_id
+			+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
 		exec(cmd, { timeout: 5000 }, function (error, stdout, stderr) {
 			if (error) {
-				console.log('go.js: Error running comparison program: ' + error);
+				console.log('golang: Error running comparison program: ' + error);
 				callback('IE', 'Comparison error: ' + error.message);
 			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
 				run_test_case(test_index + 1, test_array);
@@ -79,7 +73,7 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 	function removeCompletedTestCase(out_file) {
 		exec ('rm ' + out_file, { timeout: 5000 }, function (err, stdout, stderr) {
 			if (err) {
-				console.log('go.js: Error removing test output: ' + out_file + ': ' + err);
+				console.log('golang: Error removing test output: ' + out_file + ': ' + err);
 			}
 		});
 	}
