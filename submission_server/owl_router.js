@@ -13,7 +13,8 @@ var subsystems = {
 	c: require('./c'),
 	nodejs: require('./nodejs'),
 	cpp11: require('./cpp11'),
-	golang: require('./golang')
+	golang: require('./golang'),
+	vigil: require('./vigil')
 };
 
 // Callback: result, notes, err

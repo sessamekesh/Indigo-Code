@@ -16,7 +16,10 @@ var submission_server_data = {
 	//host: '129.123.210.40',
 	port: 8080
 },
-	SUBMISSION_TIMOUT = 45000;
+	SUBMISSION_TIMOUT = 45000,
+	last_submission_time = Date.now(),
+	vm_inactive_lifetime = 1000 * 60 * 8, // 8 minutes
+	vm_active = false;
 
 // TODO KIP: Move these to a configuration file of sorts.
 //  Virtual machines... hooray...
@@ -31,6 +34,23 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 	console.log('judge_request: Submission received for judgement: ' + submission_id + ' on problem ' + problemData.name);
 
 	var submission_socket;
+
+	// System that shuts down VM after 5 minutes of complete inactivity...
+	last_submission_time = Date.now();
+	if (vm_active === false) {
+		setTimeout(check_vm_timeout, vm_inactive_lifetime * 1.3);
+	}
+
+	function check_vm_timeout() {
+		console.log('judgeSubmission: Checking for VM timeout...');
+		if ((Date.now() - last_submission_time) > vm_inactive_lifetime) {
+			console.log('judgeSubmission: Closing VM');
+			exec('VBoxManage controlvm \'' + vm_name + '\' poweroff');
+		} else {
+			console.log('Last submission was ' + ((Date.now() - last_submission_time) / 1000) + ' seconds ago, waiting.');
+			setTimeout(check_vm_timeout, vm_inactive_lifetime * 1.3);
+		}
+	}
 
 	check_can_start();
 
@@ -85,6 +105,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 				} else {
 					// TODO KIP: Make it so that this doesn't have to be so terribly
 					//  long...
+					vm_active = true;
 					setTimeout(cb, 600);
 				}
 			}
