@@ -4,7 +4,7 @@ var error_page = require('../page_builders/error_page'),
 	formidable = require('formidable'),
 	submission_dao = require('../dao/submission_dao'),
 	language_dao = require('../dao/language_dao'),
-	owl_router = require('../lang_subsystems/owl_router'),
+	judge_request = require('./judge_request'),
 	fs = require('fs'),
 	result_listener_socket = require('../sockets/result_listener_socket'),
 	scores_dao = require('../dao/scores_dao'),
@@ -151,7 +151,7 @@ function beginJudgeProcess(submissionID, problemData, langID, path, originalFile
 		// Determine if a subsystem exists to achieve that goal
 		//  If so, route to that subsystem.
 		//  If not, give an error to the user.
-		owl_router.judgeSubmission(submissionID, languageData,
+		judge_request.judgeSubmission(submissionID, languageData,
 			problemData, path, originalFilename, function (res, notes, err) {
 				if (err) {
 					callback('IE', 'judge: ERR judging submission: ' + err);
