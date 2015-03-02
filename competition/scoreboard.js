@@ -52,13 +52,13 @@ function showScoreboard(response, request, compData, pageNumber) {
 			function generateTableHeader(scores_data) {
 				toCallback += '<div id="content" class="col-md-10"><table class="table">'
 					+'\n\t<tr>'
-					+ '\n\t\t<th>User</th>';
+					+ '\n\t\t<th></th><th>User</th>';
 				problem_dao.getProblemsInCompetition(compData.id, function (res, err) {
 					if (err) {
 						callback(null, 'ERR generating table header: ' + err);
 					} else {
 						for (var i = 0; i < res.length; i++) {
-							toCallback += '<th>' + res[i].name + '</th>';
+							toCallback += '<th><a href="/competition/c' + compData.id + '/p' + res[i].id + '/submissions">' + res[i].name + '</a></th>';
 						}
 						toCallback += '\n\t<th>Score</th><th>Time Penalty</th></tr>';
 						generateTableBody(scores_data, res);
@@ -69,7 +69,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 			function generateTableBody(scores_data, problems_list) {
 				for (var i = 0; i < scores_data.length; i++) {
 					toCallback += '\n\t<tr>'
-						+ '\n\t\t<td>' + scores_data[i].user_name + '</td>';
+						+ '\n\t\t<td>' + (i + 1) + '</td><td>' + scores_data[i].user_name + '<br /><i>' + scores_data[i].tagline + '</i></td>';
 					for (var j = 0; j < problems_list.length; j++) {
 						toCallback += '<td>';
 						if (scores_data[i]['ps_' + problems_list[j].id] === 'SOLVED') {

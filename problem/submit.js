@@ -61,7 +61,7 @@ function generateSubmitPageBody(userData, compData, problemData) {
 		function inputFileSelect() {
 			body += '\n\t\t</select><br />'
 				+ '\n\t\t<label for="submission_file">Submission File:</label>'
-				+ '\n\t\t<input type="file" name="submission_file" multiple="multiple" /><br />'
+				+ '\n\t\t<input type="file" name="submission_file" /><br />'
 				+ '\n\t\t<input type="submit" value="Submit" />'
 				+ '\n\t</form>'
 				+ '\n</div>';

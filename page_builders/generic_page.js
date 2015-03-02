@@ -207,6 +207,7 @@ function GoronPage(pageDesc) {
 				+ '\n\t\t<meta name="viewport" content="width=device-width, initial-scale=1">'
 				+ '\n\t\t<link rel="stylesheet" href="/bootstrap-3.3.2-dist/css/bootstrap.css">'
 				+ '\n\t\t<link rel="stylesheet" href="/style.css">'
+				+ '\n\t\t<link rel="icon" type="image/png" href="/UsuLogo.png" />'
 				+ '\n\t\t<script src="/jquery-1.11.2.min.js"></script>'
 				+ '\n\t\t<script src="/bootstrap-3.3.2-dist/js/bootstrap.js"></script>';
 
@@ -425,6 +426,13 @@ function GoronSidebar(userData) {
 				toReturn += '\n\t<ul>'
 					+ '\n\t\t<li><a href="/index">Home</a></li>'
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
+					+ '\n\t</ul>'
+					+ '\n\t<hr>'
+					+ '\n\t<b>Admin Functions</b>'
+					+ '\n\t<ul>'
+					+ '\n\t\t<li><a href="/admin/add_competition">Create New Competition</a></li>'
+					+ '\n\t\t<li><a href="/admin/view_users">View User Data</a></li>'
+					+ '\n\t\t<li><a href="/admin/add_comparison_program">Add comparison method</a></li>'
 					+ '\n\t</ul>'
 					+ '\n\t<hr>'
 					+ '\n\t<b>Upcoming Competitions</b><br />'

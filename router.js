@@ -32,12 +32,8 @@ function route(pathname, response, request) {
 		fs.exists('./public' + pathname, function(exists) {
 			if (exists) {
 				console.log('File found in ./public' + pathname + ', opening');
-				var loadedData = '';
-				var input = fs.createReadStream('./public' + pathname);
-				input.on('data', function(data) {
-					loadedData += data;
-				});
-				input.on('end', function() {
+
+				fs.readFile('./public' + pathname, function (err, data) {
 					var type = pathname.substr(pathname.lastIndexOf('.'));
 					if (type === '.css') {
 						type = 'text/css';
@@ -47,12 +43,16 @@ function route(pathname, response, request) {
 						type = 'text/javascript';
 					} else if (type === '.gif') {
 						type = 'image/gif';
+					} else if (type === '.ico') {
+						type = 'favicon/ico';
+					} else if (type === '.png') {
+						type = 'image/png';
 					} else {
 						type = 'text/plain';
 					}
 
 					response.writeHead(200, {'Content-Type': type});
-					response.write(loadedData);
+					response.write(data);
 					response.end();
 				});
 			} else {
