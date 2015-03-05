@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Feb 19, 2015 at 04:07 PM
+-- Generation Time: Mar 04, 2015 at 03:25 PM
 -- Server version: 5.5.41-0ubuntu0.14.10.1
 -- PHP Version: 5.5.12-2ubuntu4.2
 
@@ -19,6 +19,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `goron`
 --
+CREATE DATABASE IF NOT EXISTS `goron` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `goron`;
 
 -- --------------------------------------------------------
 
@@ -26,12 +28,12 @@ SET time_zone = "+00:00";
 -- Table structure for table `ComparisonPrograms`
 --
 
+DROP TABLE IF EXISTS `ComparisonPrograms`;
 CREATE TABLE IF NOT EXISTS `ComparisonPrograms` (
 `id` int(11) NOT NULL,
   `name` varchar(55) NOT NULL,
-  `description` varchar(2000) NOT NULL,
-  `file_path` varchar(127) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+  `description` varchar(2000) NOT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -39,23 +41,17 @@ CREATE TABLE IF NOT EXISTS `ComparisonPrograms` (
 -- Table structure for table `Competition`
 --
 
+DROP TABLE IF EXISTS `Competition`;
 CREATE TABLE IF NOT EXISTS `Competition` (
 `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
   `htmlfrag_data` varchar(3000) NOT NULL,
   `is_private` bit(1) NOT NULL,
   `start_date` datetime NOT NULL,
-  `end_date` datetime NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
-
---
--- Dumping data for table `Competition`
---
-
-INSERT INTO `Competition` (`id`, `name`, `htmlfrag_data`, `is_private`, `start_date`, `end_date`) VALUES
-(1, 'Test Upcoming Competition', '<b>This is a test upcoming competition</b>\r\n<p>There isn''t actually any data I''d like to share, and I plan on dropping this anyways.</p>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non malesuada eros. Cras sit amet nunc placerat, gravida nulla eget, tincidunt mauris. Proin in pharetra ligula. Maecenas odio dolor, hendrerit at lectus ut, pharetra aliquam ipsum. Proin nisi sapien, pulvinar vel mattis a, dictum vitae nisl. Donec laoreet tincidunt tincidunt. Maecenas consequat tempus egestas. Proin vel imperdiet nisi, ut ornare nibh. Donec tellus tellus, egestas vel ligula eu, placerat aliquet erat. Pellentesque aliquet vulputate augue ac varius. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nunc sagittis eros purus, vel cursus erat bibendum non. Integer convallis gravida metus quis cursus. Vestibulum sollicitudin vestibulum orci, at fringilla metus auctor quis. Etiam condimentum risus nec ornare ullamcorper.\r\n\r\nNam dignissim, eros ac vehicula pharetra, diam mi varius nibh, vel facilisis neque diam a augue. Ut eu accumsan justo, imperdiet sagittis tellus. Duis sodales quam vitae augue scelerisque molestie. Sed luctus maximus enim eu semper. Nullam pellentesque turpis sit amet ante suscipit, sit amet ultrices velit convallis. Nunc sed nulla ut ex laoreet ornare sit amet eu mauris. Vivamus et ex id leo accumsan tristique eu sed urna. Ut posuere non erat vitae gravida. Phasellus mollis tincidunt sem, vel pellentesque felis molestie vitae. Sed accumsan cursus erat. Donec in mollis nunc. Integer sed turpis ut dui varius eleifend. Donec tempus quam vitae iaculis dignissim.</p>', b'0', '2015-03-02 00:00:00', '2015-03-02 15:00:00'),
-(2, 'Test Ongoing Competition', '<b><i>This is a test ongoing competition></i></b>\r\n<p>There isn''t actually any data I''d like to share, and I plan on dropping this anyways.</p>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non malesuada eros. Cras sit amet nunc placerat, gravida nulla eget, tincidunt mauris. Proin in pharetra ligula. Maecenas odio dolor, hendrerit at lectus ut, pharetra aliquam ipsum. Proin nisi sapien, pulvinar vel mattis a, dictum vitae nisl. Donec laoreet tincidunt tincidunt. Maecenas consequat tempus egestas. Proin vel imperdiet nisi, ut ornare nibh. Donec tellus tellus, egestas vel ligula eu, placerat aliquet erat. Pellentesque aliquet vulputate augue ac varius. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nunc sagittis eros purus, vel cursus erat bibendum non. Integer convallis gravida metus quis cursus. Vestibulum sollicitudin vestibulum orci, at fringilla metus auctor quis. Etiam condimentum risus nec ornare ullamcorper.\r\n\r\nNam dignissim, eros ac vehicula pharetra, diam mi varius nibh, vel facilisis neque diam a augue. Ut eu accumsan justo, imperdiet sagittis tellus. Duis sodales quam vitae augue scelerisque molestie. Sed luctus maximus enim eu semper. Nullam pellentesque turpis sit amet ante suscipit, sit amet ultrices velit convallis. Nunc sed nulla ut ex laoreet ornare sit amet eu mauris. Vivamus et ex id leo accumsan tristique eu sed urna. Ut posuere non erat vitae gravida. Phasellus mollis tincidunt sem, vel pellentesque felis molestie vitae. Sed accumsan cursus erat. Donec in mollis nunc. Integer sed turpis ut dui varius eleifend. Donec tempus quam vitae iaculis dignissim.</p>', b'0', '2015-02-13 00:00:00', '2015-03-01 08:18:10'),
-(3, 'Test Just About To Start', '<h1>JUST ABOUT TO START</h1>\r\n<p>There isn''t actually any data I''d like to share, and I plan on dropping this anyways.</p>\r\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce non malesuada eros. Cras sit amet nunc placerat, gravida nulla eget, tincidunt mauris. Proin in pharetra ligula. Maecenas odio dolor, hendrerit at lectus ut, pharetra aliquam ipsum. Proin nisi sapien, pulvinar vel mattis a, dictum vitae nisl. Donec laoreet tincidunt tincidunt. Maecenas consequat tempus egestas. Proin vel imperdiet nisi, ut ornare nibh. Donec tellus tellus, egestas vel ligula eu, placerat aliquet erat. Pellentesque aliquet vulputate augue ac varius. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nunc sagittis eros purus, vel cursus erat bibendum non. Integer convallis gravida metus quis cursus. Vestibulum sollicitudin vestibulum orci, at fringilla metus auctor quis. Etiam condimentum risus nec ornare ullamcorper.\r\n\r\nNam dignissim, eros ac vehicula pharetra, diam mi varius nibh, vel facilisis neque diam a augue. Ut eu accumsan justo, imperdiet sagittis tellus. Duis sodales quam vitae augue scelerisque molestie. Sed luctus maximus enim eu semper. Nullam pellentesque turpis sit amet ante suscipit, sit amet ultrices velit convallis. Nunc sed nulla ut ex laoreet ornare sit amet eu mauris. Vivamus et ex id leo accumsan tristique eu sed urna. Ut posuere non erat vitae gravida. Phasellus mollis tincidunt sem, vel pellentesque felis molestie vitae. Sed accumsan cursus erat. Donec in mollis nunc. Integer sed turpis ut dui varius eleifend. Donec tempus quam vitae iaculis dignissim.</p>', b'0', '2015-02-13 16:48:00', '2015-02-13 18:00:00');
+  `end_date` datetime NOT NULL,
+  `max_team_size` int(11) NOT NULL DEFAULT '3',
+  `incorrect_submission_time_penalty` int(11) NOT NULL DEFAULT '20'
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=7 ;
 
 -- --------------------------------------------------------
 
@@ -63,22 +59,12 @@ INSERT INTO `Competition` (`id`, `name`, `htmlfrag_data`, `is_private`, `start_d
 -- Table structure for table `ContentType`
 --
 
+DROP TABLE IF EXISTS `ContentType`;
 CREATE TABLE IF NOT EXISTS `ContentType` (
 `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
   `content_type` varchar(55) NOT NULL
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=6 ;
-
---
--- Dumping data for table `ContentType`
---
-
-INSERT INTO `ContentType` (`id`, `name`, `content_type`) VALUES
-(1, 'HTML', 'text/html'),
-(2, 'Plain Text', 'text/plain'),
-(3, 'Source Code', 'text/plain'),
-(4, 'PDF File', 'application/pdf'),
-(5, 'PNG', 'image/png');
 
 -- --------------------------------------------------------
 
@@ -86,9 +72,9 @@ INSERT INTO `ContentType` (`id`, `name`, `content_type`) VALUES
 -- Table structure for table `Hint`
 --
 
+DROP TABLE IF EXISTS `Hint`;
 CREATE TABLE IF NOT EXISTS `Hint` (
 `hint_id` int(11) NOT NULL,
-  `problem_id` int(11) NOT NULL,
   `test_case_id` int(11) DEFAULT NULL,
   `hint_text` varchar(800) NOT NULL,
   `is_active` bit(1) NOT NULL DEFAULT b'0',
@@ -101,19 +87,13 @@ CREATE TABLE IF NOT EXISTS `Hint` (
 -- Table structure for table `Language`
 --
 
+DROP TABLE IF EXISTS `Language`;
 CREATE TABLE IF NOT EXISTS `Language` (
 `id` int(11) NOT NULL,
   `name` varchar(28) NOT NULL,
-  `subsys_name` varchar(28) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
-
---
--- Dumping data for table `Language`
---
-
-INSERT INTO `Language` (`id`, `name`, `subsys_name`) VALUES
-(1, 'C++98 (g++)', 'cpp98'),
-(2, 'Python 2.8', 'python');
+  `subsys_name` varchar(28) NOT NULL,
+  `num_uses` int(11) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=11 ;
 
 -- --------------------------------------------------------
 
@@ -121,21 +101,15 @@ INSERT INTO `Language` (`id`, `name`, `subsys_name`) VALUES
 -- Table structure for table `Problem`
 --
 
+DROP TABLE IF EXISTS `Problem`;
 CREATE TABLE IF NOT EXISTS `Problem` (
 `id` int(11) NOT NULL,
   `name` varchar(55) NOT NULL,
   `competition_id` int(11) NOT NULL,
   `description_file_path` varchar(127) NOT NULL,
-  `description_file_type` int(11) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
-
---
--- Dumping data for table `Problem`
---
-
-INSERT INTO `Problem` (`id`, `name`, `competition_id`, `description_file_path`, `description_file_type`) VALUES
-(2, 'Answer', 1, 'Answer.pdf', 4),
-(3, 'Fibonacci', 2, 'Fibonacci.pdf', 4);
+  `description_file_type` int(11) NOT NULL,
+  `default_time_limit` int(11) NOT NULL DEFAULT '2500'
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
 
 -- --------------------------------------------------------
 
@@ -143,12 +117,13 @@ INSERT INTO `Problem` (`id`, `name`, `competition_id`, `description_file_path`, 
 -- Table structure for table `Score`
 --
 
+DROP TABLE IF EXISTS `Score`;
 CREATE TABLE IF NOT EXISTS `Score` (
-`id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `problem_id` int(11) NOT NULL,
-  `score` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+  `competition_id` int(11) NOT NULL,
+  `score` int(11) NOT NULL,
+  `time_penalty` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -156,6 +131,7 @@ CREATE TABLE IF NOT EXISTS `Score` (
 -- Table structure for table `Submission`
 --
 
+DROP TABLE IF EXISTS `Submission`;
 CREATE TABLE IF NOT EXISTS `Submission` (
 `id` int(11) NOT NULL,
   `lang_id` int(11) NOT NULL,
@@ -163,8 +139,8 @@ CREATE TABLE IF NOT EXISTS `Submission` (
   `user_id` int(11) NOT NULL,
   `result` varchar(3) NOT NULL,
   `submission_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `notes` varchar(500) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+  `notes` varchar(1500) NOT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=918 ;
 
 -- --------------------------------------------------------
 
@@ -172,12 +148,25 @@ CREATE TABLE IF NOT EXISTS `Submission` (
 -- Table structure for table `TestCase`
 --
 
+DROP TABLE IF EXISTS `TestCase`;
 CREATE TABLE IF NOT EXISTS `TestCase` (
 `id` int(11) NOT NULL,
   `problem_id` int(11) NOT NULL,
-  `input_file_path` varchar(127) NOT NULL,
-  `expected_output_file_path` varchar(127) NOT NULL,
   `comparison_program_id` int(11) NOT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=18 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `TimeLimit`
+--
+
+DROP TABLE IF EXISTS `TimeLimit`;
+CREATE TABLE IF NOT EXISTS `TimeLimit` (
+`id` int(11) NOT NULL,
+  `problem_id` int(11) NOT NULL,
+  `language_id` int(11) NOT NULL,
+  `time_limit` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -186,23 +175,17 @@ CREATE TABLE IF NOT EXISTS `TestCase` (
 -- Table structure for table `User`
 --
 
+DROP TABLE IF EXISTS `User`;
 CREATE TABLE IF NOT EXISTS `User` (
 `id` int(11) NOT NULL,
   `user_name` varchar(25) NOT NULL,
   `name` varchar(55) NOT NULL,
   `is_admin` bit(1) NOT NULL DEFAULT b'0',
   `pass_hash` varchar(80) NOT NULL,
-  `tagline` varchar(125) NOT NULL DEFAULT 'Too cool for a tagline'
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=11 ;
-
---
--- Dumping data for table `User`
---
-
-INSERT INTO `User` (`id`, `user_name`, `name`, `is_admin`, `pass_hash`, `tagline`) VALUES
-(8, 'sessamekesh', 'Kamaron Peterson', b'1', '$2a$14$LrecjSJbTQaMc0dKnlS.U.1utB02xZ4ti0q0gJoVMiVwpWMdmJcly', 'F!R5T P05T!!'),
-(9, 'bluefood2010', 'KAMARON J PETERSON', b'0', '$2a$10$4rO3yldH8jfHaXWsdfia/u3q5j51X4EcMADjBldQL9CnpQPdWazei', 'I''m not an admin... :('),
-(10, 'sam', 'sam', b'0', '$2a$10$xnWk7XsG6JpHkaJXcGJocOIKpmSOUSw.K3quZGOXLaB919LRrwYUK', 'samtest');
+  `tagline` varchar(125) NOT NULL DEFAULT 'Too cool for a tagline',
+  `email_address` varchar(65) NOT NULL,
+  `can_share_email` bit(1) NOT NULL DEFAULT b'1'
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=51 ;
 
 --
 -- Indexes for dumped tables
@@ -230,7 +213,7 @@ ALTER TABLE `ContentType`
 -- Indexes for table `Hint`
 --
 ALTER TABLE `Hint`
- ADD PRIMARY KEY (`hint_id`), ADD KEY `problem_id` (`problem_id`), ADD KEY `test_case_id` (`test_case_id`);
+ ADD PRIMARY KEY (`hint_id`), ADD KEY `test_case_id` (`test_case_id`);
 
 --
 -- Indexes for table `Language`
@@ -248,7 +231,7 @@ ALTER TABLE `Problem`
 -- Indexes for table `Score`
 --
 ALTER TABLE `Score`
- ADD PRIMARY KEY (`id`), ADD KEY `problem_id` (`problem_id`), ADD KEY `user_id` (`user_id`);
+ ADD PRIMARY KEY (`user_id`,`competition_id`), ADD KEY `problem_id` (`competition_id`), ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `Submission`
@@ -261,6 +244,12 @@ ALTER TABLE `Submission`
 --
 ALTER TABLE `TestCase`
  ADD PRIMARY KEY (`id`), ADD KEY `problem_id` (`problem_id`), ADD KEY `comparison_program_id` (`comparison_program_id`);
+
+--
+-- Indexes for table `TimeLimit`
+--
+ALTER TABLE `TimeLimit`
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `probl_lang_uni` (`problem_id`,`language_id`), ADD KEY `language_id` (`language_id`), ADD KEY `problem_id` (`problem_id`);
 
 --
 -- Indexes for table `User`
@@ -276,12 +265,12 @@ ALTER TABLE `User`
 -- AUTO_INCREMENT for table `ComparisonPrograms`
 --
 ALTER TABLE `ComparisonPrograms`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
 --
 -- AUTO_INCREMENT for table `Competition`
 --
 ALTER TABLE `Competition`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=4;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=7;
 --
 -- AUTO_INCREMENT for table `ContentType`
 --
@@ -296,32 +285,32 @@ MODIFY `hint_id` int(11) NOT NULL AUTO_INCREMENT;
 -- AUTO_INCREMENT for table `Language`
 --
 ALTER TABLE `Language`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=11;
 --
 -- AUTO_INCREMENT for table `Problem`
 --
 ALTER TABLE `Problem`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=4;
---
--- AUTO_INCREMENT for table `Score`
---
-ALTER TABLE `Score`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=12;
 --
 -- AUTO_INCREMENT for table `Submission`
 --
 ALTER TABLE `Submission`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=918;
 --
 -- AUTO_INCREMENT for table `TestCase`
 --
 ALTER TABLE `TestCase`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=18;
+--
+-- AUTO_INCREMENT for table `TimeLimit`
+--
+ALTER TABLE `TimeLimit`
 MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `User`
 --
 ALTER TABLE `User`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=11;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=51;
 --
 -- Constraints for dumped tables
 --
@@ -344,7 +333,7 @@ ADD CONSTRAINT `Problem_ibfk_2` FOREIGN KEY (`description_file_type`) REFERENCES
 --
 ALTER TABLE `Score`
 ADD CONSTRAINT `Score_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-ADD CONSTRAINT `Score_ibfk_2` FOREIGN KEY (`problem_id`) REFERENCES `Problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ADD CONSTRAINT `Score_ibfk_2` FOREIGN KEY (`competition_id`) REFERENCES `Competition` (`id`);
 
 --
 -- Constraints for table `Submission`
@@ -360,6 +349,13 @@ ADD CONSTRAINT `Submission_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `User` (`i
 ALTER TABLE `TestCase`
 ADD CONSTRAINT `TestCase_ibfk_1` FOREIGN KEY (`problem_id`) REFERENCES `Problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
 ADD CONSTRAINT `TestCase_ibfk_2` FOREIGN KEY (`comparison_program_id`) REFERENCES `ComparisonPrograms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `TimeLimit`
+--
+ALTER TABLE `TimeLimit`
+ADD CONSTRAINT `TimeLimit_ibfk_1` FOREIGN KEY (`problem_id`) REFERENCES `Problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT `TimeLimit_ibfk_2` FOREIGN KEY (`language_id`) REFERENCES `Language` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

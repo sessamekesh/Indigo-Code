@@ -1,7 +1,8 @@
 'use strict';
 
 var fs = require('fs'),
-	exec = require('child_process').exec;
+	exec = require('child_process').exec,
+	execSync = require('child_process').execSync;
 
 // NEXT VERSION: Error IDs - on report error to console, attach an ID
 //  so you can quickly grep for it.
@@ -52,23 +53,22 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
 				cmd = './' + executable_fname + ' < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
 			// TODO KIP Modify these systems to have a max_buffer size
-			var cp = exec(cmd, { timeout: time_limit }, function (error, stdout, stderr) {
-				if (error) {
-					if (error.signal === 'SIGTERM') {
-						console.log('Error in executing command - ' + error);
-						callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
-						cleanup(executable_fname);
-						removeCompletedTestCase(out_file);
-					} else {
-						console.log('Error in executing command - ' + error);
-						callback('RE', error.message);
-						cleanup(executable_fname);
-					}
+			try {
+				var result = execSync(cmd, { timeout: time_limit });
+				console.log('c.js: Successfully ran test case ' + test_array[test_index].id);
+				compare_results(executable_fname, test_index, test_array, out_file);
+			} catch (error) {
+				if (error.signal === 'SIGTERM') {
+					console.log('Error in executing command - ' + error);
+					callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
+					cleanup(executable_fname);
+					removeCompletedTestCase(out_file);
 				} else {
-					console.log('c.js: Successfully ran test case ' + test_array[test_index].id);
-					compare_results(executable_fname, test_index, test_array, out_file);
+					console.log('Error in executing command - ' + error);
+					callback('RE', error.message);
+					cleanup(executable_fname);
 				}
-			});
+			}
 		}
 	}
 

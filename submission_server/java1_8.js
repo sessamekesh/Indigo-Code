@@ -1,7 +1,8 @@
 'use strict';
 
 var fs = require('fs'),
-	exec = require('child_process').exec;
+	exec = require('child_process').exec,
+	execSync = require('child_process').execSync;
 
 // Callback: result, notes
 exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
@@ -43,10 +44,10 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		var className = new_path.substr(new_path.lastIndexOf('/') + 1);
 			className = className.substr(0, className.lastIndexOf('.'));
 		console.log('java1_8.js: Building class ' + className);
-		exec('./bin/jdk1.8.0_31/bin/javac ' + new_path, { timeout: 5000 }, function (err, stdout, stderr) {
+		exec('./bin/jdk1.8.0_40/bin/javac ' + new_path, { timeout: 5000 }, function (err, stdout, stderr) {
 			if (err) {
 				console.log('java1_8: Build error: ' + err);
-				callback('BE', 'Could not build project: ' + err);
+				callback('BE', 'Could not build project: ' + err + ' ::: ' + stdout);
 				cleanup();
 			} else {
 				run_test_cases(className, new_path.substr(0, new_path.lastIndexOf('/')));
@@ -65,23 +66,22 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 			cleanup_and_report_success(test_array);
 		} else {
 			var out_file = '../../../' + sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = '../../../bin/jdk1.8.0_31/bin/java ' + class_name + ' < ../../../' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
-			exec(cmd, { timeout: time_limit, cwd: wd }, function (err, stdout, stderr) {
-				if (err) {
-					if (err.signal === 'SIGTERM') {
-						console.log('Time limit exceeded! ' + err.message);
-						callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
-						removeCompletedTestCase(out_file, wd);
-						cleanup();
-					} else {
-						console.log('java1_8.js: Error in executing command ' + cmd + ': ' + err);
-						callback('RE', err.message);
-						cleanup();
-					}
+				cmd = '../../../bin/jdk1.8.0_40/bin/java ' + class_name + ' < ../../../' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
+			try {
+				var result = execSync(cmd, { timeout: time_limit, cwd: wd });
+				compare_results(class_name, wd, test_index, test_array, out_file);
+			} catch (err) {
+				if (err.signal === 'SIGTERM') {
+					console.log('Time limit exceeded! ' + err.message);
+					callback('TLE', 'Time limit exceeded. Test case ' + (test_index + 1));
+					removeCompletedTestCase(out_file, wd);
+					cleanup();
 				} else {
-					compare_results(class_name, wd, test_index, test_array, out_file);
+					console.log('java1_8.js: Error in executing command ' + cmd + ': ' + err);
+					callback('RE', err.message);
+					cleanup();
 				}
-			});
+			}
 		}
 	}
 

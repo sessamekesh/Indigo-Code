@@ -37,10 +37,6 @@ function gatekeeper(userData, compID, callback) {
 			console.log('Failed to get competition data on grounds: ' + err);
 			callback(false, null, null, 'competition_dao error: ' + err);
 		} else {
-			console.log('competition: DEBUG: Competition data:');
-			console.log(compData);
-			console.log(compData.start_date.getTime() + ", " + compData.end_date.getTime());
-			console.log('Now: ' + Date.now());
 			if (compData) {
 				if (!userData || userData === 'Guest' || userData === 'IncorrectLogin') {
 					auth_guest(compData);

@@ -14,7 +14,8 @@ var subsystems = {
 	nodejs: require('./nodejs'),
 	cpp11: require('./cpp11'),
 	golang: require('./golang'),
-	vigil: require('./vigil')
+	vigil: require('./vigil'),
+	cpp14: require('./cpp14')
 };
 
 // Callback: result, notes, err

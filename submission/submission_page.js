@@ -35,7 +35,7 @@ function showSubmissionPage(response, request, compData, problemData, page_num) 
 
 	var submission_page = generic_page.GoronPage({
 		title: '(Goron) Results for problem ' + problemData.name,
-		body: submissionPageBody(problemData, +page_num),
+		body: submissionPageBody(compData.id, problemData, +page_num),
 		header: generic_page.GoronHeader({
 				title: 'Results for problem ' + problemData.name,
 				subtitle: 'USU ACM Competition ' + compData.name,
@@ -59,7 +59,7 @@ function showSubmissionPage(response, request, compData, problemData, page_num) 
 	}
 }
 
-function submissionPageBody(problemData, page_num) {
+function submissionPageBody(compID, problemData, page_num) {
 
 	var start = page_num * 25,
 		finish = (page_num + 1) * 25;
@@ -75,18 +75,24 @@ function submissionPageBody(problemData, page_num) {
 		//  all that front-end jazz.
 		var listener_script =
 			  'var res_listener = io(\'/PR' + problemData.id + '\'),'
-			  + '\n\ttrs = io(\'/CT2\');'
+			  + '\n\ttrs = io(\'/CT' + compID + '\')'
+			  + '\n\tresults_key = {'
+
+		for (var key in results_key) {
+			listener_script += '\n\t\t\'' + key + '\': \'' + results_key[key] + '\',';
+		}
+		listener_script = listener_script.substring(0, listener_script.length - 1);
+		listener_script += '\n\t};'
 			+ '\nres_listener.on(\'submission_finished\', function (res) {'
 				+ '\n\tconsole.log(\'Received submission \' + res.id + \' with result: \' + res.result + \' and notes: \' + res.notes);'
-				+ '\n\tvar etm_r = document.getElementById(\'td_res_\' + res.id),'
-				+ '\n\t\tetm_n = document.getElementById(\'td_notes_\' + res.id);'
-				+ '\n\tetm_r.innerHTML = res.result;'
-				+ '\n\tetm_n.innerHTML = res.notes;'
+				+ '\n\$(\'#td_res_\' + res.id).html(results_key[res.result]);'
+				+ '\n\$(\'#td_res_\' + res.id).click(function() { \$(\'<div />\').html(res.notes).dialog({ modal: true, buttons: { Ok: function () { $(this).dialog("close"); }} }); });'
+				+ '\n\$(\'#td_notes_\' + res.id + \'_p\').text(res.notes);'
 				+ '\n\tconsole.log(JSON.stringify(res));'
 			+ '\n});'
 			+ '\ntrs.on(\'time_remaining\', function(tr) {'
 				+ '\n\tconsole.log(\'Time remaining event fired, with param: \' + tr);'
-				+ '\n\tvar ctr_f = document.getElementById(\'ctr\');'
+				+ '\n\tvar ctr_f = $(\'#ctr\');'
 				+ '\n\tif (tr > 0) {'
 				+ '\n\t\ttr = Math.floor(tr / 1000);'
 				+ '\n\t\tvar secs = tr % 60,'
@@ -95,12 +101,14 @@ function submissionPageBody(problemData, page_num) {
 				+ '\n\t\t\tsecs_txt = (\'00\' + secs).slice(-2),'
 				+ '\n\t\t\tmins_txt = (\'00\' + mins).slice(-2),'
 				+ '\n\t\t\thrs_txt = (\'00\' + hrs).slice(-2);'
-				+ '\n\t\tctr_f.innerHTML = \'Time remaining: \' + hrs_txt + \':\' + mins_txt + \':\' + secs_txt;'
+				+ '\n\t\tctr_f.text(\'Time remaining: \' + hrs_txt + \':\' + mins_txt + \':\' + secs_txt);'
 				+ '\n\t} else {'
-				+ '\n\t\tctr_f.innerHTML = \'<b>Time is up!</b>\';'
+				+ '\n\t\tctr_f.text(\'<b>Time is up!</b>\');'
 				+ '\n\t}'
 			+ '\n});'
 			+ '\nfunction showModal(sub_id) {'
+			+ '\n\tconsole.log(sub_id);'
+			+ '\n\tconsole.log($("#td_notes_" + sub_id));'
 			+ '\n\t$(function() { $("#td_notes_" + sub_id).dialog({ modal: true, buttons: { Ok: function () { $(this).dialog("close"); }} }); });'
 			+ '\n}';
 		callback(listener_script);
@@ -141,7 +149,8 @@ function submissionPageBody(problemData, page_num) {
 					+ '\n\t\t<td>' + formatDate(new Date(results[i].submission_time)) + '</td>'
 					+ '\n\t\t<td>'
 						+ '<button class="btn btn-default btn-mini" id="td_res_' + results[i].submission_id + '" onclick="showModal(' + results[i].submission_id + ');">' + results_key[results[i].result] + '</a>'
-						+ '<div style="display: none;" id="td_notes_' + results[i].submission_id + '" title="Notes for submission ' + results[i].submission_id + '"><p>' + results[i].notes + '</p></div></td>'
+						+ '<div style="display: none;" id="td_notes_' + results[i].submission_id + '" title="Notes for submission ' + results[i].submission_id + '">'
+						+ '<p id="td_notes_' + results[i].submission_id + '_p">' + results[i].notes + '</p></div></td>'
 					+ '\n\t</tr>';
 			}
 			body_text += '\n</table>\n</div>';

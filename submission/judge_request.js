@@ -25,8 +25,8 @@ var submission_server_data = {
 //  Virtual machines... hooray...
 // TODO KIP: There is a way to spawn virtual machines, but not
 //  to shut them down... change this...
-var vm_name = 'SubmissionServer',
-	snapshot_name = 'Server Startup';
+var vm_name = 'SubmissionServer64',
+	snapshot_name = 'Server64 Startup';
 
 // Callback: result, notes, err
 //  The notes out of this function will be user-facing.
@@ -106,7 +106,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 					// TODO KIP: Make it so that this doesn't have to be so terribly
 					//  long...
 					vm_active = true;
-					setTimeout(cb, 600);
+					setTimeout(cb, 1000);
 				}
 			}
 		);
@@ -308,7 +308,11 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 
 	function report_result_received(data) {
 		console.log('---judge_request ' + submission_id + ': Result received: ' + data);
-		var result = JSON.parse(data);
-		callback(result.result, result.notes);
+		try {
+			var result = JSON.parse(data);
+			callback(result.result, result.notes);
+		} catch (e) {
+			callback('IE', 'Response from server was corrupted. Re-submit to try again (this submission is not counted against your score)');
+		}
 	}
 }

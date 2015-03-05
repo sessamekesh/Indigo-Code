@@ -1,7 +1,8 @@
 'use strict';
 
 var fs = require('fs'),
-	exec = require('child_process').exec;
+	exec = require('child_process').exec,
+	execSync = require('child_process').execSync;
 
 // Callback: result, notes
 exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
@@ -33,21 +34,20 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 		} else {
 			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
 				cmd = 'node ' + source_path + '.js < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
-			exec(cmd, { timeout: time_limit }, function (err, stdout, stderr) {
-				if (err) {
-					if (err.signal === 'SIGTERM') {
-						console.log('Time limit exceeded! ' + err.message);
-						callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
-						removeCompletedTestCase(out_file);
-					} else {
-						console.log('nodejs.js: Error in executing command ' + cmd + ': ' + err);
-						callback('RE', err.message);
-						removeCompletedTestCase(out_file);
-					}
+			try {
+				var result = execSync(cmd, { timeout: time_limit });
+				compare_results(test_index, test_array, out_file);
+			} catch (err) {
+				if (err.signal === 'SIGTERM') {
+					console.log('Time limit exceeded! ' + err.message);
+					callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
+					removeCompletedTestCase(out_file);
 				} else {
-					compare_results(test_index, test_array, out_file);
+					console.log('nodejs.js: Error in executing command ' + cmd + ': ' + err);
+					callback('RE', err.message);
+					removeCompletedTestCase(out_file);
 				}
-			});
+			}
 		}
 	}
 
@@ -79,6 +79,6 @@ exports.judge = function (submission_id, languageData, problemData, time_limit, 
 	}
 
 	function cleanup_and_report_success(test_array) {
-		callback('AC', 'AC on ' + test_array.length + ' tests');
+		callback('AC', 'AC on ' + test_array.length + ' tests. Once you know, you Node.');
 	}
 }
