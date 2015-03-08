@@ -66,7 +66,8 @@ function submissionPageBody(compID, problemData, page_num) {
 
 	function gen_dependencies(callback) {
 		result_listener_socket.requestResultListener(problemData);
-		callback(['https://cdn.socket.io/socket.io-1.2.0.js', 'http://code.jquery.com/ui/1.11.3/jquery-ui.js']);
+		callback([{ type: 'js', href: 'https://cdn.socket.io/socket.io-1.2.0.js' },
+			{ type: 'js', href: 'http://code.jquery.com/ui/1.11.3/jquery-ui.js' }]);
 	}
 
 	// NEXT VERSION: Use static scripts, yo. This is miserable.

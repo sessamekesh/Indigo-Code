@@ -237,7 +237,7 @@ function GoronCompetitionUserInfo(userData, compData) {
 		toReturn.render = function(callback) {
 			var user_info_code = '<form action="/user/login" method="post" role="form">'
 				+ '\n\t<div class="form-group">'
-				+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+				+ '\n\t\t<input type="text" class="form-control" name="username" placeholder="Username" /><br />'
 				+ '\n\t\t<input type="password" name="password" class="form-control" value="" /><br />'
 				+ '\n\t\t<input type="submit" class="btn" name="login" value="Login" />'
 				+ '\n\t\t<input type="submit" class="btn" id="reg_button" name="register" value="Register" />'
@@ -259,7 +259,7 @@ function GoronCompetitionUserInfo(userData, compData) {
 			callback('<p>Incorrect login credentials!</p>'
 				+ '<form action="/user/login" method="post" role="form">'
 				+ '\n\t<div class="form-group">'
-				+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+				+ '\n\t\t<input type="text" class="form-control" name="username" placeholder="Username" /><br />'
 				+ '\n\t\t<input type="password" name="password" class="form-control" value="" /><br />'
 				+ '\n\t\t<input type="submit" class="btn" name="login" value="Login" />'
 				+ '\n\t\t<input type="submit" class="btn" id="reg_button" name="register" value="Register" />'

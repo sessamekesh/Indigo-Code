@@ -213,7 +213,11 @@ function GoronPage(pageDesc) {
 				+ '\n\t\t<script src="/bootstrap-3.3.2-dist/js/bootstrap.js"></script>';
 
 			for (var i = 0; i < script_dependencies.length; i++) {
-				htmlString += '\n\t\t<script src="' + script_dependencies[i] + '"></script>';
+				if (script_dependencies[i].type === 'js') {
+					htmlString += '\n\t\t<script src="' + script_dependencies[i].href + '"></script>';
+				} else if (script_dependencies[i].type === 'css') {
+					htmlString +='\n\t\t<link rel="stylesheet" type="text/css" href="' + script_dependencies[i].href + '"></script>';
+				}
 			}
 
 			if (script_text !== undefined) {
@@ -265,7 +269,7 @@ function GoronUserInfo(userData) {
 				console.log('Rendering Goron user tab for a guest');
 				callback('<form action="/user/login" method="post" role="form">'
 					+ '\n\t<div class="form-group">'
-					+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+					+ '\n\t\t<input type="text" class="form-control" name="username" placeholder="Username" /><br />'
 					+ '\n\t\t<input type="password" class="form-control" name="password" value="" /><br />'
 					+ '\n\t\t<input type="submit" class="btn pull-left" name="login" value="Login" />'
 					+ '\n\t\t<input type="submit" class="btn pull-right" id="reg_button" name="register" value="Register" />'
@@ -276,7 +280,7 @@ function GoronUserInfo(userData) {
 				callback('<p>Incorrect login credentials!</p>'
 					+ '\n<form action="/user/login" method="post" role="form">'
 					+ '\n\t<div class="form-group">'
-					+ '\n\t\t<input type="text" class="form-control" name="username" value="Username" /><br />'
+					+ '\n\t\t<input type="text" class="form-control" name="username" placeholder="Username" /><br />'
 					+ '\n\t\t<input type="password" class="form-control" name="password" value="" /><br />'
 					+ '\n\t\t<input type="submit" class="btn pull-left" name="login" value="Login" />'
 					+ '\n\t\t<input type="submit" class="btn pull-right" name="register" value="Register" />'
@@ -431,7 +435,7 @@ function GoronSidebar(userData) {
 					+ '\n\t<hr>'
 					+ '\n\t<b>Admin Functions</b>'
 					+ '\n\t<ul>'
-					+ '\n\t\t<li><a href="/admin/add_competition">Create New Competition</a></li>'
+					+ '\n\t\t<li><a href="/admin/new_comp">Create New Competition</a></li>'
 					+ '\n\t\t<li><a href="/admin/view_users">View User Data</a></li>'
 					+ '\n\t\t<li><a href="/admin/add_comparison_program">Add comparison method</a></li>'
 					+ '\n\t</ul>'

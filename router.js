@@ -3,6 +3,7 @@
 var user = require('./user/user'),
 	statics = require('./statics/statics'),
 	competition = require('./competition/competition'),
+	admin_router = require('./admin/admin_router'),
 	fs = require('fs'),
 	error_page = require('./page_builders/error_page');
 
@@ -12,6 +13,7 @@ subsystem['/'] = statics;
 subsystem['/index'] = statics;
 subsystem['/user'] = user;
 subsystem['/competition'] = competition;
+subsystem['/admin'] = admin_router;
 
 function route(pathname, response, request) {
 	// Determine which subsystem gets the request

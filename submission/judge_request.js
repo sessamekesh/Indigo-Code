@@ -106,7 +106,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 					// TODO KIP: Make it so that this doesn't have to be so terribly
 					//  long...
 					vm_active = true;
-					setTimeout(cb, 1000);
+					setTimeout(cb, 2000);
 				}
 			}
 		);

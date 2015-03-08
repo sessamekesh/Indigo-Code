@@ -30,6 +30,43 @@ function reportQueryEnded() {
 	}
 }
 
+function addNewCompetition(compData, callback) {
+	console.log('competition_dao: Adding new competition data');
+	console.log(compData);
+	if (compData === undefined) {
+		callback(null, 'No competition description provided!');
+	} else if (compData.comp_name === undefined) {
+		callback(null, 'No competition name provided!');
+	} else if (compData.htmlfrag_data === undefined) {
+		callback(null, 'No HTML fragment data provided!');
+	} else if (compData.is_private === undefined) {
+		callback(null, 'No privacy data provided!');
+	} else if (compData.start_date === undefined) {
+		callback(null, 'No start date provided!');
+	} else if (compData.end_date === undefined) {
+		callback(null, 'No end date provided!');
+	} else if (compData.max_team_size === undefined) {
+		callback(null, 'No max team size provided!');
+	} else if (compData.penalty_time === undefined) {
+		callback(null, 'No penalty time provided!');
+	} else {
+		getConnection().query('INSERT INTO Competition (name, htmlfrag_data, is_private, start_date, end_date, max_team_size, incorrect_submission_time_penalty) VALUES (?, ?, ?, ?, ?, ?, ?);',
+			[compData.comp_name, compData.htmlfrag_data, compData.is_private,
+			compData.start_date, compData.end_date, compData.max_team_size, compData.penalty_time],
+			function (err, res) {
+			if (err) {
+				callback(null, err);
+			} else {
+				console.log(res.insertId);
+				callback(res.insertId);
+			}
+
+			reportQueryEnded();
+		});
+		reportQueryActive();
+	}
+}
+
 // Callback format: compData, err
 // compData:
 // - id, name, is_private, start_date, end_date
@@ -181,3 +218,4 @@ exports.getHTMLFrag = getHTMLFrag;
 exports.getUpcomingCompetitions = getUpcomingCompetitions;
 exports.getPreviousCompetitions = getPreviousCompetitions;
 exports.getOngoingCompetitions = getOngoingCompetitions;
+exports.addNewCompetition = addNewCompetition;

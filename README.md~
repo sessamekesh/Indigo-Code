@@ -23,7 +23,7 @@ Though, the NodeJS code itself requires on the following packages:
 # Installation
 - Download source code
 - Run 'db_structure.sql' in your MySQL client
-- node server.js
+- node index.js
 
 # Running
 I'll get around to this before the first release, I'm sure.

@@ -78,10 +78,12 @@
 -----------Socket Namespaces-----------
 
 -COMPETITION
---CT: Time until competition ends (ongoing competition)
---CS: Time until competition begins (upcoming competition)
+--CT##: Time until competition ## ends (ongoing competition)
+--CS##: Time until competition ## begins (upcoming competition)
 --PR: Problem Results. Responsible for sending freshly solved submission results
 +++ submission_finished
+-ADMIN
+--NCV##: Validates a new competition, ## being a unique number for the session
 
 -----------Problem results-----------
 --TLE: Time Limit Exceeded
