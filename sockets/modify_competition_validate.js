@@ -5,7 +5,7 @@ var socket_router = require('./socket_router'),
 
 // Returns: Namespace of competition validation listener.
 exports.requestCompetitionValidationListener = function () {
-	// NCV
+	// NCM
 	var i,
 		to_create;
 
@@ -14,11 +14,11 @@ exports.requestCompetitionValidationListener = function () {
 
 	to_create = {
 		n_connections: 0,
-		namespace: '/NCV' + i,
+		namespace: '/NCM' + i,
 		on_connect: function (socket) {
 			this.n_connections++;
 
-			socket.on('validate', function (data) { validate_new_competition_data(socket, data); });
+			socket.on('validate', function (data) { validate_modified_competition_data(socket, data); });
 
 			socket.on('disconnect', function() {
 				this.n_connections--;
@@ -35,9 +35,9 @@ exports.requestCompetitionValidationListener = function () {
 	socket_router.AddSocketRouter(to_create);
 
 	return i;
-};
+}
 
-function validate_new_competition_data (socket, data) {
+function validate_modified_competition_data (socket, data) {
 	// TODO: Validate the data, return 'Success!' if the
 	//  client script is to continue submitting the form.
 	console.log('---new_competition_validate---');

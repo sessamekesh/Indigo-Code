@@ -448,7 +448,7 @@ function GoronCompetitionSidebar(userData, compData) {
 					+ '\n\t\t<li><a href="/index/about">About</a></li>'
 					+ '\n\t</ul>'
 					+ '\n\t<hr>'
-					+ '\n\t<b><a href="/competition/c' + compData.id + '">' + compData.name + '</a></b> (<a href="/competition/c' + compData.id + '/edit">edit</a>)'
+					+ '\n\t<b><a href="/competition/c' + compData.id + '">' + compData.name + '</a></b> (<a href="/admin/modify_comp/c' + compData.id + '">edit</a>)'
 					+ '\n\t<ul>'
 					+ '\n\t\t<li><a href="/competition/c' + compData.id + '/scoreboard"><b>Scoreboard</b></a></li>';
 
@@ -459,7 +459,7 @@ function GoronCompetitionSidebar(userData, compData) {
 					} else {
 						for (var i = 0; i < res.length; i++) {
 							toReturn += '\n\t\t<li><a href="/competition/c' + compData.id + '/p' + res[i].id + '">'
-								+ res[i].name + '</a> (<a href="/competition/c' + compData.id + '/p' + res[i].id +'/edit">edit</a>)</li>';
+								+ res[i].name + '</a> (<a href="/admin/modify_prob/c' + compData.id + '/p' + res[i].id +'">edit</a>)</li>';
 						}
 					}
 

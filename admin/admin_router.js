@@ -4,7 +4,8 @@ var subsystem = {};
 
 var error_page = require('../page_builders/error_page');
 
-subsystem['/new_comp'] = require('./new_competition.js');
+subsystem['/new_comp'] = require('./new_competition');
+subsystem['/modify_comp'] = require('./modify_competition');
 
 exports.route = function (response, request, remainingPath) {
 	console.log('admin_router: Admin subsystem activated. Authenticating user...');

@@ -67,6 +67,66 @@ function addNewCompetition(compData, callback) {
 	}
 }
 
+function modifyExistingCompetition(compID, compData, callback) {
+	console.log('competition_dao: Modifying competition ' + compID);
+	console.log(compData);
+
+	if (compID === undefined) {
+		callback(null, 'No competition ID provided!');
+	} else if (compData === undefined) {
+		callback(null, 'No competition description provided!');
+	} else if (compData.comp_name === undefined) {
+		callback(null, 'No competition name provided!');
+	} else if (compData.htmlfrag_data === undefined) {
+		callback(null, 'No HTML fragment data provided!');
+	} else if (compData.is_private === undefined) {
+		callback(null, 'No privacy data provided!');
+	} else if (compData.start_date === undefined) {
+		callback(null, 'No start date provided!');
+	} else if (compData.end_date === undefined) {
+		callback(null, 'No end date provided!');
+	} else if (compData.max_team_size === undefined) {
+		callback(null, 'No max team size provided!');
+	} else if (compData.penalty_time === undefined) {
+		callback(null, 'No penalty time provided!');
+	} else {
+		getConnection().query('UPDATE Competition SET name = ?, htmlfrag_data = ?, is_private = ?, start_date = ?, end_date = ?, max_team_size = ?, incorrect_submission_time_penalty = ? WHERE id = ?;',
+			[compData.comp_name, compData.htmlfrag_data, compData.is_private,
+			compData.start_date, compData.end_date, compData.max_team_size, compData.penalty_time, compID],
+			function (err, res) {
+			if (err) {
+				callback(null, err);
+			} else {
+				console.log(res);
+				callback(res);
+			}
+
+			reportQueryEnded();
+		});
+		reportQueryActive();
+	}
+}
+
+function deleteCompetition(compID, callback) {
+	console.log('competition_dao: Deleting competition ' + compID);
+
+	// TODO KIP: Other validation before deleting something.
+	if (compID === undefined) {
+		callback(null, 'No competition Id provided!');
+	} else {
+		getConnection().query('DELETE FROM Competition WHERE id = ? LIMIT 1;', compID, function (err, res) {
+			if (err) {
+				callback(null, err);
+			} else {
+				console.log(res);
+				callback(res);
+			}
+			reportQueryEnded();
+		});
+		reportQueryActive();
+	}
+}
+
 // Callback format: compData, err
 // compData:
 // - id, name, is_private, start_date, end_date
@@ -99,7 +159,7 @@ function getCompetitionData(compDesc, callback) {
 		// Grabbing one competition only
 		console.log('Retrieving competition by ID: ' + compDesc.id);
 
-		var query = getConnection().query('SELECT id, name, is_private, start_date, end_date, max_team_size, incorrect_submission_time_penalty FROM Competition WHERE id = ?;', compDesc.id);
+		var query = getConnection().query('SELECT id, name, is_private, htmlfrag_data, start_date, end_date, max_team_size, incorrect_submission_time_penalty FROM Competition WHERE id = ?;', compDesc.id);
 		reportQueryActive();
 		var error_generated = false;
 		var result;
@@ -111,6 +171,7 @@ function getCompetitionData(compDesc, callback) {
 			result = {
 				id: res.id,
 				name: res.name,
+				htmlfrag_data: res.htmlfrag_data,
 				is_private: res.is_private[0],
 				start_date: res.start_date,
 				end_date: res.end_date,
@@ -219,3 +280,5 @@ exports.getUpcomingCompetitions = getUpcomingCompetitions;
 exports.getPreviousCompetitions = getPreviousCompetitions;
 exports.getOngoingCompetitions = getOngoingCompetitions;
 exports.addNewCompetition = addNewCompetition;
+exports.modifyExistingCompetition = modifyExistingCompetition;
+exports.deleteCompetition = deleteCompetition;

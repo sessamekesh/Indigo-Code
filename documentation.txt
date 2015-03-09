@@ -84,6 +84,8 @@
 +++ submission_finished
 -ADMIN
 --NCV##: Validates a new competition, ## being a unique number for the session
+--NCM##: Validates to modify a competition
+--NCD##: Validates that a competition can be deleted
 
 -----------Problem results-----------
 --TLE: Time Limit Exceeded

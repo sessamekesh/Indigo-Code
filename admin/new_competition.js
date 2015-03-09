@@ -36,9 +36,9 @@ exports.route = function (response, request, remainingPath) {
 
 function showNewCompetitionPage(response, request) {
 	var page = generic_page.GoronPage({
-		title: '(Goron) Register new user',
+		title: '(Goron) Create a new competition',
 		header: generic_page.GoronHeader({
-			title: 'Register for ACM Goings-Ons',
+			title: 'Create new competition',
 			subtitle: 'Version 0.2 (Goron)',
 			user_info: generic_page.GoronUserInfo(request.session.data.user)
 		}),
