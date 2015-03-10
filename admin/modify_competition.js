@@ -5,7 +5,8 @@ var subsystem = {
 
 comp_subsystem = {
 	'/submit': require('./modify_competition_submit'),
-	'/delete': require('./delete_competition_submit')
+	'/delete': require('./delete_competition_submit'),
+	'/add_problem': require('./new_problem')
 };
 
 var error_page = require('../page_builders/error_page'),
@@ -22,6 +23,8 @@ exports.route = function (response, request, remainingPath) {
 	} else if (/^\/[c]{1}\d+/.test(remainingPath)) {
 		// Extract competition ID
 		var compID = /^\/[c]{1}\d+/.exec(remainingPath)[0].substr(2);
+
+		console.log('modify_competition: Competition entered: ' + compID);
 
 		// Send off now to next system! But, with the data for that competition
 		competition_dao.getCompetitionData({ id: compID }, function (compData, err) {
@@ -47,7 +50,7 @@ exports.route = function (response, request, remainingPath) {
 		var subsys_path = remainingPath;
 		if (remainingPath.indexOf('/', 1) > 0) {
 			subsys_path = remainingPath.substr(0, remainingPath.indexOf('/', 1));
-			remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1) + 1);
+			remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
 		} else {
 			remainingPath = undefined;
 		}
@@ -71,7 +74,7 @@ function route_specific_competition (response, request, remainingPath, compData)
 		var subsys_path = remainingPath;
 		if (remainingPath.indexOf('/', 1) > 0) {
 			subsys_path = remainingPath.substr(0, remainingPath.indexOf('/', 1));
-			remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1) + 1);
+			remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
 		} else {
 			remainingPath = undefined;
 		}

@@ -66,7 +66,7 @@ exports.generateFormBody = function (compData) {
 			+ '\n\t<label class="col-md-4 control-label" for="penalty_time">Incorrect Submission Time Penalty (minutes)</label>'
 			+ '\n\t<div class="col-md-4">'
 			+ '\n\t<input id="penalty_time" name="penalty_time" type="text" placeholder="15" class="form-control input-md" required="" value="' + compData.incorrect_submission_time_penalty + '">'
-			+ '\n\t</div>\n\t<span id="penalty_time_err" class="help-block"></span></div>\n\t'
+			+ '\n\t</div>\n\t<span id="penalty_time_err" class="help-block"></span></div>'
 			+ '\n\t<div class="form-group col-md-4">'
 			+ '\n\t<input type="button" class="btn btn-danger" name="delete_button" onclick="send_delete_request();" value="Delete Competition"></div>' // Delete button
 			+ '\n\t<div class="form-group col-md-4">'

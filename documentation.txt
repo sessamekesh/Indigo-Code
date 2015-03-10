@@ -86,6 +86,7 @@
 --NCV##: Validates a new competition, ## being a unique number for the session
 --NCM##: Validates to modify a competition
 --NCD##: Validates that a competition can be deleted
+--NPV##: Validates that a problem can be added
 
 -----------Problem results-----------
 --TLE: Time Limit Exceeded

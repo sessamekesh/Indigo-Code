@@ -298,7 +298,7 @@ function GoronCompetitionUserInfo(userData, compData) {
 			} else if (compData.start_date > Date.now()) {
 				// Upcoming competition
 				return {
-					// TODO: Add 'going' field, that stops requesting time remaining after
+					// TODO KIP: Add 'going' field, that stops requesting time remaining after
 					//  the competition has started / ended.
 					required_includes: ['https://cdn.socket.io/socket.io-1.2.0.js'],
 						script_text: 'var trs = io(\'/CS' + compData.id + '\'),'
@@ -450,6 +450,7 @@ function GoronCompetitionSidebar(userData, compData) {
 					+ '\n\t<hr>'
 					+ '\n\t<b><a href="/competition/c' + compData.id + '">' + compData.name + '</a></b> (<a href="/admin/modify_comp/c' + compData.id + '">edit</a>)'
 					+ '\n\t<ul>'
+					+ '\n\t\t<li><a href="/admin/modify_comp/c' + compData.id + '/add_problem">Add New Problem</a></li>'
 					+ '\n\t\t<li><a href="/competition/c' + compData.id + '/scoreboard"><b>Scoreboard</b></a></li>';
 
 				// Get list of problems...
@@ -459,7 +460,7 @@ function GoronCompetitionSidebar(userData, compData) {
 					} else {
 						for (var i = 0; i < res.length; i++) {
 							toReturn += '\n\t\t<li><a href="/competition/c' + compData.id + '/p' + res[i].id + '">'
-								+ res[i].name + '</a> (<a href="/admin/modify_prob/c' + compData.id + '/p' + res[i].id +'">edit</a>)</li>';
+								+ res[i].name + '</a> (<a href="/admin/modify_prob/c' + compData.id + '/p' + res[i].id +'">edit</a>) (<a href="/competition/c' + compData.id + '/p' + res[i].id + '/submit">submit</a>)</li>';
 						}
 					}
 

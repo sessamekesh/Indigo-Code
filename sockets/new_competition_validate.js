@@ -6,8 +6,7 @@ var socket_router = require('./socket_router'),
 // Returns: Namespace of competition validation listener.
 exports.requestCompetitionValidationListener = function () {
 	// NCV
-	var i,
-		to_create;
+	var i, to_create;
 
 	for (i = 0; used_namespaces[i] !== undefined; i++);
 	used_namespaces[i] = '..';
@@ -20,7 +19,7 @@ exports.requestCompetitionValidationListener = function () {
 
 			socket.on('validate', function (data) { validate_new_competition_data(socket, data); });
 
-			socket.on('disconnect', function() {
+			socket.on('disconnect', function () {
 				this.n_connections--;
 				setTimeout(function () {
 					if (this.n_connections === 0) {
