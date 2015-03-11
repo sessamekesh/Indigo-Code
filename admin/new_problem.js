@@ -7,7 +7,8 @@ var subsystem = {
 var error_page = require('../page_builders/error_page'),
 	generic_page = require('../page_builders/generic_page'),
 	new_problem_validate = require('../sockets/new_problem_validate'),
-	language_dao = require('../dao/language_dao');
+	language_dao = require('../dao/language_dao'),
+	comparison_program_dao = require('../dao/comparison_program_dao');
 
 exports.route = function (response, request, remainingPath, compData) {
 	console.log('new_problem: Subsystem activated');
@@ -170,6 +171,10 @@ function generateNewProblemForm(compData) {
 			+ '\n});'
 			+ '\nfunction send_validation_request() {'
 				+ '\n\tvar tosend = {};'
+				+ '\n\tfor (var i = 0; i < test_case_datas.length; i++) {'
+				+ '\n\t\ttest_case_datas[i].in_name = $(\'#tcin\' + test_case_datas[i].id).val();'
+				+ '\n\t\ttest_case_datas[i].out_name = $(\'#tcout\' + test_case_datas[i].id).val();'
+				+ '\n\t}'
 				+ '\n\ttosend.prob_name = $(\'#prob_name\').val();'
 				+ '\n\ttosend.time_limit = $(\'#time_limit\').val();'
 				+ '\n\ttosend.file_name = $(\'#desc_file\').val();'
@@ -188,37 +193,44 @@ function generateNewProblemForm(compData) {
 			+ '\n\tvar new_tc_html = \'<div id="tc\' + tcid + \'" class="form-group">\''
 			+ '\n\t\t+ \'<label class="col-md-4 control-label" for="rmtc\' + tcid + \'">Test Case \' + tcid + \':</label>\''
 			+ '\n\t\t+ \'<div class="col-md-4">\''
-			+ '\n\t\t+ \'<input type="button" class="btn btn-danger" id="rmtc\' + tcid + \'" name="rmtc\' + tcid + \'" onclick="remove_test_case(\' + tcid + \');" value="Delete">\''
-			+ '\n\t\t+ \'<div id="tcd\' + tcid + \'" style="display:none">\''
 			+ '\n\t\t+ \'<input type="file" name="tcin\' + tcid + \'" id="tcin\' + tcid + \'">\''
+			+ '\n\t\t+ \'</div></div>\''
+			+ '\n\t\t+ \'<div class="form-group"><div class="col-md-4">\''
 			+ '\n\t\t+ \'<input type="file" name="tcout\' + tcid + \'" id="tcout\' + tcid + \'">\''
-			+ '\n\t\t+ \'</div>\''
-			+ '\n\t\t+ \'</div><span id="tc\' + tcid + \'_err" class="help-block"></span></div>\';'
-			+ '\n\t$(\'#test_cases\').append(new_tc_html);'
-			+ '\n\t$(\'#tcd\' + tcid).dialog({'
-				+ '\n\t\tmodal: true,'
-				+ '\n\t\tbuttons: {'
-				+ '\n\t\t\t"Add Test Case": function () {'
-				+ '\n\t\t\t\ttest_case_datas.push({ id: tcid, in_name: $(\'#tcin\' + tcid).val(), out_name: $(\'#tcout\' + tcid).val() });'
-				+ '\n\t\t\t\t$(this).dialog("close");'
-				+ '\n\t\t\t},'
-				+ '\n\t\t\t"Cancel": function () {'
-				+ '\n\t\t\t\tremove_test_case(tcid);'
-				+ '\n\t\t\t\t$(this).dialog("close");'
-				+ '\n\t\t\t}'
+			+ '\n\t\t+ \'</div></div>\''
+			+ '\n\t\t+ \'<div class="form-group"><div class="col-md-4">\''
+			+ '\n\t\t+ \'<input type="button" class="btn btn-danger" id="rmtc\' + tcid + \'" name="rmtc\' + tcid + \'" onclick="remove_test_case(\' + tcid + \');" value="Delete">\''
+			+ '\n\t\t+ \'</div></div>\''
+			+ '\n\t\t+ \'<div class="form-group"><div class="col-md-4">\''
+			+ '\n\t\t+ \'<select id="tccp\' + tcid + \'" name="tccp\' + tcid + \'" class="form-control">\'';
+
+		comparison_program_dao.getComparisonProgramList(function (res, err) {
+			if (!err) {
+				for (var i = 0; i < res.length; i++) {
+					tr += '\n\t\t+ \'<option value="' + res[i].id + '">' + res[i].name + '</option>\''
+				}
+			}
+			finish();
+		});
+
+		function finish() {
+			tr += '\n\t\t+ \'</select>\''
+				+ '\n\t\t+ \'</div></div>\''
+				+ '\n\t\t+ \'</div><span id="tc\' + tcid + \'_err" class="help-block"></span></div>\';'
+				+ '\n\t$(\'#test_cases\').append(new_tc_html);'
+				+ '\n\ttest_case_datas.push({ id: tcid });'
+				+ '\n\tnext_test_case_id += 1;'
+				+ '\n}'
+				+ '\nfunction remove_test_case(tcid) {'
+				+ '\n\tfor (var i = 0; i < test_case_datas.length; i++) {'
+				+ '\n\t\tif (test_case_datas[i].id === tcid) {'
+				+ '\n\t\t\ttest_case_datas.splice(i, 1); break;'
 				+ '\n\t\t}'
-			+ '\n\t});'
-			+ '\n\tnext_test_case_id += 1;'
-			+ '\n}'
-			+ '\nfunction remove_test_case(tcid) {'
-			+ '\n\tfor (var i = 0; i < test_case_datas.length; i++) {'
-			+ '\n\t\tif (test_case_datas[i].id === tcid) {'
-			+ '\n\t\t\ttest_case_datas.splice(i, 1); break;'
-			+ '\n\t\t}'
-			+ '\n\t}'
-			+ '\n\t$(\'#tc\' + tcid).remove();'
-			+ '\n}';
-		callback(tr);
+				+ '\n\t}'
+				+ '\n\t$(\'#tc\' + tcid).remove();'
+				+ '\n}';
+			callback(tr);
+		}
 	};
 
 	return that;

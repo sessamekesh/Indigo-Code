@@ -30,7 +30,7 @@ function reportQueryEnded() {
 }
 
 // callback: res, err
-exports.getTestCases = function(problemID, callback) {
+exports.getTestCases = function (problemID, callback) {
 	getConnection().query('SELECT id, problem_id, comparison_program_id FROM TestCase WHERE problem_id = ?;',
 		problemID,
 		function (err, res) {
@@ -43,4 +43,27 @@ exports.getTestCases = function(problemID, callback) {
 		}
 	);
 	reportQueryActive();
-}
+};
+
+exports.addTestCase = function (problemID, comparisonID, callback) {
+	console.log('test_case_dao: Adding a new test case for problem ' + problemID);
+
+	if (problemID === undefined) {
+		callback(null, 'No problem ID provided!');
+	} else if (comparisonID === undefined) {
+		callback(null, 'No comparison program ID defined!');
+	} else {
+		getConnection().query('INSERT INTO TestCase (problem_id, comparison_program_id) VALUES (?, ?);',
+			[problemID, comparisonID],
+			function (err, res) {
+				if (err) {
+					callback(null, err);
+				} else {
+					callback(res.insertId);
+				}
+				reportQueryEnded();
+			}
+		);
+		reportQueryActive();
+	}
+};

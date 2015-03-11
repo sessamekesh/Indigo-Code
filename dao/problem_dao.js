@@ -29,6 +29,39 @@ function reportQueryEnded() {
 	}
 }
 
+function addNewProblem(probData, callback) {
+	console.log('problem_dao: Adding new problem data!');
+	if (probData === undefined) {
+		callback(null, 'No problem data provided!');
+	} else if (probData.prob_name === undefined || probData.prob_name === '') {
+		callback(null, 'No problem name provided!');
+	} else if (probData.comp_id === undefined) {
+		callback(null, 'No competition id provided!');
+	} else if (probData.description_file_path === undefined) {
+		callback(null, 'No problem description file path specified!');
+	} else if (probData.description_file_type === undefined) {
+		callback(null, 'No problem description file type specified!');
+	} else if (probData.default_time_limit === undefined) {
+		callback(null, 'No default time limit for specified!');
+	} else {
+		console.log('problem_dao: Array to insert:');
+		console.log([probData.comp_id, probData.prob_name, probData.description_file_path, probData.description_file_type, probData.default_time_limit]);
+		getConnection().query('INSERT INTO Problem '
+			+ '(name, competition_id, description_file_path, description_file_type, default_time_limit)'
+			+ ' VALUES (?, ?, ?, ?, ?);',
+			[probData.prob_name, probData.comp_id, probData.description_file_path, probData.description_file_type, probData.default_time_limit],
+			function (err, res) {
+				if (err) {
+					callback(null, err);
+				} else {
+					callback(res.insertId);
+				}
+				reportQueryEnded();
+			});
+		reportQueryActive();
+	}
+}
+
 function getProblemsInCompetition(compID, callback) {
 	console.log('problem_dao: Getting list of problems in competition ' + compID);
 	getConnection().query('SELECT id, name, description_file_path AS \'desc_path\' FROM Problem WHERE competition_id = ?;', compID,
@@ -74,3 +107,4 @@ function getProblemData(problemID, callback) {
 
 exports.getProblemsInCompetition = getProblemsInCompetition;
 exports.getProblemData = getProblemData;
+exports.addNewProblem = addNewProblem;

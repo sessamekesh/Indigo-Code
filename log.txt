@@ -1,0 +1,233 @@
+Setting up websockets...
+-------------------------------USU ACM SERVER - V0.2 (Goron)------------------------------
+-------------------------------Developed by Kamaron Peterson------------------------------
+Listening on port 8888
+::::::::::Request for /admin/modify_comp/c9/add_problem received::::::::::
+Routing request to subsystem /admin
+admin_router: Admin subsystem activated. Authenticating user...
+error_page: Showing error page with safe function
+Creating Goron user info tab...
+Creating Goron header...
+Creating Goron user info tab...
+Creating Goron sidebar...
+Creating new page for display...
+Rendering page (Goron) User not authorized...
+Rendering header...
+Rendering Goron user tab for a guest
+Rendering body for (Goron) User not authorized...
+Rendering Goron sidebar for guest
+competition_dao: Getting previous competitions list...
+user_dao query count: 1
+Rendering sidebar for (Goron) User not authorized...
+user_dao query count: 0
+Closing connection user_dao...
+::::::::::Request for /bootstrap-3.3.2-dist/css/bootstrap.css received::::::::::
+::::::::::Request for /style.css received::::::::::
+::::::::::Request for /jquery-1.11.2.min.js received::::::::::
+::::::::::Request for /bootstrap-3.3.2-dist/js/bootstrap.js received::::::::::
+File found in ./public/bootstrap-3.3.2-dist/css/bootstrap.css, opening
+File found in ./public/style.css, opening
+File found in ./public/jquery-1.11.2.min.js, opening
+File found in ./public/bootstrap-3.3.2-dist/js/bootstrap.js, opening
+::::::::::Request for /UsuLogo.png received::::::::::
+File found in ./public/UsuLogo.png, opening
+::::::::::Request for /user/login received::::::::::
+Routing request to subsystem /user
+Subsystem user activated - remaining path: /login
+Forwarding request to subsystem /login
+Login subsystem activated - remaining path: undefined
+Fields recognized:
+{ username: 'sessamekesh', password: 'sess', login: 'Login' }
+user_dao: Retrieving user data for
+{ user_name: 'sessamekesh', password: 'sess' }
+Retrieving user data with username and password
+user_dao query count: 1
+user_dao query count: 0
+Closing connection user_dao...
+Authenticating user password against hash $2a$14$LrecjSJbTQaMc0dKnlS.U.1utB02xZ4ti0q0gJoVMiVwpWMdmJcly
+Authentication success. Returning user data...
+user_dao query count: 1
+User found - sessamekesh
+user_dao query count: 0
+Closing connection user_dao...
+No last page found. Redirecting to index page
+::::::::::Request for / received::::::::::
+Routing request to subsystem /
+Static subsystem activated. Additional path: undefined
+No additional path. Generating index page.
+Creating Goron user info tab...
+Creating Goron header...
+Creating Goron sidebar...
+Creating new page for display...
+Rendering page (Goron) USU ACM Competition Framework...
+Rendering header...
+Rendering Goron user tab for an admin
+Rendering body for (Goron) USU ACM Competition Framework...
+Rendering Goron sidebar for admin sessamekesh
+competition_dao: Getting upcoming competitions list...
+user_dao query count: 1
+competition_dao: Getting ongoing competitions list...
+user_dao query count: 2
+user_dao query count: 1
+competition_dao: Getting previous competitions list...
+user_dao query count: 2
+user_dao query count: 1
+Rendering sidebar for (Goron) USU ACM Competition Framework...
+Rendering of static page finished. Sending to user...
+user_dao query count: 0
+Closing connection user_dao...
+::::::::::Request for /bootstrap-3.3.2-dist/css/bootstrap.css received::::::::::
+File found in ./public/bootstrap-3.3.2-dist/css/bootstrap.css, opening
+::::::::::Request for /style.css received::::::::::
+::::::::::Request for /jquery-1.11.2.min.js received::::::::::
+::::::::::Request for /bootstrap-3.3.2-dist/js/bootstrap.js received::::::::::
+File found in ./public/style.css, opening
+File found in ./public/jquery-1.11.2.min.js, opening
+File found in ./public/bootstrap-3.3.2-dist/js/bootstrap.js, opening
+::::::::::Request for /admin/modify_comp/c9/add_problem received::::::::::
+Routing request to subsystem /admin
+admin_router: Admin subsystem activated. Authenticating user...
+Subsystem: /modify_comp, Remaining: /c9/add_problem
+modify_competition: Subsystem activated
+modify_competition: Competition entered: 9
+competition_dao: Retrieving competition data for:
+{ id: '9' }
+Retrieving competition by ID: 9
+user_dao query count: 1
+user_dao query count: 0
+Closing connection user_dao...
+modify_competition: Subsystem for competition USU ACM Awesome Competition activated
+new_problem: Subsystem activated
+Creating Goron user info tab...
+Creating Goron header...
+Creating Goron sidebar...
+Creating new page for display...
+Rendering page (Goron) Create a new problem...
+Rendering header...
+Rendering Goron user tab for an admin
+Adding a socket router...
+socket_router: Creating router with namespace /NPV0
+language_dao: Getting list of languages supported by the framework.
+Rendering body for (Goron) Create a new problem...
+Rendering Goron sidebar for admin sessamekesh
+competition_dao: Getting upcoming competitions list...
+user_dao query count: 1
+Closing connection problem_dao...
+competition_dao: Getting ongoing competitions list...
+user_dao query count: 2
+user_dao query count: 1
+competition_dao: Getting previous competitions list...
+user_dao query count: 2
+user_dao query count: 1
+Rendering sidebar for (Goron) Create a new problem...
+new_problem: have data, showing it
+user_dao query count: 0
+Closing connection user_dao...
+::::::::::Request for /bootstrap-3.3.2-dist/css/bootstrap.css received::::::::::
+File found in ./public/bootstrap-3.3.2-dist/css/bootstrap.css, opening
+::::::::::Request for /style.css received::::::::::
+File found in ./public/style.css, opening
+::::::::::Request for /jquery-1.11.2.min.js received::::::::::
+::::::::::Request for /bootstrap-3.3.2-dist/js/bootstrap.js received::::::::::
+::::::::::Request for /datetime-picker/jquery.datetimepicker.css received::::::::::
+::::::::::Request for /datetime-picker/jquery.js received::::::::::
+File found in ./public/jquery-1.11.2.min.js, opening
+File found in ./public/bootstrap-3.3.2-dist/js/bootstrap.js, opening
+File found in ./public/datetime-picker/jquery.datetimepicker.css, opening
+File found in ./public/datetime-picker/jquery.js, opening
+::::::::::Request for /datetime-picker/jquery.datetimepicker.js received::::::::::
+File found in ./public/datetime-picker/jquery.datetimepicker.js, opening
+::::::::::Request for /UsuLogo.png received::::::::::
+File found in ./public/UsuLogo.png, opening
+---new_problem_validate---
+::::::::::Request for /admin/modify_comp/c9/add_problem/submit received::::::::::
+Routing request to subsystem /admin
+admin_router: Admin subsystem activated. Authenticating user...
+Subsystem: /modify_comp, Remaining: /c9/add_problem/submit
+modify_competition: Subsystem activated
+modify_competition: Competition entered: 9
+competition_dao: Retrieving competition data for:
+{ id: '9' }
+Retrieving competition by ID: 9
+user_dao query count: 1
+user_dao query count: 0
+Closing connection user_dao...
+modify_competition: Subsystem for competition USU ACM Awesome Competition activated
+new_problem: Subsystem activated
+---------------------
+{ prob_name: 'Awesome ACM Problem',
+  time_limit: '2000',
+  soln_lang: '4' }
+---------------------
+{ desc_file: 
+   { domain: null,
+     _events: {},
+     _maxListeners: undefined,
+     size: 1484,
+     path: 'data/sandbox/upload_5300c1b555a46c47f4cef42d66ba8e1b',
+     name: 'cbrk.txt',
+     type: 'text/plain',
+     hash: null,
+     lastModifiedDate: Tue Mar 10 2015 17:11:40 GMT-0600 (MDT),
+     _writeStream: 
+      { _writableState: [Object],
+        writable: true,
+        domain: null,
+        _events: {},
+        _maxListeners: undefined,
+        path: 'data/sandbox/upload_5300c1b555a46c47f4cef42d66ba8e1b',
+        fd: null,
+        flags: 'w',
+        mode: 438,
+        start: undefined,
+        pos: undefined,
+        bytesWritten: 1484,
+        closed: true } },
+  soln_file: 
+   { domain: null,
+     _events: {},
+     _maxListeners: undefined,
+     size: 437,
+     path: 'data/sandbox/upload_9a854ecd9925ec859486eaff6061db2c',
+     name: 'data_loader.js',
+     type: 'application/javascript',
+     hash: null,
+     lastModifiedDate: Tue Mar 10 2015 17:11:40 GMT-0600 (MDT),
+     _writeStream: 
+      { _writableState: [Object],
+        writable: true,
+        domain: null,
+        _events: {},
+        _maxListeners: undefined,
+        path: 'data/sandbox/upload_9a854ecd9925ec859486eaff6061db2c',
+        fd: null,
+        flags: 'w',
+        mode: 438,
+        start: undefined,
+        pos: undefined,
+        bytesWritten: 437,
+        closed: true } } }
+::::::::::Request for /favicon.ico received::::::::::
+File not found. Reporting 404
+error_page: Showing error page with safe function
+Creating Goron user info tab...
+Creating Goron header...
+Creating Goron user info tab...
+Creating Goron sidebar...
+Creating new page for display...
+Rendering page (Goron) 404 - Page Not Found...
+Rendering header...
+Rendering Goron user tab for a guest
+Rendering body for (Goron) 404 - Page Not Found...
+Rendering Goron sidebar for admin sessamekesh
+competition_dao: Getting upcoming competitions list...
+user_dao query count: 1
+competition_dao: Getting ongoing competitions list...
+user_dao query count: 2
+user_dao query count: 1
+competition_dao: Getting previous competitions list...
+user_dao query count: 2
+user_dao query count: 1
+Rendering sidebar for (Goron) 404 - Page Not Found...
+user_dao query count: 0
+Closing connection user_dao...

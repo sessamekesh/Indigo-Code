@@ -74,6 +74,7 @@ function validate_new_problem_data (socket, data) {
 		error_list.push({ 'field': 'general', 'error': 'Must provide at least one test case' });
 	} else {
 		for (var i = 0; i < data.test_cases.length; i++) {
+			console.log(data.test_cases[i]);
 			if (data.test_cases[i].in_name === undefined || data.test_cases[i].in_name === '') {
 				error_list.push({ 'field': 'tc' + data.test_cases[i].id, 'error': 'No input file provided' });
 			}
