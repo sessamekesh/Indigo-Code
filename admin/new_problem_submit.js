@@ -6,6 +6,7 @@ var error_page = require('../page_builders/error_page'),
 	exec =  require('child_process').exec,
 	language_dao = require('../dao/language_dao'),
 	problem_dao = require('../dao/problem_dao'),
+	team_dao = require('../dao/team_dao'),
 	test_case_dao = require('../dao/test_case_dao'),
 	submission_dao = require('../dao/submission_dao'),
 	generic_page = require('../page_builders/generic_page'),
@@ -23,7 +24,18 @@ exports.route = function (response, request, remainingPath, compData) {
 				console.log('new_competition_submit make dir ERR: ' + error);
 				error_page.ShowErrorPage(response, request, 'Could not make new submission directory', error);
 			} else {
-				parse_the_form('./data/sandbox/np_' + request.session.data.user.user_name);
+				get_team_data('./data/sandbox/np_' + request.session.data.user.user_name);
+			}
+		});
+	}
+
+	function get_team_data(sandbox_dir) {
+		team_dao.getTeamData({ userID: request.session.data.user.id, compID: compData.id }, function (res, err) {
+			if (err) {
+				error_page.ShowErrorPage(response, request, 'Team not found', 'This admin does not have an admin team for this competition!');
+			} else {
+				request.session.data.team = res;
+				parse_the_form(sandbox_dir);
 			}
 		});
 	}
@@ -161,7 +173,7 @@ exports.route = function (response, request, remainingPath, compData) {
 	// Run submitted code against entries
 	function make_submission(sandbox_dir, problemData, fields, files) {
 		submission_dao.reportSubmissionReceived(fields.soln_lang,
-			problemData.id, request.session.data.user.id, new Date().valueOf() / 1000,
+			problemData.id, request.session.data.team.id, new Date().valueOf() / 1000,
 			function (submission_id, error) {
 				if (error) {
 					console.log('new_problem_submit: ERR making submission: ' + error);
@@ -184,7 +196,7 @@ exports.route = function (response, request, remainingPath, compData) {
 							}, 30000);
 
 							// Begin the judgement process
-							judge_process(submission_id, problemData, fields.soln_lang, './data/submits/s' + submission_id, files.soln_file.name);
+							judge_process(submission_id, problemData, fields.soln_lang, './data/submits/s' + submission_id, files.soln_file.name, sandbox_dir);
 						}
 					});
 				}
@@ -192,7 +204,7 @@ exports.route = function (response, request, remainingPath, compData) {
 		);
 	}
 
-	function judge_process(submissionID, problemData, langID, submission_path, original_filename) {
+	function judge_process(submissionID, problemData, langID, submission_path, original_filename, sandbox_dir) {
 		language_dao.getLanguageData(langID, function (result, err) {
 			if (err) {
 				console.log('new_problem_submit ERR getting language data: ' + err);
@@ -205,14 +217,14 @@ exports.route = function (response, request, remainingPath, compData) {
 							console.log('new_problem_submit ERR judging submission: ' + err);
 							error_page.ShowErrorPage(response, request, 'Error judging submission', err);
 						} else {
-							recordResults(res, notes);
+							recordResults(res, notes, sandbox_dir);
 						}
 					}
 				);
 			}
 
 			// TODO KIP: If not AC, then yeah problem. Delete shit.
-			function recordResults(result, notes) {
+			function recordResults(result, notes, sandbox_dir) {
 				submission_dao.reportSubmissionResult(submissionID, result, notes, function () {});
 				var page = generic_page.GoronPage({
 					title: '(Goron) Submission Result Received',
@@ -241,6 +253,8 @@ exports.route = function (response, request, remainingPath, compData) {
 							response.writeHead(200, {'Content-Type': 'text/html'});
 							response.write(w);
 							response.end();
+
+							cleanup(sandbox_dir);
 						}
 					});
 				}
@@ -252,9 +266,21 @@ exports.route = function (response, request, remainingPath, compData) {
 	// -Success: Only clean up sandbox
 	// -Fail: Clean up sandbox, test case, problem description,
 	//			delete database submission, delete problem
-	function cleanup(problemID, success) {
+	function cleanup(sandbox_dir, problemID, success) {
+		console.log('new_problem_submit: Cleaning up...');
+
 		// Do shit.
 		// Clean up sandbox
+		exec('rm ' + sandbox_dir + '/*', function (err, stdout, stderr) {
+			if (err) {
+				console.log('new_problem_submit: Error removing sandbox dir contents: ' + err);
+			}
+		});
+		exec('rmdir ' + sandbox_dir, function (err, stdout, stderr) {
+			if (err) {
+				console.log('new_problem_submit: Error removing directory: ' + err);
+			}
+		});
 
 		// If success,
 		// Get which test cases belong to this problem
@@ -266,7 +292,6 @@ exports.route = function (response, request, remainingPath, compData) {
 		//  Remove problem description
 		if (success === true) {
 		} else {
-
 		}
 	}
 

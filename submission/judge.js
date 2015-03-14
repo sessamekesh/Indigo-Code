@@ -104,7 +104,7 @@ function judge_submission(response, request, compData, problemData) {
 		// (7) Update scores (if competition is ongoing)
 		if (compData.start_date.getTime() < Date.now() &&
 			compData.end_date.getTime() > Date.now()) {
-			scores_dao.updateScore(request.session.data.user.id, compData.id, compData.incorrect_submission_time_penalty);
+			scores_dao.updateScore(request.session.data.team.id, compData.id, compData.incorrect_submission_time_penalty);
 		} else {
 			console.log('judge: Submission not scored because competition is not ongoing!');
 		}

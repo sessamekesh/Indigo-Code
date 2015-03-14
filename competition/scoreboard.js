@@ -69,7 +69,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 			function generateTableBody(scores_data, problems_list) {
 				for (var i = 0; i < scores_data.length; i++) {
 					toCallback += '\n\t<tr>'
-						+ '\n\t\t<td>' + (i + 1) + '</td><td>' + scores_data[i].user_name + '<br /><i>' + scores_data[i].tagline + '</i></td>';
+						+ '\n\t\t<td>' + (i + 1) + '</td><td>' + scores_data[i].team_name + '<br /><i>' + scores_data[i].tagline + '</i></td>';
 					for (var j = 0; j < problems_list.length; j++) {
 						toCallback += '<td>';
 						if (scores_data[i]['ps_' + problems_list[j].id] === 'SOLVED') {
