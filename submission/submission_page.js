@@ -39,7 +39,7 @@ function showSubmissionPage(response, request, compData, problemData, page_num) 
 		header: generic_page.GoronHeader({
 				title: 'Results for problem ' + problemData.name,
 				subtitle: 'USU ACM Competition ' + compData.name,
-				user_info: competition_page.GoronCompetitionUserInfo(request.session.data.user, compData)
+				user_info: competition_page.GoronCompetitionUserInfo(request.session.data.user, request.session.data.team, compData)
 			}),
 		sidebar: competition_page.GoronCompetitionSidebar(request.session.data.user, compData)
 	});
@@ -145,7 +145,7 @@ function submissionPageBody(compID, problemData, page_num) {
 
 				body_text += '>'
 					+ '\n\t\t<td>' + results[i].submission_id + '</td>'
-					+ '\n\t\t<td>' + results[i].user_name + '<br /><i>' + results[i].user_tagline + '</i></td>'
+					+ '\n\t\t<td>' + results[i].name + '<br /><i>' + results[i].user_tagline + '</i></td>'
 					+ '\n\t\t<td>' + results[i].lang_name + '</td>'
 					+ '\n\t\t<td>' + formatDate(new Date(results[i].submission_time)) + '</td>'
 					+ '\n\t\t<td>'

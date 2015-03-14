@@ -15,7 +15,8 @@ var subsystems = {
 	cpp11: require('./cpp11'),
 	golang: require('./golang'),
 	vigil: require('./vigil'),
-	cpp14: require('./cpp14')
+	cpp14: require('./cpp14'),
+	csmono: require('./csmono')
 };
 
 // Callback: result, notes, err

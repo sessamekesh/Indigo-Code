@@ -58,7 +58,7 @@ exports.route = function (response, request, compData, remainingPath) {
 					} else if (form_data['usertype_' + i] === 'new') {
 						new_user(i, user_ids);
 					} else {
-						process_user(i + 1);
+						process_user(i + 1, user_ids);
 					}
 				}
 			}

@@ -46,7 +46,7 @@ function judge_submission(response, request, compData, problemData) {
 			//  for like 30 seconds - if the status has not changed from
 			//  'Q', remove it and prompt user to try again.
 			submission_dao.reportSubmissionReceived(fields.language,
-				problemData.id, request.session.data.user.id, new Date().valueOf() / 1000,
+				problemData.id, request.session.data.team.id, new Date().valueOf() / 1000,
 				function (submission_id, error) {
 					if (error) {
 						console.log('judge: ERR SQL Error reporting received submission: ' + error);

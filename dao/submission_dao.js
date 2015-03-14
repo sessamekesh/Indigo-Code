@@ -29,13 +29,13 @@ function reportQueryEnded() {
 	}
 }
 
-function reportSubmissionReceived(lang_id, problem_id, user_id, submission_time, callback) {
+function reportSubmissionReceived(lang_id, problem_id, team_id, submission_time, callback) {
 	console.log('submission_dao: Reporting a submission received at ' + submission_time);
 	getConnection().query(
 		'INSERT INTO Submission'
-		+ '(lang_id, problem_id, user_id, result, submission_time, notes)'
+		+ '(lang_id, problem_id, team_id, result, submission_time, notes)'
 		+ 'VALUES(?, ?, ?, \'Q\', FROM_UNIXTIME(?), \'\');',
-		[lang_id, problem_id, user_id, submission_time],
+		[lang_id, problem_id, team_id, submission_time],
 		function (error, res) {
 			if (error) {
 				callback(null, error);
@@ -99,10 +99,10 @@ function checkSubmissionTimeout(submission_id, timeout_callback, error_callback)
 function getProblemSubmissions(problemID, start, end, callback) {
 	console.log('submission_dao: Retrieving submissions for problem ID ' + problemID);
 	getConnection().query(
-		'SELECT Submission.id AS submission_id, submission_time, User.user_name AS user_name, User.tagline AS user_tagline,'
+		'SELECT Submission.id AS submission_id, submission_time, Team.name AS name, Team.tagline AS user_tagline,'
 		+ ' Language.name AS lang_name, Problem.name AS problem_name, result, notes'
 		+ ' FROM Submission'
-		+ ' LEFT JOIN User ON Submission.user_id = User.id'
+		+ ' LEFT JOIN Team ON Submission.team_id = Team.id'
 		+ ' LEFT JOIN Problem ON Submission.problem_id = Problem.id'
 		+ ' LEFT JOIN Language ON Language.id = Submission.lang_id'
 		+ ' WHERE Submission.problem_id = ? ORDER BY Submission.submission_time DESC'
