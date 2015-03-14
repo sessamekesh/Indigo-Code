@@ -32,7 +32,6 @@ function reportQueryEnded() {
 
 function addNewCompetition(compData, callback) {
 	console.log('competition_dao: Adding new competition data');
-	console.log(compData);
 	if (compData === undefined) {
 		callback(null, 'No competition description provided!');
 	} else if (compData.comp_name === undefined) {
@@ -69,7 +68,6 @@ function addNewCompetition(compData, callback) {
 
 function modifyExistingCompetition(compID, compData, callback) {
 	console.log('competition_dao: Modifying competition ' + compID);
-	console.log(compData);
 
 	if (compID === undefined) {
 		callback(null, 'No competition ID provided!');

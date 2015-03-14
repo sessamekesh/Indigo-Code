@@ -24,7 +24,7 @@ var generic_page = require('./generic_page'),
 
 // * Use MVVM/Websockets
 
-function GoronCompetitionPage(userData, compData, bodyData) {
+function GoronCompetitionPage(userData, teamData, compData, bodyData) {
 	console.log('Creating a new competition page from competition data:');
 	console.log(compData);
 
@@ -49,7 +49,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 			headString = '',
 			sidebarString = '',
 			bodyString = '',
-			userInfoObject = GoronCompetitionUserInfo(userData, compData),
+			userInfoObject = GoronCompetitionUserInfo(userData, teamData, compData),
 			required_client_includes = {},
 			user_info_scripts = '',
 			body_scripts = '';
@@ -196,7 +196,7 @@ function GoronCompetitionPage(userData, compData, bodyData) {
 	return toReturn;
 }
 
-function GoronCompetitionUserInfo(userData, compData) {
+function GoronCompetitionUserInfo(userData, teamData, compData) {
 	console.log(userData);
 
 	var toReturn = {};
@@ -327,23 +327,44 @@ function GoronCompetitionUserInfo(userData, compData) {
 			}
 		}
 
-		toReturn.render = function(callback) {
-			console.log('Rendering competition user tab for admin ' + userData.user_name);
-			var userInfoText = '<p>Hello, sir <b>' + userData.user_name + '</b></p>'
-				+ '\n<p><i>' + userData.tagline + '</i></p>'
-				+ '\n<form action="/user/logout" method="post" role="form">'
-				+ '\n\t<div class="form-group">'
-				+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
-				+ '\n\t</div>'
-				+ '\n</form>\n<br />';
-			if (compData.start_date > Date.now()) {
-				// Display time until competition starts
-				userInfoText += '\n<p id="ctr">TR</p>';
-			} else if (compData.end_date > Date.now()) {
-				// Display time until competition is over
-				userInfoText += '\n<p id="ctr">TR</p>';
+		if (teamData === undefined) {
+			toReturn.render = function(callback) {
+				console.log('Rendering competition user tab for admin ' + userData.user_name);
+				var userInfoText = '<p>Hello, sir <b>' + userData.user_name + '</b></p>'
+					+ '\n<p><i>' + userData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
+					+ '\n\t</div>'
+					+ '\n</form>\n<br />';
+				if (compData.start_date > Date.now()) {
+					// Display time until competition starts
+					userInfoText += '\n<p id="ctr">TR</p>';
+				} else if (compData.end_date > Date.now()) {
+					// Display time until competition is over
+					userInfoText += '\n<p id="ctr">TR</p>';
+				}
+				callback(userInfoText);
 			}
-			callback(userInfoText);
+		} else {
+			toReturn.render = function (callback) {
+				console.log('Rendering competition user tab for admin team ' + teamData.name);
+				var userInfoText = '<p>Hello, <b>' + teamData.name + '</b></p>'
+					+ '\n<p><i>' + teamData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
+					+ '\n\t</div>'
+					+ '\n</form>\n<br />';
+				if (compData.start_date > Date.now()) {
+					// Display time until competition starts
+					userInfoText += '\n<p id="ctr">TR</p>';
+				} else if (compData.end_date > Date.now()) {
+					// Display time until competition is over
+					userInfoText += '\n<p id="ctr">TR</p>';
+				}
+				callback(userInfoText);
+			}
 		}
 	} else {
 		toReturn.generate_scripts = function() {
@@ -375,22 +396,41 @@ function GoronCompetitionUserInfo(userData, compData) {
 		}
 
 		toReturn.render = function(callback) {
-			console.log('Rendering competition user tab for peasant ' + userData.user_name);
-			var userInfoText = '<p>Hello, ' + userData.user_name + '</p>'
-				+ '\n<p><i>' + userData.tagline + '</i></p>'
-				+ '\n<form action="/user/logout" method="post" role="form">'
-				+ '\n\t<div class="form-group">'
-				+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
-				+ '\n\t</div>'
-				+ '\n</form>\n<br />';
-			if (compData.start_date > Date.now()) {
-				// Display time until competition starts
-				userInfoText += '\n<p id="ctr">TR</p>';
-			} else if (compData.end_date > Date.now()) {
-				// Display time until competition is over
-				userInfoText += '\n<p id="ctr">TR</p>';
+			if (teamData === undefined) {
+				console.log('Rendering competition user tab for peasant ' + userData.user_name);
+				var userInfoText = '<p>Hello, ' + userData.user_name + '</p>'
+					+ '\n<p><i>' + userData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
+					+ '\n\t</div>'
+					+ '\n</form>\n<br />';
+				if (compData.start_date > Date.now()) {
+					// Display time until competition starts
+					userInfoText += '\n<p id="ctr">TR</p>';
+				} else if (compData.end_date > Date.now()) {
+					// Display time until competition is over
+					userInfoText += '\n<p id="ctr">TR</p>';
+				}
+				callback(userInfoText);
+			} else {
+				console.log('Rendering competition user tab for peasant team ' + teamData.name);
+				var userInfoText = '<p>Hello, ' + teamData.name + '</p>'
+					+ '\n<p><i>' + teamData.tagline + '</i></p>'
+					+ '\n<form action="/user/logout" method="post" role="form">'
+					+ '\n\t<div class="form-group">'
+					+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
+					+ '\n\t</div>'
+					+ '\n</form>\n<br />';
+				if (compData.start_date > Date.now()) {
+					// Display time until competition starts
+					userInfoText += '\n<p id="ctr">TR</p>';
+				} else if (compData.end_date > Date.now()) {
+					// Display time until competition is over
+					userInfoText += '\n<p id="ctr">TR</p>';
+				}
+				callback(userInfoText);
 			}
-			callback(userInfoText);
 		}
 	}
 

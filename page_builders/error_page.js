@@ -75,7 +75,7 @@ function ShowErrorPage(response, request, errName, errMessage) {
 		header: generic_page.GoronHeader({
 			title: 'Error: ' + errName,
 			subtitle: '(Goron) ' + errMessage,
-			user_infor: generic_page.GoronUserInfo(request.session.data.user)
+			user_info: generic_page.GoronUserInfo(request.session.data.user)
 		}),
 		sidebar: generic_page.GoronSidebar(request.session.data.user),
 		body: {

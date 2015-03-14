@@ -5,7 +5,8 @@ var user = require('./user/user'),
 	competition = require('./competition/competition'),
 	admin_router = require('./admin/admin_router'),
 	fs = require('fs'),
-	error_page = require('./page_builders/error_page');
+	error_page = require('./page_builders/error_page'),
+	register = require('./register/register');
 
 var subsystem = {},
 	redirecting_pages = {};
@@ -14,6 +15,7 @@ subsystem['/index'] = statics;
 subsystem['/user'] = user;
 subsystem['/competition'] = competition;
 subsystem['/admin'] = admin_router;
+subsystem['/register'] = register;
 
 function route(pathname, response, request) {
 	// Determine which subsystem gets the request

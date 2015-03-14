@@ -36,6 +36,55 @@ function reportQueryEnded() {
 	}
 }
 
+exports.checkUserExists = function (username, callback) {
+	if (username === undefined || username === '') {
+		callback (false);
+	} else {
+		getConnection().query('SELECT id FROM User WHERE user_name = ?;', username, function (err, res) {
+			if (err) {
+				callback (false);
+			} else {
+				callback (res.length > 0);
+			}
+			reportQueryEnded();
+		});
+		reportQueryActive();
+	}
+}
+
+exports.authUser = function (username, password, callback) {
+	if (username === undefined || username === '') {
+		callback(false, 'No username provided!');
+	} else if (password === undefined || password === '') {
+		callback(false, 'No password provided!');
+	} else {
+		console.log('user_dao: Authenticating user ' + username);
+		getConnection().query('SELECT pass_hash FROM User WHERE user_name = ?;', username,
+			function (err, res) {
+				if (err) {
+					callback(false, 'SQL err: ' + err);
+				} else if (res.length != 1) {
+					callback(false, 'User not found');
+				} else {
+					auth_user(res[0].pass_hash);
+				}
+				reportQueryEnded();
+			}
+		);
+		reportQueryActive();
+	}
+
+	function auth_user(ph) {
+		bcrypt.compare(password, ph, function (err, res) {
+			if (err) {
+				callback (false, 'Error authenticating password: ' + err);
+			} else {
+				callback (res);
+			}
+		});
+	}
+};
+
 // Callback format: userData, err
 function getUserData(userDesc, callback) {
 	console.log('user_dao: Retrieving user data for');
@@ -88,7 +137,7 @@ function getUserData(userDesc, callback) {
 		} else if(userDesc.id) {
 			console.log('Using userID');
 			// Grab user by id - use internally, requires no password authentication
-			var query = getConnection().query('SELECT id, email_address, can_share_email, user_name, name, tagline, is_admin FROM User WHERE id = ?;',
+			var query = getConnection().query('SELECT id, email_address, can_share_email, user_name, name, is_admin FROM User WHERE id = ?;',
 				userDesc.id);
 			reportQueryActive();
 			var error_generated = false;
@@ -102,7 +151,6 @@ function getUserData(userDesc, callback) {
 					id: res.id,
 					name: res.name,
 					user_name: res.user_name,
-					tagline: res.tagline,
 					is_admin: res.is_admin[0],
 					email: res.email_address,
 					can_share_email: res.can_share_email[0]
@@ -118,7 +166,7 @@ function getUserData(userDesc, callback) {
 			console.log('Using only username ' + userDesc.user_name);
 			// Grab user only using user_name: unauthenticated, only return
 			//  non-sensitive data about them.
-			var query = getConnection().query('SELECT id, user_name, tagline, is_admin FROM User WHERE user_name = ?;',
+			var query = getConnection().query('SELECT id, user_name, is_admin FROM User WHERE user_name = ?;',
 				entities.encodeHTML(userDesc.user_name));
 			reportQueryActive();
 			var error_generated = false;
@@ -132,7 +180,6 @@ function getUserData(userDesc, callback) {
 					id: res.id,
 					name: res.name,
 					user_name: res.user_name,
-					tagline: res.tagline,
 					is_admin: res.is_admin[0]
 				};
 			});
@@ -159,7 +206,7 @@ function getUserData(userDesc, callback) {
 				} else {
 					if (res === true) {
 						console.log('Authentication success. Returning user data...');
-						var query = getConnection().query('SELECT id, user_name, name, tagline, is_admin FROM User WHERE user_name = ?;',
+						var query = getConnection().query('SELECT id, user_name, name, is_admin FROM User WHERE user_name = ?;',
 							entities.encodeHTML(userDesc.user_name));
 						var result;
 						reportQueryActive();
@@ -174,7 +221,6 @@ function getUserData(userDesc, callback) {
 								id: res.id,
 								name: res.name,
 								user_name: res.user_name,
-								tagline: res.tagline,
 								is_admin: res.is_admin[0]
 							};
 						});
@@ -211,6 +257,8 @@ function addUser(userDesc, callback) {
 		callback(null, 'No email property of userDesc passed - cannot create user');
 	} else if (!/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}/.test(userDesc.email)) {
 		callback(null, 'Not a valid email addresss!');
+	} else if (!userDesc.is_student) {
+		callback(null, 'Not specified if student or not');
 	} else {
 		// Make sure there is no user with given username...
 		getUserData({ user_name: userDesc.user_name }, function(user, err) {
@@ -250,8 +298,8 @@ function addUser(userDesc, callback) {
 		console.log('Inserting data...');
 		console.log(userDesc);
 		console.log('pw_hash: ' + pw_hash);
-		var insert_query = getConnection().query('INSERT INTO User (user_name, name, pass_hash, tagline, email_address) VALUES (?, ?, ?, ?, ?);',
-			[entities.encodeHTML(userDesc.user_name), entities.encodeHTML(userDesc.name), pw_hash, entities.encodeHTML(userDesc.tagline), userDesc.email]);
+		var insert_query = getConnection().query('INSERT INTO User (user_name, name, pass_hash, email_address, is_student) VALUES (?, ?, ?, ?, ?);',
+			[entities.encodeHTML(userDesc.user_name), entities.encodeHTML(userDesc.name), pw_hash, userDesc.email, userDesc.is_student]);
 		reportQueryActive();
 		var error_generated = false;
 		var toReturn;
@@ -298,11 +346,6 @@ function updateUser(userID, updateFields, callback) {
 		if (updateFields.pass_hash) {
 			queryAddons.push(updateFields.pass_hash);
 			queryString += (first) ? 'pass_hash' : ', pass_hash';
-			valuesBit += (first) ? '?' : ', ?';
-		}
-		if (updateFields.tagline) {
-			queryAddons.push(entities.encodeHTML(updateFields.tagline));
-			queryString += (first) ? 'tagline' : ', tagline';
 			valuesBit += (first) ? '?' : ', ?';
 		}
 		if (updateFields.is_admin) {

@@ -11,7 +11,7 @@ var competition_page = require('../page_builders/competition_page'),
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('submit.js:: Submit subsystem activated');
 	if (!remainingPath || remainingPath == '') {
-		var page = competition_page.GoronCompetitionPage(request.session.data.user, compData, {
+		var page = competition_page.GoronCompetitionPage(request.session.data.user, request.session.data.team, compData, {
 			render: generateSubmitPageBody(request.session.data.user, compData, problemData)
 		});
 		if (page) {

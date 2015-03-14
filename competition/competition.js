@@ -7,7 +7,8 @@ var error_page = require('../page_builders/error_page'),
 	competition_dao = require('../dao/competition_dao'),
 	competition_page = require('../page_builders/competition_page'),
 	scoreboard = require('./scoreboard'),
-	problem = require('../problem/problem.js');
+	problem = require('../problem/problem.js'),
+	team_dao = require('../dao/team_dao');
 
 comp_subsystem['/scoreboard'] = scoreboard;
 
@@ -136,63 +137,81 @@ function route(response, request, remainingPath) {
 			}
 			gatekeeper(request.session.data.user, compID,
 				function(result, compData, authNotes, err) {
-					if (result) {
-						// Check for forwarding to 'problems' subsystem...
-						if (/^\/[p]{1}\d+/.test(remainingPath)) {
-							var problemID = /^\/[p]{1}\d+/.exec(remainingPath)[0].substr(2);
-							if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
-								remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
+					// Gather team data, commit to session variable
+					//  If no team, provide error page with link to register team.
+					if (compData !== undefined && compData !== null) {
+						team_dao.getTeamData({ userID: request.session.data.user.id, compID: compData.id }, function (res, err) {
+							if (err) {
+								console.log('competition: Error getting team data: ' + err);
+								error_page.ShowErrorPage(response, request, 'No team found', 'No team found with current information - register a team for this competition <a href="/register/c' + compData.id + '">here</a>');
 							} else {
-								remainingPath = undefined;
+								request.session.data.team = res;
+								dostuff();
 							}
-							problem.route(response, request, compData, problemID, remainingPath);
-						} else {
-							if (subsys_name) {
+						});
+					} else {
+						dostuff();
+					}
+
+					function dostuff() {
+						if (result) {
+							// Check for forwarding to 'problems' subsystem...
+							if (/^\/[p]{1}\d+/.test(remainingPath)) {
+								var problemID = /^\/[p]{1}\d+/.exec(remainingPath)[0].substr(2);
 								if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
 									remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
 								} else {
 									remainingPath = undefined;
 								}
-								console.log('competition: Forwarding path out to subsystem ' + subsys_name);
-								// Forward request out
-								if (comp_subsystem[subsys_name]) {
-									comp_subsystem[subsys_name].route(response, request, compData, remainingPath);
-								} else {
-									console.log('Subsystem ' + subsys_name + ' not found!');
-									response.writeHead(404, {'Content-Type': 'text/plain'});
-									response.write('404 not found! (Subsystem - competition)');
-									response.end();
-								}
+								problem.route(response, request, compData, problemID, remainingPath);
 							} else {
-								// Just generate competition page
-								var comp_page = competition_page.GoronCompetitionPage(request.session.data.user, compData);
-								if (comp_page) {
-									comp_page.render(function (data, err) {
-										if (err) {
-											error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Error generating competition page: ' + err);
-										} else {
-											console.log('competition.js: Sending response for competition');
-											response.writeHead(300, {'Content-Type': 'text/html'});
-											response.write(data);
-											response.end();
-										}
-									});
+								if (subsys_name) {
+									if (remainingPath && remainingPath.indexOf('/', 1) > 0) {
+										remainingPath = remainingPath.substr(remainingPath.indexOf('/', 1));
+									} else {
+										remainingPath = undefined;
+									}
+									console.log('competition: Forwarding path out to subsystem ' + subsys_name);
+									// Forward request out
+									if (comp_subsystem[subsys_name]) {
+										comp_subsystem[subsys_name].route(response, request, compData, remainingPath);
+									} else {
+										console.log('Subsystem ' + subsys_name + ' not found!');
+										response.writeHead(404, {'Content-Type': 'text/plain'});
+										response.write('404 not found! (Subsystem - competition)');
+										response.end();
+									}
 								} else {
-									error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Could not generate competition page builder');
+									// Just generate competition page
+									var comp_page = competition_page.GoronCompetitionPage(request.session.data.user, request.session.data.team, compData);
+									if (comp_page) {
+										comp_page.render(function (data, err) {
+											if (err) {
+												error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Error generating competition page: ' + err);
+											} else {
+												console.log('competition.js: Sending response for competition');
+												response.writeHead(300, {'Content-Type': 'text/html'});
+												response.write(data);
+												response.end();
+											}
+										});
+									} else {
+										error_page.ShowErrorPage(response, request, 'Error Generating Competition Page', 'Could not generate competition page builder');
+									}
 								}
 							}
-						}
-					} else {
-						if (err) {
-							console.log('competition: Error authorizing user: ' + err);
-							error_page.ShowErrorPage(response, request, 'User Not Authorized',
-								'There was an unexpected error attempting to authorize the current user. '
-								+ 'The error itself was unexpected, so I\'m afraid I can\'t share the details of it '
-								+ 'with you, this being an early and untested prototype.');
 						} else {
-							console.log('competition: User rejected from competition subsystem: ' + authNotes);
-							// Generate rejection page
-							error_page.ShowErrorPage(response, request, 'User Not Authorized', authNotes);
+							if (err) {
+								console.log('competition: Error authorizing user: ' + err);
+								error_page.ShowErrorPage(response, request, 'User Not Authorized',
+									'There was an unexpected error attempting to authorize the current user. '
+									+ 'The error itself was unexpected, so I\'m afraid I can\'t share the details of it '
+									+ 'with you, this being an early and untested prototype.');
+							} else {
+								console.log('competition: User rejected from competition subsystem: ' + authNotes);
+								// Generate rejection page
+								error_page.ShowErrorPage(response, request, 'User Not Authorized', authNotes);
+							}
 						}
 					}
 				});

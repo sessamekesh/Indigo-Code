@@ -70,7 +70,7 @@ function showProblemPage(response, request, compData, problemID) {
 
 	// Generate page
 	function GeneratePage(problemData) {
-		var page = problem_page.GoronProblemPage(request.session.data.user, compData, problemData);
+		var page = problem_page.GoronProblemPage(request.session.data.user, request.session.data.team, compData, problemData);
 		if (!page) {
 			// NEXT VERSION: Whenever you have a 'check logs' thing, also write out last whatever lines to file
 			error_page.ShowErrorPage(response, request, 'Error Generating Problem Page', 'Could not generate problem page - returned empty object. Check logs.');

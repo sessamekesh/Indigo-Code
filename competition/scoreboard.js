@@ -36,7 +36,7 @@ function showScoreboard(response, request, compData, pageNumber) {
 	// Generate scoreboard for user...
 	var start = pageNumber * 25,
 		finish = (pageNumber + 1) * 25,
-		scoreboard_page = competition_page.GoronCompetitionPage(request.session.data.user, compData, {
+		scoreboard_page = competition_page.GoronCompetitionPage(request.session.data.user, request.session.data.team, compData, {
 		render: function(callback) {
 			var toCallback = '';
 

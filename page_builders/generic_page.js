@@ -289,7 +289,6 @@ function GoronUserInfo(userData) {
 			} else if (userData.is_admin == true) {
 				console.log('Rendering Goron user tab for an admin');
 				callback('<p>Hello, sir <b>' + userData.user_name + '</b></p>'
-					+ '\n<p><i>' + userData.tagline + '</i></p>'
 					+ '\n<form action="/user/logout" method="post" role="form">'
 					+ '\n\t<div class="form-group">'
 					+ '\n\t\t<input type="submit" class="btn" value="Logout" />'
@@ -298,7 +297,6 @@ function GoronUserInfo(userData) {
 			} else {
 				console.log('Rendering Goron user tab for a peasant');
 				callback('<p>Hello, <b>' + userData.user_name + '</b></p>'
-					+ '\n<p><i>' + userData.tagline + '</i></p>'
 					+ '\n<form action="/user/logout" method="post" role="form">'
 					+ '\n\t<div class="form-group">'
 					+ '\n\t\t<input type="submit" class="btn btn-default" value="Logout" />'
