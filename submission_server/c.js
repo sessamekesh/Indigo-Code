@@ -4,109 +4,75 @@ var fs = require('fs'),
 	exec = require('child_process').exec,
 	execSync = require('child_process').execSync;
 
-// NEXT VERSION: Error IDs - on report error to console, attach an ID
-//  so you can quickly grep for it.
-
-// callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
-	console.log('----------C JUDGE----------');
+// Callback: result, notes
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases) {
+	console.log('-----------------C JUDGE-----------------');
 
 	// Append .c to submission type...
-	exec('mv ' + source_path + ' ' + source_path + '.c', { timeout: 5000 }, function(error, stdout, stder) {
-		if (error) {
-			console.log('c.js: ERR in moving file to add c extension');
-			console.log('--Source Path: ' + source_path);
-			console.log('--New Path: ' + source_path + '.c');
-			console.log('--Error: ' + error);
-			callback('IE', 'Internal Error (you will not be docked)');
-		} else {
-			compile_submission();
-		}
-	});
+	try {
+		var stdout = execSync('mv ' + source_path + ' ' + source_path + '.c', { encoding: 'utf8', timeout: 5000 } );
+	} catch (err) {
+		console.log('ERR moving file to add c extension');
+		console.log('--Source Path: ' + source_path);
+		console.log('--New Path: ' + source_path + '.c');
+		console.log('--Error: ' + err);
+		return { 'res': 'IE', 'notes': 'Staging error' };
+	}
 
 	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
 
-	// Compile code...
-	function compile_submission() {
-		var executable_path = sandbox_dir + '/' + submission_id + '.exe';
-		var cmd = 'gcc ' + source_path + '.c -o ' + executable_path;
-		exec(cmd, { timeout: 5000 }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('ERR in buliding code: ' + error);
-				callback('BE', 'Error buliding code: ' + error);
-			} else {
-				run_test_cases(executable_path);
-			}
-		});
+	var executable_path = sandbox_dir + '/' + submission_id + '.exe',
+		cmd = 'gcc ' + source_path + '.c -o ' + executable_path;
+	try {
+		execSync(cmd, { timeout: 5000, encoding: 'utf8' });
+	} catch (error) {
+		console.log('c.js: ERR in building code: ' + error);
+		return {'res': 'BE', 'notes': 'Error in building code: ' + error };
 	}
 
 	// Run against test cases...
-	function run_test_cases(executable_fname) {
-		run_test_case(executable_fname, 0, test_cases);
-	}
-
-	function run_test_case(executable_fname, test_index, test_array) {
-		if (test_index >= test_array.length) {
-			cleanup(executable_fname);
-			callback('AC', 'AC on ' + test_array.length + ' tests');
-		} else {
-			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = './' + executable_fname + ' < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
-			// TODO KIP Modify these systems to have a max_buffer size
+	for (var i = 0; i < test_cases.length; i++) {
+		var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_cases[i].id + '_sb' + submission_id,
+			cmd = './' + executable_path + ' < ' + sandbox_dir + '/tc' + test_cases[i].id + '.in > ' + out_file;
+		try {
+			stdout = execSync(cmd, { encoding: 'utf8', timeout: time_limit });
+			var cmd_compare = sandbox_dir + '/cp' + test_cases[i].comparison_program_id
+				+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_cases[i].id + '.out';
 			try {
-				var result = execSync(cmd, { timeout: time_limit });
-				console.log('c.js: Successfully ran test case ' + test_array[test_index].id);
-				compare_results(executable_fname, test_index, test_array, out_file);
-			} catch (error) {
-				if (error.signal === 'SIGTERM') {
-					console.log('Error in executing command - ' + error);
-					callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
-					cleanup(executable_fname);
-					removeCompletedTestCase(out_file);
+				stdout = execSync(cmd_compare, { encoding: 'utf8', timeout: 5000 });
+				if (stdout[0] === 'A' && stdout[1] === 'C') {
+					console.log('--- Passed test case ' + (i + 1) + ' of ' + test_cases.length);
 				} else {
-					console.log('Error in executing command - ' + error);
-					callback('RE', error.message);
-					cleanup(executable_fname);
+					// Failed test case
+					try {
+						execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+					} catch (err) {}
+					console.log('--- Failed test case ' + (i + 1));
+					console.log('--- Output: ' + stdout);
+					return { 'res': 'WA', 'notes': 'Failed on test ' + (i + 1) + ' of ' + test_cases.length + ':\n' + stdout };
 				}
+			} catch (err) {
+				console.log('c.js Error running comparison program: ' + error + ' (test case ' + i + ')');
+				try {
+					execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+				} catch (err) {}
+				return { 'res': 'IE', 'notes': 'Comparison error: ' + error.message };
+			}
+
+		} catch (err) {
+			if (err.signal === 'SIGTERM') {
+				console.log('Time limit exceeded on test ' + i + '! ' + err.message);
+				return {'res': 'TLE', 'notes': 'Test case ' + i + ' took too long to execute.' };
+			} else {
+				console.log('c.js Error (test case ' + i + ') in executing command ' + cmd + ': ' + err);
+				return {'res': 'RE', 'notes': err.message };
 			}
 		}
+		try {
+			execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+		} catch (err) {}
 	}
-
-	// Compare test cases...
-	function compare_results(executable_fname, test_index, test_array, out_file) {
-		var cmd = sandbox_dir + '/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
-		exec (cmd, { timout: 5000 }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('c.js: Error running comparison program: ' + error);
-				callback('IE', 'Comparison error: ' + error.message);
-				cleanup(executable_fname);
-			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
-				run_test_case(executable_fname, test_index + 1, test_array);
-			} else {
-				// Failed test case. Report fail here...
-				callback('WA', 'Failed on test ' + (test_index + 1) + ' of ' + test_array.length + ':\n' + stdout);
-				cleanup(executable_fname);
-			}
-
-			removeCompletedTestCase(out_file);
-		});
-	}
-
-	function removeCompletedTestCase(out_file) {
-		exec ('rm ' + out_file, { timeout: 5000 }, function (err, stdout, stderr) {
-			if (err) {
-				console.log('c.js: Error removing test output: ' + out_file + ': ' + err);
-			}
-		});
-	}
-
-	function cleanup(executable_fname) {
-		// Remove executable from sandbox...
-		exec ('rm ' + executable_fname, { timeout: 5000 }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('c.js: Error: Could not remove executable ' + executable_fname + ': ' + error);
-			}
-		});
-	}
-}
+	
+	console.log('-----------------PASSED-----------------');
+	return { 'res': 'AC', 'notes': 'AC on ' + test_cases.length + ' tests.' };
+};

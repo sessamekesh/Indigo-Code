@@ -5,136 +5,75 @@ var fs = require('fs'),
 	execSync = require('child_process').execSync;
 
 // Callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
-	console.log('----------JAVA 8 JUDGE----------');
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases) {
+	console.log('-----------------JAVA 1.8 JUDGE-----------------');
 
-	var new_path;
-
-	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
-
-	// Make a directory for this submission in the sandbox...
-	console.log('java1_8.js: Making directory ' + sandbox_dir + '/poor_java_fool_' + submission_id);
-	exec('mkdir ' + sandbox_dir + '/poor_java_fool_' + submission_id, { timeout: 5000 }, function (err, stdout, stderr) {
-		if (err) {
-			console.log('java1_8.js: ERR creating submission directory in sandbox: ' + err);
-			callback('IE', 'Could not create directory in which to place Java submission');
-		} else {
-			moveFile();
-		}
-	});
-
-	function moveFile() {
-		// Move file to directory, using original filename as filename
-		new_path = sandbox_dir + '/poor_java_fool_' + submission_id + '/' + original_filename;
-		console.log('java1_8.js: Moving file to ' + new_path);
-		exec ('cp ' + source_path + ' ' + new_path, { timeout: 5000 },
-			function (err, stdout, stderr) {
-				if (err) {
-					console.log('java1_8.js: ERR moving file to new directory: ' + err);
-					callback('IE', 'Could not move file into new Java directory: ' + new_path);
-					cleanup();
-				} else {
-					build_class();
-				}
-			}
-		);
+	// Append .go to submission type...
+	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/')),
+		new_path = sandbox_dir + '/' + original_filename,
+		classname = new_path.substr(new_path.lastIndexOf('/') + 1);
+	classname = classname.substr(0, classname.lastIndexOf('.'));
+	try {
+		var stdout = execSync('mv ' + source_path + ' ' + new_path, { encoding: 'utf8', timeout: 5000 } );
+	} catch (err) {
+		console.log('ERR moving file to add go extension');
+		console.log('--Source Path: ' + source_path);
+		console.log('--New Path: ' + source_path + '.go');
+		console.log('--Error: ' + err);
+		return { 'res': 'IE', 'notes': 'Staging error' };
 	}
 
-	function build_class() {
-		var className = new_path.substr(new_path.lastIndexOf('/') + 1);
-			className = className.substr(0, className.lastIndexOf('.'));
-		console.log('java1_8.js: Building class ' + className);
-		exec('./bin/jdk1.8.0_40/bin/javac ' + new_path, { timeout: 5000 }, function (err, stdout, stderr) {
-			if (err) {
-				console.log('java1_8: Build error: ' + err);
-				callback('BE', 'Could not build project: ' + err + ' ::: ' + stdout);
-				cleanup();
-			} else {
-				run_test_cases(className, new_path.substr(0, new_path.lastIndexOf('/')));
-			}
-		});
+	var cmd = './bin/jdk1.8.0_40/bin/javac ' + new_path;
+	try {
+		execSync(cmd, { timeout: 5000, encoding: 'utf8' });
+	} catch (error) {
+		console.log('golang.js: ERR in building code: ' + error);
+		return { 'res': 'BE', 'notes': 'Error in building code: ' + error };
 	}
 
 	// Run against test cases...
-	function run_test_cases(class_name, wd) {
-		run_test_case(class_name, wd, 0, test_cases);
-	}
-
-	function run_test_case(class_name, wd, test_index, test_array) {
-		if (test_index >= test_array.length) {
-			cleanup();
-			cleanup_and_report_success(test_array);
-		} else {
-			var out_file = '../../../' + sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = '../../../bin/jdk1.8.0_40/bin/java ' + class_name + ' < ../../../' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
+	for (var i = 0; i < test_cases.length; i++) {
+		var out_file = './test_result_p' + problemData.id + '_tc' + test_cases[i].id + '_sb' + submission_id,
+			cmd = '../../bin/jdk1.8.0_40/bin/java ' + classname + ' < ' + './tc' + test_cases[i].id + '.in > ' + out_file;
+		try {
+			stdout = execSync(cmd, { encoding: 'utf8', timeout: time_limit, cwd: sandbox_dir });
+			var cmd_compare = sandbox_dir + '/cp' + test_cases[i].comparison_program_id
+				+ ' ' + sandbox_dir +  '/' + out_file + ' ' + sandbox_dir + '/tc' + test_cases[i].id + '.out';
 			try {
-				var result = execSync(cmd, { timeout: time_limit, cwd: wd });
-				compare_results(class_name, wd, test_index, test_array, out_file);
-			} catch (err) {
-				if (err.signal === 'SIGTERM') {
-					console.log('Time limit exceeded! ' + err.message);
-					callback('TLE', 'Time limit exceeded. Test case ' + (test_index + 1));
-					removeCompletedTestCase(out_file, wd);
-					cleanup();
+				stdout = execSync(cmd_compare, { encoding: 'utf8', timeout: 5000 });
+				if (stdout[0] === 'A' && stdout[1] === 'C') {
+					console.log('--- Passed test case ' + (i + 1) + ' of ' + test_cases.length);
 				} else {
-					console.log('java1_8.js: Error in executing command ' + cmd + ': ' + err);
-					callback('RE', err.message);
-					cleanup();
+					// Failed test case
+					try {
+						execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+					} catch (err) {}
+					console.log('--- Failed test case ' + (i + 1));
+					console.log('--- Output: ' + stdout);
+					return { 'res': 'WA', 'notes': 'Failed on test ' + (i + 1) + ' of ' + test_cases.length + ':\n' + stdout };
 				}
+			} catch (err) {
+				console.log('golang.js Error running comparison program: ' + error + ' (test case ' + i + ')');
+				try {
+					execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+				} catch (err) {}
+				return { 'res': 'IE', 'notes': 'Comparison error: ' + error.message };
+			}
+
+		} catch (err) {
+			if (err.signal === 'SIGTERM') {
+				console.log('Time limit exceeded on test ' + i + '! ' + err.message);
+				return {'res': 'TLE', 'notes': 'Test case ' + i + ' took too long to execute.' };
+			} else {
+				console.log('golang.js Error (test case ' + i + ') in executing command ' + cmd + ': ' + err);
+				return {'res': 'RE', 'notes': err.message };
 			}
 		}
+		try {
+			execSync('rm ' + sandbox_dir + '/' + out_file, { encoding: 'utf8', timeout: 5000 });
+		} catch (err) {}
 	}
-
-	function removeCompletedTestCase(out_file, wd) {
-		exec ('rm ' + out_file, { timeout: 5000, cwd: wd }, function (err, stdout, stderr) {
-			if (err) {
-				console.log('java1_8: Error removing test output: ' + out_file + ': ' + err);
-			}
-		});
-	}
-
-	function compare_results(class_name, wd, test_index, test_array, out_file) {
-		var cmd = '../../../' + sandbox_dir +'/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + '../../../' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
-		exec(cmd, { timeout: 5000, cwd: wd }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('java1_8.js: Error running comparison program: ' + error);
-				callback('IE', 'Comparison error: ' + error.message);
-				cleanup();
-			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
-				run_test_case(class_name, wd, test_index + 1, test_array);
-			} else {
-				// Failed test case
-				callback('WA', 'Failed on test ' + (test_index + 1) + ' of ' + test_array.length + ':\n' + stdout);
-				console.log('Wrong Answer: ' + stdout);
-				cleanup();
-			}
-
-			removeCompletedTestCase(out_file, wd);
-		});
-	}
-
-	function cleanup(test_array) {
-		// HACK: Waits a second, before going along with it, because of a bug
-		//  sometimes caused by friggin Java.
-		setTimeout(function () {
-			console.log('Removing: ' + new_path + ' and ' + new_path.substr(0, new_path.lastIndexOf('.')) + '.class');
-			exec ('rm ' + new_path + ' ' + new_path.substr(0, new_path.lastIndexOf('.')) + '.class', { timeout: 5000 }, function (error, stdout, stderr) {
-				if (error) {
-					console.log('java1_8.js: Error: Could not remove executable ' + new_path + ': ' + error);
-				}
-			});
-
-			exec ('rmdir ' + new_path.substr(0, new_path.lastIndexOf('/')), { timeout: 5000 }, function (error, stdout, stderr) {
-				if (error) {
-					console.log('java1_8.js: Error: Could not remove directory ' + new_path.substr(0, new_path.lastIndexOf('/')) + ': ' + error);
-				}
-			});
-		}, 1000);
-	}
-
-	function cleanup_and_report_success(test_array) {
-		callback('AC', 'AC on ' + test_array.length + ' tests');
-	}
-}
-// TODO KIP: Write function test (model after cpp98)
+	
+	console.log('-----------------PASSED-----------------');
+	return { 'res': 'AC', 'notes': 'AC on ' + test_cases.length + ' tests.' };
+};

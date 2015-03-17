@@ -5,92 +5,73 @@ var fs = require('fs'),
 	execSync = require('child_process').execSync;
 
 // Callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
-	console.log('----------GOLANG JUDGE----------');
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases) {
+	console.log('-----------------GOLANG JUDGE-----------------');
 
 	// Append .go to submission type...
-	exec('mv ' + source_path + ' ' + source_path + '.go', { timeout: 5000 }, function (err, stdout, stderr) {
-		if (err) {
-			console.log('golang: ERR moving file to add go extension');
-			console.log('--Source Path: ' + source_path);
-			console.log('--New Path: ' + source_path + '.go');
-			console.log('--Error: ' + err);
-			callback('IE', 'Staging error');
-		} else {
-			compile_submission();
-		}
-	});
+	try {
+		var stdout = execSync('mv ' + source_path + ' ' + source_path + '.go', { encoding: 'utf8', timeout: 5000 } );
+	} catch (err) {
+		console.log('ERR moving file to add go extension');
+		console.log('--Source Path: ' + source_path);
+		console.log('--New Path: ' + source_path + '.go');
+		console.log('--Error: ' + err);
+		return { 'res': 'IE', 'notes': 'Staging error' };
+	}
 
 	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
 
-	function compile_submission() {
-		var cmd = 'go build SRC.go';
-		exec(cmd, { timeout: 5000, cwd: sandbox_dir }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('ERR in building code: ' + error);
-				callback('BE', 'Errir in building code: ' + error);
-			} else {
-				run_test_cases();
-			}
-		});
+	var cmd = 'go build SRC.go';
+	try {
+		execSync(cmd, { timeout: 5000, cwd: sandbox_dir, encoding: 'utf8' });
+	} catch (error) {
+		console.log('golang.js: ERR in building code: ' + error);
+		return { 'res': 'BE', 'notes': 'Error in building code: ' + error };
 	}
 
 	// Run against test cases...
-	function run_test_cases() {
-		run_test_case(0, test_cases);
-	}
-
-	function run_test_case(test_index, test_array) {
-		if (test_index >= test_array.length) {
-			cleanup_and_report_success(test_array);
-		} else {
-			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = './' + sandbox_dir + '/SRC' + ' < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
+	for (var i = 0; i < test_cases.length; i++) {
+		var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_cases[i].id + '_sb' + submission_id,
+			cmd = './' + sandbox_dir + '/SRC < ' + sandbox_dir + '/tc' + test_cases[i].id + '.in > ' + out_file;
+		try {
+			stdout = execSync(cmd, { encoding: 'utf8', timeout: time_limit });
+			var cmd_compare = sandbox_dir + '/cp' + test_cases[i].comparison_program_id
+				+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_cases[i].id + '.out';
 			try {
-				var result = execSync(cmd, { timeout: time_limit });
-				compare_results(test_index, test_array, out_file);
-			} catch (err) {
-				if (err.signal === 'SIGTERM') {
-					console.log('Time limit exceeded! ' + err.message);
-					callback('TLE', 'Took too long, yo. Test case ' + (test_index + 1));
-					removeCompletedTestCase(out_file);
+				stdout = execSync(cmd_compare, { encoding: 'utf8', timeout: 5000 });
+				if (stdout[0] === 'A' && stdout[1] === 'C') {
+					console.log('--- Passed test case ' + (i + 1) + ' of ' + test_cases.length);
 				} else {
-					console.log('golang: Error in executing command ' + cmd + ': ' + err);
-					callback('RE', err.message);
-					removeCompletedTestCase(out_file);
+					// Failed test case
+					try {
+						execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+					} catch (err) {}
+					console.log('--- Failed test case ' + (i + 1));
+					console.log('--- Output: ' + stdout);
+					return { 'res': 'WA', 'notes': 'Failed on test ' + (i + 1) + ' of ' + test_cases.length + ':\n' + stdout };
 				}
+			} catch (err) {
+				console.log('golang.js Error running comparison program: ' + error + ' (test case ' + i + ')');
+				try {
+					execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+				} catch (err) {}
+				return { 'res': 'IE', 'notes': 'Comparison error: ' + error.message };
+			}
+
+		} catch (err) {
+			if (err.signal === 'SIGTERM') {
+				console.log('Time limit exceeded on test ' + i + '! ' + err.message);
+				return {'res': 'TLE', 'notes': 'Test case ' + i + ' took too long to execute.' };
+			} else {
+				console.log('golang.js Error (test case ' + i + ') in executing command ' + cmd + ': ' + err);
+				return {'res': 'RE', 'notes': err.message };
 			}
 		}
+		try {
+			execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+		} catch (err) {}
 	}
-
-	function compare_results(test_index, test_array, out_file) {
-		var cmd = sandbox_dir + '/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
-		exec(cmd, { timeout: 5000 }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('golang: Error running comparison program: ' + error);
-				callback('IE', 'Comparison error: ' + error.message);
-			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
-				run_test_case(test_index + 1, test_array);
-			} else {
-				// Failed test case
-				callback('WA', 'Failed on test ' + (test_index + 1) + ' of ' + test_array.length + ':\n' + stdout);
-			}
-
-			removeCompletedTestCase(out_file);
-		});
-
-	}
-
-	function removeCompletedTestCase(out_file) {
-		exec ('rm ' + out_file, { timeout: 5000 }, function (err, stdout, stderr) {
-			if (err) {
-				console.log('golang: Error removing test output: ' + out_file + ': ' + err);
-			}
-		});
-	}
-
-	function cleanup_and_report_success(test_array) {
-		callback('AC', 'AC on ' + test_array.length + ' tests');
-	}
-}
+	
+	console.log('-----------------PASSED-----------------');
+	return { 'res': 'AC', 'notes': 'AC on ' + test_cases.length + ' tests.' };
+};

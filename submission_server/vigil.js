@@ -5,85 +5,66 @@ var fs = require('fs'),
 	execSync = require('child_process').execSync;
 
 // Callback: result, notes
-exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback) {
+exports.judge = function (submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases) {
 	console.log('-----------------VIGIL JUDGE-----------------');
 	console.log('---We commend you for your moral vigilance---');
 
 	// Append .py to submission type...
 	try {
-		var result = execSync('mv ' + source_path + ' ' + source_path + '.vg', { timeout: 5000 });
-			function (err, stdout, stderr) {
-			if (err) {
-			} else {
-				run_test_cases();
-			}
-		});
+		var stdout = execSync('mv ' + source_path + ' ' + source_path + '.vg', { encoding: 'utf8', timeout: 5000 } );
 	} catch (err) {
 		console.log('ERR moving file to add vg extension');
 		console.log('--Source Path: ' + source_path);
 		console.log('--New Path: ' + source_path + '.vg');
 		console.log('--Error: ' + err);
-		callback('IE', 'Staging error');
+		return { 'res': 'IE', 'notes': 'Staging error' };
 	}
 
 	var sandbox_dir = source_path.substr(0, source_path.lastIndexOf('/'));
 
 	// Run against test cases...
-	function run_test_cases() {
-		run_test_case(0, test_cases);
-	}
-
-	function run_test_case(test_index, test_array) {
-		if (test_index >= test_array.length) {
-			cleanup_and_report_success(test_array);
-		} else {
-			var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_array[test_index].id + '_sb' + submission_id,
-				cmd = './bin/vigil-master/vigil ' + source_path + '.vg < ' + sandbox_dir + '/tc' + test_array[test_index].id + '.in > ' + out_file;
+	for (var i = 0; i < test_cases.length; i++) {
+		var out_file = sandbox_dir + '/test_result_p' + problemData.id + '_tc' + test_cases[i].id + '_sb' + submission_id,
+			cmd = './bin/vigil-master/vigil ' + source_path + '.vg < ' + sandbox_dir + '/tc' + test_cases[i].id + '.in > ' + out_file;
+		try {
+			stdout = execSync(cmd, { encoding: 'utf8', timeout: time_limit });
+			var cmd_compare = sandbox_dir + '/cp' + test_cases[i].comparison_program_id
+				+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_cases[i].id + '.out';
 			try {
-				result = execSync(cmd, { timeout: time_limit }); // Run in sync - framework is only allowed to run one submission at a time. Prevents memory failures.
-				compare_results(test_index, test_array, out_file);
-			} catch (err) {
-				if (err.signal === 'SIGTERM') {
-					console.log('Time limit exceeded! ' + err.message);
-					callback('TLE', 'Test case ' + test_index + ' took too long to execute.');
-					removeCompletedTestCase(out_file);
+				stdout = execSync(cmd_compare, { encoding: 'utf8', timeout: 5000 });
+				if (stdout[0] === 'A' && stdout[1] === 'C') {
+					console.log('--- Passed test case ' + (i + 1) + ' of ' + test_cases.length);
 				} else {
-					console.log('vigil.js: Error in executing command ' + cmd + ': ' + err);
-					callback('RE', err.message);
-					removeCompletedTestCase(out_file);
+					// Failed test case
+					try {
+						execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+					} catch (err) {}
+					console.log('--- Failed test case ' + (i + 1));
+					console.log('--- Output: ' + stdout);
+					return { 'res': 'WA', 'notes': 'Failed on test ' + (i + 1) + ' of ' + test_cases.length + ':\n' + stdout };
 				}
+			} catch (err) {
+				console.log('vigil.js: Error running comparison program: ' + error + ' (test case ' + i + ')');
+				try {
+					execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+				} catch (err) {}
+				return { 'res': 'IE', 'notes': 'Comparison error: ' + error.message };
+			}
+
+		} catch (err) {
+			if (err.signal === 'SIGTERM') {
+				console.log('Time limit exceeded on test ' + i + '! ' + err.message);
+				return {'res': 'TLE', 'notes': 'Test case ' + i + ' took too long to execute.' };
+			} else {
+				console.log('vigil.js: Error (test case ' + i + ') in executing command ' + cmd + ': ' + err);
+				return {'res': 'RE', 'notes': err.message };
 			}
 		}
+		try {
+			execSync('rm ' + out_file, { encoding: 'utf8', timeout: 5000 });
+		} catch (err) {}
 	}
-
-	function compare_results(test_index, test_array, out_file) {
-		var cmd = sandbox_dir + '/cp' + test_array[test_index].comparison_program_id
-			+ ' ' + out_file + ' ' + sandbox_dir + '/tc' + test_array[test_index].id + '.out';
-		exec(cmd, { timeout: 5000 }, function (error, stdout, stderr) {
-			if (error) {
-				console.log('vigil.js: Error running comparison program: ' + error);
-				callback('IE', 'Comparison error: ' + error.message);
-			} else if (stdout[0] === 'A' && stdout[1] === 'C') {
-				run_test_case(test_index + 1, test_array);
-			} else {
-				// Failed test case
-				callback('WA', 'Failed on test ' + (test_index + 1) + ' of ' + test_array.length + ':\n' + stdout);
-			}
-
-			removeCompletedTestCase(out_file);
-		});
-
-	}
-
-	function removeCompletedTestCase(out_file) {
-		exec ('rm ' + out_file, { timeout: 5000 }, function (err, stdout, stderr) {
-			if (err) {
-				console.log('vigil.js: Error removing test output: ' + out_file + ': ' + err);
-			}
-		});
-	}
-
-	function cleanup_and_report_success(test_array) {
-		callback('AC', 'AC on ' + test_array.length + ' tests. We commend you for your eternal moral vigilance.');
-	}
-}
+	
+	console.log('-----------------PASSED-----------------');
+	return { 'res': 'AC', 'notes': 'AC on ' + test_cases.length + ' tests. We commend you for your eternal moral vigilance.' };
+};

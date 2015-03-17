@@ -73,11 +73,11 @@ function judgeSubmission(fname, callback) {
 				}
 
 				// Either way, remove the directory we were using...
-				exec ('rm -r ' + submission_dir + ' ' + tarball_path, function (err, stdout, stderr) {
-					if (err) {
-						console.log('judgeSubmission ERR: Could not cleanup directory: ' + err);
-					}
-				});
+				// exec ('rm -r ' + submission_dir + ' ' + tarball_path, function (err, stdout, stderr) {
+				// 	if (err) {
+				// 		console.log('judgeSubmission ERR: Could not cleanup directory: ' + err);
+				// 	}
+				// });
 			}
 		);
 	}
