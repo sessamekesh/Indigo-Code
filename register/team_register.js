@@ -176,6 +176,7 @@ function generateNewTeamForm (compData) {
 			+ '\n\ttosend.team_name = $(\'#team_name\').val();'
 			+ '\n\ttosend.team_tagline = $(\'#team_tagline\').val();'
 			+ '\n\ttosend.n_users = ' + compData.team_size + ';'
+			+ '\n\ttosend.comp_id = ' + compData.id + ';'
 			+ '\n\ttosend.user_data = {};'
 			+ '\n\t$(\'#team_name_err\').text(\'\');'
 			+ '\n\t$(\'#team_tagline_err\').text(\'\');'

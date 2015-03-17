@@ -16,7 +16,8 @@ var subsystems = {
 	golang: require('./golang'),
 	vigil: require('./vigil'),
 	cpp14: require('./cpp14'),
-	csmono: require('./csmono')
+	csmono: require('./csmono'),
+	php: require('./php')
 };
 
 // Callback: result, notes, err
@@ -26,7 +27,8 @@ function judgeSubmission(submission_id, languageData, problemData, source_path, 
 	console.log('Source Path: ' + source_path + ' Original Filename: ' + original_filename);
 
 	if (subsystems[languageData.subsys_name]) {
-		subsystems[languageData.subsys_name].judge(submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases, callback);
+		var judge_result = subsystems[languageData.subsys_name].judge(submission_id, languageData, problemData, time_limit, source_path, original_filename, test_cases);
+		callback(judge_result['res'], judge_result['notes']);
 	} else {
 		callback(null, null, 'Could not find subsystem ' + languageData.subsys_name);
 	}

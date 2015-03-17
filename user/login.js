@@ -26,26 +26,28 @@ function route(response, request, remainingPath) {
 			} else {
 				if (fields.register) {
 					var page = registration_page.GenerateRegistrationPage(request, { user_name: fields.username});
-					if (page) {
-						page.render(function(content, err) {
-							if (err) {
-								console.log('Error in rendering registration page - ' + err);
-								response.writeHead(200, {'Content-Type': 'text/plain'});
-								response.write('Error rendering registration form. Check log.');
-								response.end();
-							} else {
-								console.log('Writing registration page response...');
-								response.writeHead(200, {'Content-Type': 'text/html'});
-								response.write(content);
-								response.end();
-							}
-						});
-					} else {
-						console.log('Error in generating registration page');
-						response.writeHead(200, {'Content-Type': 'text/plain'});
-						response.write('Error generating registration form. Check log.');
-						response.end();
-					}
+					response.writeHead(302, {'Location': '/register'})
+					response.end();
+					// if (page) {
+					// 	page.render(function(content, err) {
+					// 		if (err) {
+					// 			console.log('Error in rendering registration page - ' + err);
+					// 			response.writeHead(200, {'Content-Type': 'text/plain'});
+					// 			response.write('Error rendering registration form. Check log.');
+					// 			response.end();
+					// 		} else {
+					// 			console.log('Writing registration page response...');
+					// 			response.writeHead(200, {'Content-Type': 'text/html'});
+					// 			response.write(content);
+					// 			response.end();
+					// 		}
+					// 	});
+					// } else {
+					// 	console.log('Error in generating registration page');
+					// 	response.writeHead(200, {'Content-Type': 'text/plain'});
+					// 	response.write('Error generating registration form. Check log.');
+					// 	response.end();
+					// }
 				} else {
 					console.log('Fields recognized:');
 					console.log(fields);

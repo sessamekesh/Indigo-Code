@@ -81,11 +81,11 @@ exports.registerTeam = function (team_data, callback) {
 	}
 };
 
-exports.teamNameAvailable = function (team_name, callback) {
+exports.teamNameAvailable = function (team_name, compID, callback) {
 	if (team_name === undefined || team_name === '') {
 		callback(false);
 	} else {
-		getConnection().query('SELECT COUNT(*) AS ct FROM Team WHERE name = ?;', team_name, function (err, res) {
+		getConnection().query('SELECT COUNT(*) AS ct FROM Team WHERE name = ? AND competition_id = ?;', [team_name, compID], function (err, res) {
 			if (err) {
 				console.log('Error in getting team counts: ' + err);
 				callback(false);

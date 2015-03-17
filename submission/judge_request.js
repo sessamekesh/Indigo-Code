@@ -106,7 +106,7 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 					// TODO KIP: Make it so that this doesn't have to be so terribly
 					//  long...
 					vm_active = true;
-					setTimeout(cb, 2000);
+					setTimeout(cb, 5000);
 				}
 			}
 		);
@@ -303,7 +303,8 @@ exports.judgeSubmission = function (submission_id, languageData, problemData, so
 				if (error) {
 					console.log('---judge_request ' + submission_id + ': Error cleaning up sandbox: ' + error);
 				}
-			});
+			}
+		);
 	}
 
 	function report_result_received(data) {

@@ -49,8 +49,11 @@ function validate_new_team_data (socket, data) {
 		if (data.team_name === undefined || data.team_name === '') {
 			error_list.push({ 'field': 'team_name', 'error': 'No team name provided' });
 			check_users();
+		} else if (data.comp_id === undefined || isNaN(data.comp_id)) {
+			error_list.push({ 'field': 'generic', 'error': 'No competition ID found'});
+			check_users();
 		} else {
-			team_dao.teamNameAvailable(data.team_name, function (is_available) {
+			team_dao.teamNameAvailable(data.team_name, data.comp_id, function (is_available) {
 				if (!is_available) {
 					error_list.push({ 'field': 'team_name', 'error': 'Team name is already in use!' });
 				}
@@ -97,16 +100,39 @@ function validate_new_team_data (socket, data) {
 					user_dao.authUser(data.user_data[n].username, data.user_data[n].password, function (res, err) {
 						if (err === 'User not found') {
 							error_list.push({ 'field': 'user_name_' + n, 'error': 'User not found' });
+							i++;
+							check_user(ul[i], team_members);
 						} else if (err) {
 							console.log('----- new_team_validate: Error authenticating user: ' + err);
 							error_list.push({ 'field': 'user_pass_' + n, 'error': 'Error authenticating user - see logs' });
+							i++;
+							check_user(ul[i], team_members);
 						} else {
 							if (res !== true) {
 								error_list.push({ 'field': 'user_pass_' + n, 'error': 'Incorrect password' });
+								i++;
+								check_user(ul[i], team_members);
+							} else {
+								// Make sure user doesn't already have a team for this competition.
+								user_dao.getUserData({ user_name: data.user_data[n].username, password: data.user_data[n].password }, function (res, err) {
+									if (err) {
+										console.log('new_team_validate: Error getting user data: ' + err);
+										error_list.push({ 'field': 'user_name_' + n, 'error': 'Failed to get user information, notify admin.' });
+										i++;
+										check_user(ul[i], team_members);
+									} else {
+										team_dao.getTeamData({ userID: res.id, compID: data.comp_id }, function (res, err) {
+											if (err) {
+											} else {
+												error_list.push({ 'field': 'user_name_' + n, 'error': 'User is already part of a team for this competition!' });
+											}
+											i++;
+											check_user(ul[i], team_members);
+										});
+									}
+								});
 							}
 						}
-						i++;
-						check_user(ul[i], team_members);
 					});
 				} else{
 					i++;
