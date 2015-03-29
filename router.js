@@ -1,82 +1,76 @@
-var requestHandlers = require("./requestHandlers"),
-	fs = require("fs");
+'use strict';
 
-var handle = {};
+var user = require('./user/user'),
+	statics = require('./statics/statics'),
+	competition = require('./competition/competition'),
+	admin_router = require('./admin/admin_router'),
+	fs = require('fs'),
+	error_page = require('./page_builders/error_page'),
+	register = require('./register/register');
 
-// Add website handles here...
-handle['/'] = requestHandlers.index;
-handle['/index'] = requestHandlers.index;
-handle['/login'] = requestHandlers.login;
-handle['/logout'] = requestHandlers.logout;
-handle['/register-new-user'] = requestHandlers.registerNew;
-handle['/register'] = requestHandlers.register;
-handle['/c'] = requestHandlers.makeCompetitionPage;
-handle['/co'] = requestHandlers.getCompetitionObject;
-handle['/submit'] = requestHandlers.judge_submission;
-handle['/scores'] = requestHandlers.getScoreboard;
-handle['/submissions'] = requestHandlers.getSubmissions;
+var subsystem = {},
+	redirecting_pages = {};
+subsystem['/'] = statics;
+subsystem['/index'] = statics;
+subsystem['/user'] = user;
+subsystem['/competition'] = competition;
+subsystem['/admin'] = admin_router;
+subsystem['/register'] = register;
 
 function route(pathname, response, request) {
-	console.log(pathname);
-	if(typeof handle[pathname] === 'function') {
-		handle[pathname](response, request);
-	} else {
-		console.log("No request handler found for " + pathname);
-		console.log("Searching for associated file...");
+	// Determine which subsystem gets the request
+	var subsys_path = pathname;
+	if (pathname.indexOf('/', 1) > 0) {
+		subsys_path = pathname.substr(0, pathname.indexOf('/', 1));
+	}
 
-		var pathnameToUse = pathname;
-		if (pathnameToUse[0] === '/') {
-			pathnameToUse = './public' + pathnameToUse;
+	if (subsystem[subsys_path]) {
+		console.log('Routing request to subsystem ' + subsys_path);
+		if (pathname.indexOf('/', 1) > 0) {
+			subsystem[subsys_path].route(response, request, pathname.substr(pathname.indexOf('/', 1)));
+		} else {
+			subsystem[subsys_path].route(response, request);
 		}
-
-		fs.exists(pathnameToUse, function(exists) {
+	} else {
+		// Check for file in public directory
+		fs.exists('./public' + pathname, function(exists) {
 			if (exists) {
-				console.log("File found!");
-				var loadedData = '';
-				var input = fs.createReadStream(pathnameToUse);
-				input.on('data', function(data) {
-					loadedData += data;
-				});
-				input.on('end', function() {
-					var type = pathnameToUse.substr(pathnameToUse.lastIndexOf('.'));
+				console.log('File found in ./public' + pathname + ', opening');
+
+				fs.readFile('./public' + pathname, function (err, data) {
+					var type = pathname.substr(pathname.lastIndexOf('.'));
 					if (type === '.css') {
 						type = 'text/css';
 					} else if (type === '.htm' || type === '.html') {
 						type = 'text/html';
+					} else if (type === '.js') {
+						type = 'text/javascript';
+					} else if (type === '.gif') {
+						type = 'image/gif';
+					} else if (type === '.ico') {
+						type = 'favicon/ico';
+					} else if (type === '.png') {
+						type = 'image/png';
+					} else if (type === '.jpg') {
+						type = 'image/jpeg';
 					} else {
 						type = 'text/plain';
 					}
-					response.writeHead(200, {"Content-Type": type});
-					response.write(loadedData);
+
+					response.writeHead(200, {'Content-Type': type});
+					response.write(data);
 					response.end();
 				});
 			} else {
-				// Look for a fragment with the given name
-				console.log('Pathname: ' + pathname);
-				var rawName;
-				if (pathname[0] === '/') {
-					rawName = pathname.substr(1);
-				} else {
-					rawName = pathname;
-				}
-				if (pathname.indexOf('.') > -1) {
-					rawName = rawName.substr(0, pathname.lastIndexOf('.'));
-				}
-				console.log('Looking for fragment at ' + './frags/' + rawName + '.frag');
-				fs.exists('./frags/' + rawName + '.frag', function(exists) {
-					if (exists) {
-						console.log('Fragment found!');
-						requestHandlers.pageFromFragment(response, request, rawName);
-					} else {
-						console.log("File not found. Reporting 404");
-						response.writeHead(404, {"Content-Type": "text/plain"});
-						response.write("404 not found!");
-						response.end();
-					}
-				});
+				console.log('File not found. Reporting 404');
+
+				error_page.ShowErrorPage(response, request,
+					'404 - Page Not Found',
+					'The page you requested could not be loaded. It doesn\'t exist and cannot be generated. Sorry about that.');
 			}
 		});
 	}
+	// Modification: Now, routers down the line are responsible for this.
 }
 
 exports.route = route;

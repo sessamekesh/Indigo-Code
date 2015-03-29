@@ -1,0 +1,3 @@
+Improvement: Does not show place number next to person in scoreboard
+Bug: Submission 330 has a runtime error, with no reason given. Check it.
+---Not a build error, but a run time error against test 7

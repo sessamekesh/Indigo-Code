@@ -1,1 +1,0 @@
-<b>This is the about page</p>
