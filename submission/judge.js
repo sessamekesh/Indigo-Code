@@ -9,7 +9,8 @@ var error_page = require('../page_builders/error_page'),
 	result_listener_socket = require('../sockets/result_listener_socket'),
 	scores_dao = require('../dao/scores_dao'),
 	SUBMISSION_TIMEOUT_TIME = 45000,
-	WAIT_BEFORE_SEND_PING_TIME = 1100;
+	WAIT_BEFORE_SEND_PING_TIME = 1100,
+	TIME_BETWEEN_SUBMISSIONS_SECONDS = 30;
 
 function route(response, request, compData, problemData, remainingPath) {
 	console.log('judge:: Routing request for submission from user ' + request.session.data.user.user_name + ', problem ' + problemData.name);
@@ -22,7 +23,10 @@ function route(response, request, compData, problemData, remainingPath) {
 		|| request.session.data.user === 'IncorrectLogin') {
 		console.log('Error - not logged in person tried to submit!');
 		error_page.ShowErrorPage(response, request, 'Access Denied', 'You must be logged in to submit solutions to problems');
+	} else if (request.session.data.user.next_submit !== undefined && request.session.data.user.next_submit > Date.now()){
+		error_page.ShowErrorPage(response, request, 'Cannot accept submission', 'You must wait ' + TIME_BETWEEN_SUBMISSIONS_SECONDS + ' between making submissions. Please try again in a few seconds.');
 	} else {
+		request.session.data.user.next_submit = Date.now() + TIME_BETWEEN_SUBMISSIONS_SECONDS * 1000;
 		judge_submission(response, request, compData, problemData);
 	}
 }

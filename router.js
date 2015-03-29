@@ -51,6 +51,8 @@ function route(pathname, response, request) {
 						type = 'favicon/ico';
 					} else if (type === '.png') {
 						type = 'image/png';
+					} else if (type === '.jpg') {
+						type = 'image/jpeg';
 					} else {
 						type = 'text/plain';
 					}

@@ -6,6 +6,7 @@ div#container {
 
 div#header {
 	background-color: #002366;
+	border-radius: 15px;
 }
 
 div#words_and_whatnot {

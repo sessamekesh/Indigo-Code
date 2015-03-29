@@ -120,7 +120,33 @@ exports.route = function (response, request, compData, remainingPath) {
 
 			// Show confirmation or error page.
 			function show_page() {
-				error_page.ShowErrorPage(response, request, 'Success!', 'Success in the registration and stuff!');
+				var page = generic_page.GoronPage({
+					title: '(Goron) Registration success!',
+					header: generic_page.GoronHeader({
+						title: 'Registration success!',
+						subtitle: 'USU ACM Competition Framework 0.2 (Goron)',
+						user_info: generic_page.GoronUserInfo(request.session.data.user)
+					}),
+					sidebar: generic_page.GoronSidebar(request.session.data.user),
+					body: { render: function (callback) { callback('<p>Registration was a success! Log in with any of the users on your team to compete.</p>'); } }
+				});
+
+				if (page === undefined) {
+					console.log('team_register_submit: Could not render page');
+					error_page.ShowErrorPage(response, request, 'Error generating page', 'Unknown error, page object could not be generated');
+				} else {
+					page.render(function (w, err) {
+						if (err) {
+							console.log('team_register: Could not render page');
+							error_page.ShowErrorPage(response, request, 'Internal Error', 'Failed to generate page');
+						} else {
+							console.log('team_register_submit: Have data, rendering it');
+							response.writeHead(200, {'Content-Type': 'text/html'});
+							response.write(w);
+							response.end();
+						}
+					});
+				}
 			}
 		});
 	}

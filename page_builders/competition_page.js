@@ -504,7 +504,8 @@ function GoronCompetitionSidebar(userData, compData) {
 						}
 					}
 
-					toReturn += '\n\t</ul>\n\t<hr />\n\t\tACM Homepage\n</div>';
+					toReturn += '\n\t</ul>\n\t<hr />\n\t\t<span class="col-md-2"></span><img style="max-width: 200px" style="max-width: 400px" class="image-responsive col-md-8" src="/logos/ifit.png" alt="iFit">'
+						+ '\n\t<br /><img class="image-responsive col-md-12" style="max-width: 400px" src="/logos/blackgreybg.png" alt="Focused Support"></div>';
 					callback(toReturn);
 				});
 			}

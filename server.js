@@ -6,6 +6,7 @@ var http = require('http'),
 	session = require('sesh/lib/core').magicSession(),
 	socket_io = require('socket.io'),
 	socket_router = require('./sockets/socket_router'),
+	error_page = require('./page_builders/error_page'),
 	port_number = 8888;
 
 var server = http.createServer(function(request, response) {
@@ -14,7 +15,12 @@ var server = http.createServer(function(request, response) {
 	console.log('::::::::::Request for ' + pathname + ' received::::::::::');
 	
 	// Send request to the router
-	router.route(pathname, response, request);
+	try {
+		router.route(pathname, response, request);
+	} catch (e) {
+		console.log(e);
+		error_page.ShowErrorPage(response, request, 'Fatal error!', 'A fatal error has occurred internally - notify an admin IMMEDIATELY!');
+	}
 });
 
 io = socket_io(server);
