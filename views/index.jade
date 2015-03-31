@@ -1,5 +1,6 @@
-extends layout
-
-block content
-  h1= title
-  p Welcome to #{title}
+doctype html
+html
+    include generic_head
+    body
+        p Hello, world! <escaped>
+        include generic_scripts
