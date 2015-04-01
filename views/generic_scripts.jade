@@ -3,7 +3,9 @@
 
 script(src="/jquery-2.1.3.min.js")
 script(src="/bootstrap-3.3.4-dist/js/bootstrap.min.js")
-if include_dependencies
-    - for (var i = 0; i < include_dependencies.length; i++) {
-        script(src= include_dependencies[i].src)
+script(src="/angular.min.js")
+script(src="/js/controllers.js")
+if include_scripts
+    - for (var i = 0; i < include_scripts.length; i++) {
+        script(src= include_scripts[i].src)
     - }
