@@ -1,0 +1,8 @@
+//
+   Created by kamaron on 4/2/15.
+
+extends generic_page
+
+block content
+   h1 An error occurred!
+   h2= 'Error: ' + (err || {}).message || 'UNKNOWN'
