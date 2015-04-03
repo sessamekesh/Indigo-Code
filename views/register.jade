@@ -1,0 +1,21 @@
+//
+   Created by kamaron on 4/2/15.
+
+extends generic_page
+
+block content
+   h1 Register for a competition
+   p.
+      All registrations must be for a competition - on the competition registration page,
+      you will be allowed to create a team, as well as create users to add to that team
+      and / or link existing site users into that team.
+   hr
+   b Upcoming Competitions
+      ul(ng-controller="upcoming-competitions-controller")
+         li(ng-repeat="competition in competitions")
+            a(href="/register/{{competition.id}}") {{competition.name}}
+   hr
+   b Ongoing Competitions
+      ul(ng-controller="current-competitions-controller")
+         li(ng-repeat="competition in competitions")
+            a(href="/register/{{competition.id}}") {{competition.name}}

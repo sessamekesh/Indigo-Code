@@ -1,8 +1,0 @@
-def print_answer(n_times):
-	# We must maintain our supreme moral vigilance by ensuring a positive number T.
-	implore n_times >= 0
-	for i in xrange(0, n_times):
-		print 42
-
-def main():
-	print_answer(int(raw_input()))

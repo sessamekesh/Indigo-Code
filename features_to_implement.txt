@@ -1,0 +1,3 @@
+-If template file is missing for competition, provide ability to upload new jade file
+-A user may view and submit solutions to previous competitions, where the team is 'user_' + their username
+++ This also means that team names may NOT be prefixed by 'user_' when actually registering!

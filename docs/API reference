@@ -1,0 +1,24 @@
+ZORA PROTOTYPE REST API
+
+    The Zora web framework provides a REST api for interaction with the server. This is used on the front-end for
+much of the content and navigation code, and is also exposed for users to handle into. While for the USU competitions
+I cannot condone the writing of custom user scripts and web frontends to reach the competition website and submission
+server, the freedom will exist. User statistics will be available, and this is the idea behind exposing the API -
+a user could create a web banner containing recent competition details (for CS department websites, etc.), a mobile
+app that reports scores and submissions, etc.
+
+    All API calls will fit under the directory /api. These calls are as follows, and are documented as such:
+
+    HTTP-VERB /api/[system/]call[?param1=value&param2=value] NOTES
+
+------------------------ USER AND TEAM CALLS -------------------------
+GET    /api/user    Gets data about a user (id or username specified) or gets list of users in system
+PUT    /api/user    Updates data about a user (if admin or user logged in)
+POST   /api/user    Creates a new user with given information
+DELETE /api/user    Deletes a user
+GET    /api/team    Gets data about a team or teams as part of a competitions. Must provide team ID or competition ID
+PUT    /api/team    Updates a team - change competition ID, add user, remove user, etc.
+POST   /api/team    Creates a new team
+DELETE /api/team    Deletes a team
+
+----------------------- COMPETITION DATA CALLS -----------------------
