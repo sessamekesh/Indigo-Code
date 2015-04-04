@@ -47,7 +47,32 @@ generic_page_app.controller('registration-section-controller', function ($scope,
     };
 
     $scope.team = {};
-    $scope.team.name = "Sessamekesh Rules";
-    $scope.team.tagline = "This is test tagline data";
-    $scope.team.name_err = "This is totally true.";
+});
+
+generic_page_app.controller('users-on-team-controller', function ($scope, $http) {
+    "use strict";
+    $scope['formfields'] = [
+        { type: 'blank', index: 1 },
+        { type: 'blank', index: 2 },
+        { type: 'blank', index: 3 },
+        { type: 'blank', index: 4 }
+    ];
+
+    $scope['entry_elements'] = {
+        'new': [{
+            name: 'name',
+            type: 'text',
+            value: 'new_test'
+        }],
+        'existing': [{
+            name: 'name',
+            type: 'text',
+            value: 'existing_test'
+        }],
+        'blank': [{
+            name: 'name',
+            type: 'text',
+            value: 'blank_test'
+        }]
+    };
 });

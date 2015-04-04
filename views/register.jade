@@ -38,7 +38,22 @@ block content
             .col-md-4
                input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="team_awesome", required="", value="{{team.tagline}}")
             span#team_tagline_err.help-block {{ team.tagline_err }}
+         fieldset(ng-controller="users-on-team-controller")
+            legend Team Members
             // Users
-            - for (var i = 0; i < comp_data.max_team_size; i++) {
-               // User here when ng-route is done...
-            - }
+            .form-group(ng-repeat="field in formfields")
+               label.col-md-4.control-label(for="usertype_{{field.index}}") User {{field.index}}
+               div.col-md-8(name="usertype_{{field.index}}", id="usertype_{{field.index}}")
+                  label.radio-inline(for="usertype_new_{{field.index}}")
+                     input(type="radio", name="usertype_{{field.index}}", value="new", ng-model="field.type")
+                     |Create New User
+                  label.radio-inline(for="usertype_existing_{{field.index}}")
+                     input(type="radio", name="usertype_{{field.index}}", value="existing", ng-model="field.type")
+                     |Use Existing
+                  label.radio-inline(for="usertype_blank_{{field.index}}")
+                     input(type="radio", name="usertype_{{field.index}}", value="blank", ng-model="field.type")
+                     |Leave Blank
+               div.form-group(id="userdata_{{field.index}}" ng-repeat="element in entry_elements[field.type]")
+                  label.col-md-4.control-label(for="{{element.name}}")
+                     input(type="{{element.type}}", name="{{element.name}}", value="{{element.value}}")
+                     |{{element.name}}

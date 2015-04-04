@@ -28,7 +28,8 @@ router.get('/register/:id', function (req, res) {
                 subtitle: 'Zora: Prototype 0.3',
                 user_data: req.session.user_data,
                 redirect_url: '/register/' + rsl.id,
-                comp_data: rsl
+                comp_data: rsl,
+                include_scripts: [{'src': '/js/angular-route.min.js'}]
             });
         }
     });
