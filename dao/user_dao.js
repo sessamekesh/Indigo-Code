@@ -195,3 +195,13 @@ exports.addUser = function (name, user_name, password, email_address, user_type,
         });
     }
 };
+
+exports.getUserTypes = function (cb) {
+    credentials.zora_query('SELECT ut.id, ut.name FROM UserType AS ut;', [], function (err, res) {
+        if (err) {
+            cb(undefined, 'MYSQL error: ' + err);
+        } else {
+            cb(res);
+        }
+    });
+};

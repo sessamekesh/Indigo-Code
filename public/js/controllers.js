@@ -35,7 +35,6 @@ generic_page_app.controller('upcoming-competitions-controller', function ($scope
 });
 
 generic_page_app.controller('registration-section-controller', function ($scope, $http) {
-    $scope.type = 'new';
     $scope.on_select_existing = function () {
         $scope.type = 'existing';
     };
@@ -46,33 +45,50 @@ generic_page_app.controller('registration-section-controller', function ($scope,
         $scope.type = 'blank';
     };
 
-    $scope.team = {};
-});
+    $scope.validate_form = function() {
+        alert('Validation has begun...');
+        console.log($scope.team.name);
+        $scope.submit_enabled = false;
+        setTimeout(function () { $scope.submit_enabled = true; }, 12345);
+    };
 
-generic_page_app.controller('users-on-team-controller', function ($scope, $http) {
-    "use strict";
+    $scope.team = {
+        name: '',
+        tagline: ''
+    };
+
     $scope['formfields'] = [
-        { type: 'blank', index: 1 },
-        { type: 'blank', index: 2 },
-        { type: 'blank', index: 3 },
-        { type: 'blank', index: 4 }
+        {
+            type: 'new',
+            data: {}
+        },
+        {
+            type: 'blank',
+            data: {}
+        },
+        {
+            type: 'blank',
+            data: {}
+        },
+        {
+            type: 'blank',
+            data: {}
+        }
     ];
 
-    $scope['entry_elements'] = {
-        'new': [{
-            name: 'name',
-            type: 'text',
-            value: 'new_test'
-        }],
-        'existing': [{
-            name: 'name',
-            type: 'text',
-            value: 'existing_test'
-        }],
-        'blank': [{
-            name: 'name',
-            type: 'text',
-            value: 'blank_test'
-        }]
-    };
+    $http.get('/api/user/types').
+        success(function (data, status, headers, config) {
+            if (data.success == true) {
+                $scope.types = data.types;
+            } else {
+                console.error('Types sent back in invalid format - ' + (data.message || 'reason unknown!'));
+                $scope.types = { id: 1, name: 'UNKNOWN_ERR' };
+            }
+        }).
+        error(function (data, status, headers, config) {
+            console.error('Could not retrieve types - ' + (data.message || 'reason unknown!'));
+            $scope.types = { id: 1, name: 'ERR_TYPE' };
+        });
+
+    $scope.submit_enabled = true;
 });

@@ -17,5 +17,6 @@ router.get('/user/login', user_api.get_user_data);
 router.post('/user/login', user_api.login);
 router.post('/user/logout', user_api.logout);
 router.post('/user/register', user_api.register);
+router.get('/user/types', user_api.get_user_types);
 
 module.exports = router;

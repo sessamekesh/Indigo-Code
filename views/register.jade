@@ -23,37 +23,66 @@ block content
    else
       h1= 'Register for competition ' + comp_data.name
       p= JSON.stringify(comp_data)
-      form#new_team_form.form-horizontal(method="post", action="/register/" + comp_data.id + "/submit", ng-controller="registration-section-controller")
+      form#new_team_form.form-horizontal(ng-submit="validate_form()", ng-controller="registration-section-controller")
          fieldset
             legend Basic Information
             // Team Name
             .form-group
                label.col-md-4.control-label(for="team_name") Team Name
                .col-md-4
-                  input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="", value="{{team.name}}")
+                  input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="", ng-model="team.name")
                span#team_name_err.help-block {{ team.name_err }}
             // Team Tagline
             .form-group
             label.col-md-4.control-label(for="team_tagline") Team Tagline
             .col-md-4
-               input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="team_awesome", required="", value="{{team.tagline}}")
+               input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="team_awesome", required="", ng-model="team.tagline")
             span#team_tagline_err.help-block {{ team.tagline_err }}
-         fieldset(ng-controller="users-on-team-controller")
+         fieldset
             legend Team Members
             // Users
-            .form-group(ng-repeat="field in formfields")
-               label.col-md-4.control-label(for="usertype_{{field.index}}") User {{field.index}}
-               div.col-md-8(name="usertype_{{field.index}}", id="usertype_{{field.index}}")
-                  label.radio-inline(for="usertype_new_{{field.index}}")
-                     input(type="radio", name="usertype_{{field.index}}", value="new", ng-model="field.type")
-                     |Create New User
-                  label.radio-inline(for="usertype_existing_{{field.index}}")
-                     input(type="radio", name="usertype_{{field.index}}", value="existing", ng-model="field.type")
-                     |Use Existing
-                  label.radio-inline(for="usertype_blank_{{field.index}}")
-                     input(type="radio", name="usertype_{{field.index}}", value="blank", ng-model="field.type")
-                     |Leave Blank
-               div.form-group(id="userdata_{{field.index}}" ng-repeat="element in entry_elements[field.type]")
-                  label.col-md-4.control-label(for="{{element.name}}")
-                     input(type="{{element.type}}", name="{{element.name}}", value="{{element.value}}")
-                     |{{element.name}}
+            div(ng-repeat="field in formfields")
+               .form-group
+                  label.col-md-4.control-label(for="usertype_{{$index + 1}}") User {{$index + 1}}
+                  div.col-md-8(name="usertype_{{$index + 1}}", id="usertype_{{$index + 1}}")
+                     label.radio-inline(for="usertype_new_{{$index + 1}}")
+                        input(type="radio", name="usertype_{{$index + 1}}", value="new", ng-model="field.type")
+                        |Create New User
+                     label.radio-inline(for="usertype_existing_{{$index + 1}}")
+                        input(type="radio", name="usertype_{{$index + 1}}", value="existing", ng-model="field.type")
+                        |Use Existing
+                     label.radio-inline(for="usertype_blank_{{$index + 1}}")
+                        input(type="radio", name="usertype_{{$index + 1}}", value="blank", ng-model="field.type")
+                        |Leave Blank
+               div(id="userdata_{{$index + 1}}", ng-switch="field.type")
+                  div(ng-switch-when="new")
+                     .form-group
+                        label.col-md-4.control-label(for="username_{{$index + 1}}") Username
+                        input.form-inline(type="text", name="username_{{$index + 1}}", placeholder="sessamekesh", required="required", ng-model="field.data.username")
+                     .form-group
+                        label.col-md-4.control-label(for="name_{{$index + 1}}") Name
+                        input.form-inline(type="text", name="name_{{$index + 1}}", placeholder="Alan Turing", required="required", ng-model="field.data.name")
+                     .form-group
+                        label.col-md-4.control-label(for="pass_{{$index + 1}}") Password
+                        input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.pass")
+                     .form-group
+                        label.col-md-4.control-label(for="conf_{{$index + 1}}") Confirm Password
+                        input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.confirm_pass")
+                     .form-group
+                        label.col-md-4.control-label(for="email_{{$index + 1}}") Email Address
+                        input.form-inline(type="text", name="email_{{$index + 1}}", placeholder="john.smith@aggiemail.usu.edu", required="required", ng-model="field.data.email")
+                     .form-group
+                        label.col-md-4.control-label(for="usertype_{{$index + 1}}") User Type
+                        select.form-inline(name="usertype_{{$index + 1}}", ng-model="field.data.selected_user_type", ng-options="type.id as (type.name) for type in types")
+                  div(ng-switch-when="existing")
+                     .form-group
+                        label.col-md-4.control-label(for="username_{{$index + 1}}") Username
+                        input.form-inline(type="text", name="username_{{$index + 1}}", placeholder="sessamekesh", ng-model="field.data.username")
+                     .form-group
+                        label.col-md-4.control-label(for="pass_{{$index + 1}}") Password
+                        input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.pass")
+                  div(ng-switch-default)
+                     // Leave this blank, since the user will be blank.
+               hr
+            .form-group
+               input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit!")

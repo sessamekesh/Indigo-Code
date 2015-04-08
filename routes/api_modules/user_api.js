@@ -94,3 +94,16 @@ exports.get_user_data = function (req, res) {
         });
     }
 };
+
+exports.get_user_types = function (req, res) {
+    "use strict";
+    console.log('Requesting user types...');
+
+    user_dao.getUserTypes(function (rsl, err) {
+        if (err) {
+            res.status(400).send({ 'success': false, 'error': req.url, 'message': 'Error fetching user types - ' + err.toString() });
+        } else {
+            res.send({ 'success': true, 'types': rsl });
+        }
+    });
+};
