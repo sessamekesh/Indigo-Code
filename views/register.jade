@@ -26,6 +26,8 @@ block content
       form#new_team_form.form-horizontal(ng-submit="validate_form()", ng-controller="registration-section-controller")
          fieldset
             legend Basic Information
+            input#comp_data_id(type="hidden", value=comp_data.id)
+            input#comp_data_max_team_size(type="hidden", value=comp_data.max_team_size)
             // Team Name
             .form-group
                label.col-md-4.control-label(for="team_name") Team Name
@@ -54,33 +56,42 @@ block content
                      label.radio-inline(for="usertype_blank_{{$index + 1}}")
                         input(type="radio", name="usertype_{{$index + 1}}", value="blank", ng-model="field.type")
                         |Leave Blank
+                     span.help-block {{ field.type_err }}
                div(id="userdata_{{$index + 1}}", ng-switch="field.type")
                   div(ng-switch-when="new")
                      .form-group
                         label.col-md-4.control-label(for="username_{{$index + 1}}") Username
                         input.form-inline(type="text", name="username_{{$index + 1}}", placeholder="sessamekesh", required="required", ng-model="field.data.username")
+                        span.help-block {{ field.data.username_err }}
                      .form-group
                         label.col-md-4.control-label(for="name_{{$index + 1}}") Name
                         input.form-inline(type="text", name="name_{{$index + 1}}", placeholder="Alan Turing", required="required", ng-model="field.data.name")
+                        span.help-block {{ field.data.name_err }}
                      .form-group
                         label.col-md-4.control-label(for="pass_{{$index + 1}}") Password
                         input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.pass")
+                        span.help-block {{ field.data.pass_err }}
                      .form-group
                         label.col-md-4.control-label(for="conf_{{$index + 1}}") Confirm Password
                         input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.confirm_pass")
+                        span.help-block {{ field.data.confirm_pass_err }}
                      .form-group
                         label.col-md-4.control-label(for="email_{{$index + 1}}") Email Address
                         input.form-inline(type="text", name="email_{{$index + 1}}", placeholder="john.smith@aggiemail.usu.edu", required="required", ng-model="field.data.email")
+                        span.help-block {{ field.data.email_err }}
                      .form-group
                         label.col-md-4.control-label(for="usertype_{{$index + 1}}") User Type
-                        select.form-inline(name="usertype_{{$index + 1}}", ng-model="field.data.selected_user_type", ng-options="type.id as (type.name) for type in types")
+                        select.form-inline(name="usertype_{{$index + 1}}", ng-model="field.data.selected_user_type", ng-options="type.id as (type.name) for type in types", required="required")
+                        span.help-block {{ field.data.selected_user_type_err }}
                   div(ng-switch-when="existing")
                      .form-group
                         label.col-md-4.control-label(for="username_{{$index + 1}}") Username
                         input.form-inline(type="text", name="username_{{$index + 1}}", placeholder="sessamekesh", ng-model="field.data.username")
+                        span.help-block {{ field.data.username_err }}
                      .form-group
                         label.col-md-4.control-label(for="pass_{{$index + 1}}") Password
                         input.form-inline(type="password", name="pass_{{$index + 1}}", required="required", ng-model="field.data.pass")
+                        span.help-block {{ field.data.pass_err }}
                   div(ng-switch-default)
                      // Leave this blank, since the user will be blank.
                hr

@@ -51,8 +51,7 @@ exports.login = function (req, res) {
 };
 
 exports.logout = function (req, res) {
-    var rd,
-        req_params = (Object.keys(req.body).length > 0) ? req.body : req.query;
+    var req_params = (Object.keys(req.body).length > 0) ? req.body : req.query;
     req.session.destroy();
     if (req_params.redirect !== undefined) {
         res.redirect(req_params.redirect);

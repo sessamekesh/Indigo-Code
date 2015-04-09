@@ -4,8 +4,7 @@
 'use strict';
 
 var bcrypt = require('bcrypt'),
-    credentials = require('./credentials'),
-    entities = require('entities');
+    credentials = require('./credentials');
 
 var work_factor = 10;
 
@@ -29,14 +28,14 @@ exports.authUser = function (username, password, cb) {
     } else if (password === undefined || password === '') {
         cb(undefined, 'No password provided!');
     } else {
-        credentials.zora_query('SELECT pass_hash FROM User WHERE user_name = ?;', username,
+        credentials.zora_query('SELECT pass_hash FROM User WHERE user_name = ?;', [username],
             function (err, res) {
                 if (err) {
                     cb(undefined, 'SQL error: ' + err);
                 } else if (res.length != 1) {
                     cb(undefined, 'User not found');
                 } else {
-                    auth(res[0].pass_hash);
+                    auth(res[0]['pass_hash']);
                 }
             }
         );
@@ -148,7 +147,6 @@ exports.getUserById = function (userID, sensitive, cb) {
  * @param user_name Username for the new user (e.g., "Sessamekesh")
  * @param password Password to use. This is NOT stored plain text.
  * @param email_address Email address of the user (e.g., "kamaron.peterson@gmail.com")
- * @param is_admin Boolean specifying whether user is an admin or not
  * @param user_type User type - int, corresponds to entry from "UserType" table/dao)
  * @param cb Callback function to invoke after user is added or on failure (res, err)
  *          Res will be true on success, undefined on failure
@@ -162,7 +160,7 @@ exports.addUser = function (name, user_name, password, email_address, user_type,
         cb(undefined, 'Must specify the password of the new user');
     } else if (email_address === undefined || email_address === '') {
         cb(undefined, 'Must provide an email address of the new user');
-    } else if (user_type === undefined || parseInt(user_type) === NaN) {
+    } else if (user_type === undefined || isNaN(parseInt(user_type))) {
         cb(undefined, 'Must provide a user type');
     } else {
         encrypt_password();
@@ -186,13 +184,29 @@ exports.addUser = function (name, user_name, password, email_address, user_type,
 
     function insert_data (pw_hash) {
         credentials.zora_query('INSERT INTO User (user_name, name, pass_hash, email_address, user_type) '
-        + 'VALUES (?, ?, ?, ?, ?);', [user_name, name, pw_hash, email_address, user_type], function (err, res) {
+        + 'VALUES (?, ?, ?, ?, ?);', [user_name, name, pw_hash, email_address, user_type], function (err) {
             if (err) {
                 cb(undefined, 'MYSQL error: ' + err);
             } else {
                 cb(true);
             }
         });
+    }
+};
+
+exports.removeUser = function (userID, cb) {
+    if (userID === undefined || isNaN(parseInt(userID))) {
+        cb(undefined, 'Must provide a valid user ID');
+    } else {
+        credentials.zora_query('DELETE FROM User WHERE id = ? LIMIT 1;', [userID],
+            function (err) {
+                if (err) {
+                    cb(undefined, 'MYSQL error: ' + err);
+                } else {
+                    cb(true);
+                }
+            }
+        );
     }
 };
 
