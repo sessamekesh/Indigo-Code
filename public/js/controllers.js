@@ -6,30 +6,30 @@ var generic_page_app = angular.module('generic-page-app', []);
 
 generic_page_app.controller('previous-competitions-controller', function ($scope, $http) {
     $http.get('/api/competition/past').
-        success(function (data, status, headers, config) {
+        success(function (data/*, status, headers, config*/) {
             $scope.competitions = data.result;
         }).
-        error(function (data, status, headers, config) {
+        error(function (data/*, status, headers, config*/) {
             console.log('Error - ' + data);
         });
 });
 
 generic_page_app.controller('current-competitions-controller', function ($scope, $http) {
     $http.get('/api/competition/present').
-        success(function (data, status, headers, config) {
+        success(function (data/*, status, headers, config*/) {
             $scope.competitions = data.result;
         }).
-        error(function (data, status, headers, config) {
+        error(function (data/*, status, headers, config*/) {
             console.log('Error - ' + data);
         });
 });
 
 generic_page_app.controller('upcoming-competitions-controller', function ($scope, $http) {
     $http.get('/api/competition/future').
-        success(function (data, status, headers, config) {
+        success(function (data/*, status, headers, config*/) {
             $scope.competitions = data.result;
         }).
-        error(function (data, status, headers, config) {
+        error(function (data/*, status, headers, config*/) {
             console.log('Error - ' + data);
         });
 });
@@ -56,12 +56,12 @@ generic_page_app.controller('registration-section-controller', function ($scope,
             team_tagline: $scope.team.tagline,
             user_data: $scope['formfields']
         }).
-            success(function (data, status, headers, config) {
+            success(function (data/*, status, headers, config*/) {
                 "use strict";
                 console.log('SUCCESS');
                 console.log(data);
             }).
-            error(function (data, status, headers, config) {
+            error(function (data/*, status, headers, config*/) {
                 "use strict";
                 console.log('FAIL');
                 console.log(data);
@@ -94,7 +94,7 @@ generic_page_app.controller('registration-section-controller', function ($scope,
     }
 
     $http.get('/api/user/types').
-        success(function (data, status, headers, config) {
+        success(function (data/*, status, headers, config*/) {
             if (data.success == true) {
                 $scope.types = data.types;
             } else {
@@ -102,7 +102,7 @@ generic_page_app.controller('registration-section-controller', function ($scope,
                 $scope.types = { id: 1, name: 'UNKNOWN_ERR' };
             }
         }).
-        error(function (data, status, headers, config) {
+        error(function (/*data, status, headers, config*/) {
             console.error('Could not retrieve types - ' + (data.message || 'reason unknown!'));
             $scope.types = { id: 1, name: 'ERR_TYPE' };
         });

@@ -3,8 +3,7 @@
  */
 
 var url = require('url'),
-    competition_dao = require('../../dao/competition_dao'),
-    team_dao = require('../../dao/team_dao');
+    competition_dao = require('../../dao/competition_dao');
 
 exports.register_team = function (req, res) {
     "use strict";
@@ -16,7 +15,7 @@ exports.register_team = function (req, res) {
     if (req_params.team_name === undefined || req_params.team_name === '') {
         err_list.push({ param: 'team_name', error: 'Must provide a team name' });
     }
-    if (req_params.comp_id === undefined || parseInt(req_params.comp_id) == NaN) {
+    if (req_params.comp_id === undefined || isNaN(parseInt(req_params.comp_id))) {
         err_list.push({ param: 'general', error: 'Must provide a competition ID' });
     }
     if (req_params.team_tagline === undefined) {
