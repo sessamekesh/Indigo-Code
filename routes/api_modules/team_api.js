@@ -3,7 +3,9 @@
  */
 
 var url = require('url'),
-    competition_dao = require('../../dao/competition_dao');
+    competition_dao = require('../../dao/competition_dao'),
+    user_dao = require('../../dao/user_dao'),
+    team_dao = require('../../dao/team_dao');
 
 exports.register_team = function (req, res) {
     "use strict";
@@ -53,10 +55,19 @@ exports.register_team = function (req, res) {
         }
     }
 
-    function check_user(n_users, i) {
+    function check_user(n_users, i, existing_users) {
+        if (existing_users === undefined) {
+            existing_users = [];
+        }
         if (i >= n_users) {
-            end_success(-1);
+            if (err_list.length > 0) {
+                end_error();
+            } else {
+                attempt_register_team();
+            }
         } else {
+            var udat = req_params.user_data[i].data;
+            console.log(udat);
             if (req_params.user_data[i].type === 'new') {
                 // Check user data params, make sure all required fields are present...
                 // Check to see if username is already taken...
@@ -64,22 +75,88 @@ exports.register_team = function (req, res) {
                 //  team is successfully created. The team will be removed
                 //  if a user actually fails to be created after the fact,
                 //  along with successfully created users.
-                var udat = req_params.user_data[i].data;
-                console.log(udat);
 
                 if (udat.username === undefined || udat.username === '') {
                     err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Must provide user name' });
                 }
+                if (udat.pass === undefined || udat.pass === '') {
+                    err_list.push({ param: 'user_data[' + i + '].data.pass', error: 'Must provide a password'});
+                }
+                if (udat.confirm_pass === undefined || udat.confirm_pass === '' || udat.confirm_pass !== udat.pass) {
+                    err_list.push({ param: 'user_data[' + i + '].data.confirm_pass', error: 'Must provide a confirmation password that matches the password'});
+                }
+                if (udat.email === undefined || udat.email === '') {
+                    // TODO: Add email regex
+                    err_list.push({ param: 'user_data[' + i + '].data.email', error: 'Must provide a valid email address' });
+                }
+                if (udat.selected_user_type === undefined || isNaN(parseInt(udat.selected_user_type))) {
+                    err_list.push({ param: 'user_data[' + i + '].data.selected_user_type', error: 'Must provide a valid user type (by ID)'});
+                }
 
-                check_user(n_users, i + 1);
+                // Check to see if user was already added...
+                for (var idx = 0; idx < existing_users.length; i++) {
+                    if (existing_users[idx] === udat.username) {
+                        err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Username ' + udat.username + ' was already used previously in form' });
+                    }
+                }
+
+                // Fields check the pre-test, advance to next user.
+                existing_users.push(udat.username);
+                check_user(n_users, i + 1, existing_users);
             } else if (req_params.user_data[i].type === 'existing') {
-                check_user(n_users, i + 1);
+                // Since no data is being written, we can authenticate the user right now...
+                if (udat.username === undefined || udat.username === '') {
+                    err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Must provide a username for user ' + (i + 1) });
+                }
+                if (udat.pass === undefined || udat.pass === '') {
+                    err_list.push({ param: 'user_data[' + i + '].data.pass', error: 'Must provide a password for user ' + (i + 1)});
+                }
+
+                // Check to see if user was already added...
+                for (var idx = 0; idx < existing_users.length; idx++) {
+                    if (existing_users[idx] === udat.username) {
+                        err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Username ' + udat.username + ' was already used previously in form' });
+                    }
+                }
+
+                existing_users.push(udat.username);
+
+                user_dao.authUser(udat.username, udat.pass, function (rsl, err) {
+                    if (err || !rsl) {
+                        err_list.push({ param: 'user_data[' + i + '].data.pass', error: 'Incorrect username or password' });
+                    }
+
+                    check_user(n_users, i + 1, existing_users);
+                });
             } else if (req_params.user_data[i].type === 'blank') {
-                check_user(n_users, i + 1);
+                check_user(n_users, i + 1, existing_users);
             } else {
                 err_list.push({ param: 'user_data[' + i + '].type', error: 'Unrecognized user type "' + req_params.user_data[i].type + '"' });
-                check_user(n_users, i + 1);
+                check_user(n_users, i + 1, existing_users);
             }
+        }
+    }
+
+    function attempt_register_team() {
+        // Attempt to create a new team registration - be sure to note the team ID, because we will be removing
+        //  the entry if a new user fails.
+
+        team_dao.addTeam(req_params.team_name, req_params.team_tagline, req_params.comp_id, req_params.team_notes, function (rsl, err) {
+            if (err) {
+                err_list.push({ param: 'generic', error: 'Error registering team - ' + err });
+            } else {
+                create_new_users_and_entries(rsl);
+            }
+        });
+    }
+
+    function create_new_users_and_entries (teamID, user_index) {
+        if (user_index === undefined) {
+            user_index = 0;
+        } else if (user_index >= req_params.user_data.length) {
+            end_success(teamID);
+        } else {
+            // TODO KIP: DO STUFF HERE
         }
     }
 
