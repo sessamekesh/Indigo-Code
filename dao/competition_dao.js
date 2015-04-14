@@ -28,7 +28,7 @@ exports.addNewCompetition = function (name, start, end, penalty, team_size, cb) 
         credentials.zora_query('INSERT INTO Competition (name, start_date, end_date, time_penalty, max_team_size) '
         + 'VALUES (?, ?, ?, ?, ?);', [name, start, end, penalty, team_size], function (err, res) {
             if (err) {
-                cb(undefined, 'MYSQL error: ' + err);
+                cb(undefined, 'MySQL error: ' + JSON.stringify(err));
             } else {
                 cb(res.insertId);
             }
@@ -89,7 +89,7 @@ exports.modifyExistingCompetition = function (compID, newData, cb) {
                 credentials.zora_query('UPDATE Competition SET name = ?, start_date = ?, end_date = ?, time_penalty = ?, max_team_size = ? WHERE id = ?;',
                     [newData.name, newData.start_date, newData.end_date, newData.time_penalty, newData.max_team_size, compID], function (err, res) {
                         if (err) {
-                            cb(undefined, 'MYSQL error: ' + err);
+                            cb(undefined, 'MYSQL error: ' + JSON.stringify(err));
                         } else {
                             cb(res);
                         }
@@ -106,7 +106,7 @@ exports.deleteCompetition = function (compID, cb) {
     } else {
         credentials.zora_query('DELETE FROM Competition WHERE id = ? LIMIT 1;', compID, function (err, res) {
             if (err) {
-                cb(undefined, 'MYSQL error: ' + err);
+                cb(undefined, 'MySQL error: ' + JSOn.stringify(err));
             } else {
                 cb(res);
             }
@@ -134,7 +134,7 @@ exports.getUpcomingCompetitions = function (cb) {
 exports.getOngoingCompetitions = function (cb) {
     credentials.zora_query('SELECT id, name FROM Competition WHERE start_date < NOW() AND end_date > NOW();', [], function (err, res) {
         if (err) {
-            cb(undefined, 'MYSQL err: ' + err);
+            cb(undefined, 'MySQL err: ' + JSON.stringify(err));
         } else {
             var tr = [];
             for (var i = 0; i < res.length; i++) {

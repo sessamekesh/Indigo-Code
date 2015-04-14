@@ -31,14 +31,14 @@ block content
             .form-group
                label.col-md-4.control-label(for="team_name") Team Name
                .col-md-4
-                  input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="", ng-model="team.name")
-               span.col-md-4#team_name_err.help-block {{ team.name_err }}
+                  input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="", ng-model="team_name")
+               span.col-md-4#team_name_err.help-block {{ team_name_err }}
             // Team Tagline
             .form-group
             label.col-md-4.control-label(for="team_tagline") Team Tagline
             .col-md-4
-               input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="team_awesome", required="", ng-model="team.tagline")
-            span.col-md-4#team_tagline_err.help-block {{ team.tagline_err }}
+               input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="team_awesome", required="", ng-model="team_tagline")
+            span.col-md-4#team_tagline_err.help-block {{ team_tagline_err }}
          fieldset
             legend Team Members
             // Users

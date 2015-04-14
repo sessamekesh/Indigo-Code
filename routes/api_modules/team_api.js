@@ -40,7 +40,7 @@ exports.register_team = function (req, res) {
     });
 
     function check_users(n_users) {
-        console.log('Checking existance of ' + n_users + ' users...');
+        console.log('Checking existence of ' + n_users + ' users...');
         if ((req_params.user_data || []).length !== n_users) {
             err_list.push({ param: 'general', error: 'Competition does not call for ' + req_params.user_data.length + ' registrations - re-send data with ' + n_users + ' user data entries.' });
             end_error();
@@ -79,6 +79,9 @@ exports.register_team = function (req, res) {
                 if (udat.username === undefined || udat.username === '') {
                     err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Must provide user name' });
                 }
+                if (udat.name === undefined || udat.name === '') {
+                    err_list.push({ param: 'user_data[' + i + '].data.name', error: 'Must provide name of user' });
+                }
                 if (udat.pass === undefined || udat.pass === '') {
                     err_list.push({ param: 'user_data[' + i + '].data.pass', error: 'Must provide a password'});
                 }
@@ -86,7 +89,7 @@ exports.register_team = function (req, res) {
                     err_list.push({ param: 'user_data[' + i + '].data.confirm_pass', error: 'Must provide a confirmation password that matches the password'});
                 }
                 if (udat.email === undefined || udat.email === '') {
-                    // TODO: Add email regex
+                    // TODO KIP: Add email regex
                     err_list.push({ param: 'user_data[' + i + '].data.email', error: 'Must provide a valid email address' });
                 }
                 if (udat.selected_user_type === undefined || isNaN(parseInt(udat.selected_user_type))) {
@@ -94,7 +97,7 @@ exports.register_team = function (req, res) {
                 }
 
                 // Check to see if user was already added...
-                for (var idx = 0; idx < existing_users.length; i++) {
+                for (var idx = 0; idx < existing_users.length; idx++) {
                     if (existing_users[idx] === udat.username) {
                         err_list.push({ param: 'user_data[' + i + '].data.username', error: 'Username ' + udat.username + ' was already used previously in form' });
                     }
@@ -142,23 +145,102 @@ exports.register_team = function (req, res) {
         //  the entry if a new user fails.
 
         team_dao.addTeam(req_params.team_name, req_params.team_tagline, req_params.comp_id, req_params.team_notes, function (rsl, err) {
+            // TODO KIP: Wouldn't it be great if you had an error logging module that did better levels of error reporting?
             if (err) {
-                err_list.push({ param: 'generic', error: 'Error registering team - ' + err });
+                // TODO KIP: Improve MySQL error handling on these, right now it's awful.
+                console.log('team_api.js: Error registering team - ' + JSON.stringify(err));
+                if (err.indexOf('ER_DUP_ENTRY') > 0) {
+                    err_list.push({ param: 'team_name', error: 'Team name ' + req_params.team_name + ' is already taken' });
+                } else {
+                    err_list.push({ param: 'generic', error: 'Unknown error registering team - system administrater has been notified of error'});
+                }
+                end_error();
             } else {
                 create_new_users_and_entries(rsl);
             }
         });
     }
 
-    function create_new_users_and_entries (teamID, user_index) {
+    function create_new_users_and_entries (teamID, user_index, created_users) {
+        created_users = created_users || [];
+
         if (user_index === undefined) {
             user_index = 0;
-        } else if (user_index >= req_params.user_data.length) {
+        }
+
+        if (user_index >= req_params.user_data.length) {
             end_success(teamID);
         } else {
-            // TODO KIP: DO STUFF HERE
+            var user_data = req_params.user_data[user_index];
+            if (user_data.type === 'new') {
+                // Create user, mark ID for possible later removal, or addition to teams
+                //  if team creation was success
+                user_dao.addUser(user_data.data.name, user_data.data.username, user_data.data.pass, user_data.data.email, user_data.data.selected_user_type, function (rsl, err) {
+                    if (err) {
+                        console.log('team_api.js: Error inserting new user ' + user_data.data.username + ': ' + err);
+                        err_list.push({ param: 'generic', error: 'Could not add user ' + user_data.data.username + ' to system - failure reason has been reported to system administrator.' });
+                        cleanup_failure(teamID, created_users);
+                    } else {
+                        created_users.push(rsl);
+                        team_dao.addUserToTeam(rsl, teamID, function (trsl, err) {
+                            if (err) {
+                                console.log('team_api.js: Error inserting user ' + user_data.data.username + ' to team - ' + err);
+                                err_list.push({ param: 'generic', error: 'Could not add newly created user ' + user_data.data.username + ' to team - failure reason has been reported to system administrator.' });
+                                cleanup_failure(teamID, created_users);
+                            } else {
+                                create_new_users_and_entries(teamID, user_index + 1, created_users);
+                            }
+                        });
+                    }
+                });
+            } else if (user_data.type === 'existing') {
+                // User has already been authenticated - grab user ID, no additional work required
+                user_dao.getUserData(user_data.data.username, user_data.data.pass, function (rsl, err) {
+                    if (err) {
+                        console.log('team_api.js: Error retrieving user ID for user ' + user_data.data.username + ' - ' + err);
+                        err_list.push({ param: 'generic', error: 'Could not get data for user ' + user_data.data.username + ' - failure reason has been reported to system administrator.' });
+                        cleanup_failure(teamID, created_users);
+                    } else {
+                        team_dao.addUserToTeam(rsl, teamID, function (trsl, err) {
+                            if (err) {
+                                console.log('team_api.js: Error inserting user ' + user_data.data.username + ' to team - ' + err);
+                                err_list.push({ param: 'generic', error: 'Could not add existing user ' + user_data.data.username + ' to team - failure reason has been reported to system administrator.' });
+                                cleanup_failure(teamID, created_users);
+                            } else {
+                                create_new_users_and_entries(teamID, user_index + 1, created_users);
+                            }
+                        });
+                    }
+                });
+            } else if (user_data.type === 'blank') {
+                // No user is required, yeah
+                create_new_users_and_entries(teamID, user_index + 1, created_users);
+            }
         }
     }
+
+    function cleanup_failure (teamID, created_users) {
+        // Remove team from table, as well as created user IDs,
+        //  and report a failure.
+        // We do not have to notify user of successful removal of users - if a failure occurs, log it.
+        end_error();
+
+        for (var i = 0; i < created_users.length; i++) {
+            user_dao.removeUser(created_users[i], function (rsl, err) {
+                if (err) {
+                    console.log('team_api.js: Error removing newly created user ' + created_users[i] + ' - ' + err);
+                }
+            });
+        }
+
+        team_dao.removeTeam(teamID, function (rsl, err) {
+            if (err) {
+                console.log('team_api.js: Error removing newly created team ' + teamID + ' - ' + err);
+            }
+        });
+    }
+
+
 
     function end_success(teamid) {
         if (err_list.length > 0) {

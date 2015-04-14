@@ -149,7 +149,7 @@ exports.getUserById = function (userID, sensitive, cb) {
  * @param email_address Email address of the user (e.g., "kamaron.peterson@gmail.com")
  * @param user_type User type - int, corresponds to entry from "UserType" table/dao)
  * @param cb Callback function to invoke after user is added or on failure (res, err)
- *          Res will be true on success, undefined on failure
+ *          Res will be the userID on success, undefined on failure
  */
 exports.addUser = function (name, user_name, password, email_address, user_type, cb) {
     if (name === undefined || name === '') {
@@ -173,7 +173,7 @@ exports.addUser = function (name, user_name, password, email_address, user_type,
             } else {
                 bcrypt.hash(password, salt, function (err, hash) {
                     if (err) {
-                        cb(undefined, 'Error encrypting password: ' + err);
+                        cb(undefined, 'Error encrypting password: ' + JSON.stringify(err));
                     } else {
                         insert_data(hash);
                     }
@@ -184,11 +184,11 @@ exports.addUser = function (name, user_name, password, email_address, user_type,
 
     function insert_data (pw_hash) {
         credentials.zora_query('INSERT INTO User (user_name, name, pass_hash, email_address, user_type) '
-        + 'VALUES (?, ?, ?, ?, ?);', [user_name, name, pw_hash, email_address, user_type], function (err) {
+        + 'VALUES (?, ?, ?, ?, ?);', [user_name, name, pw_hash, email_address, user_type], function (err, res) {
             if (err) {
-                cb(undefined, 'MYSQL error: ' + err);
+                cb(undefined, 'MYSQL error: ' + JSON.stringify(err));
             } else {
-                cb(true);
+                cb(res.insertId);
             }
         });
     }
@@ -201,7 +201,7 @@ exports.removeUser = function (userID, cb) {
         credentials.zora_query('DELETE FROM User WHERE id = ? LIMIT 1;', [userID],
             function (err) {
                 if (err) {
-                    cb(undefined, 'MYSQL error: ' + err);
+                    cb(undefined, 'MYSQL error: ' + JSON.stringify(err));
                 } else {
                     cb(true);
                 }
@@ -213,7 +213,7 @@ exports.removeUser = function (userID, cb) {
 exports.getUserTypes = function (cb) {
     credentials.zora_query('SELECT ut.id, ut.name FROM UserType AS ut;', [], function (err, res) {
         if (err) {
-            cb(undefined, 'MYSQL error: ' + err);
+            cb(undefined, 'MYSQL error: ' + JSON.stringify(err));
         } else {
             cb(res);
         }

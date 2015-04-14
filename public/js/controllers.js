@@ -79,14 +79,13 @@ generic_page_app.controller('registration-section-controller', function ($scope,
     };
 
     $scope.validate_form = function() {
-        console.log($scope.team.name);
         $scope.submit_enabled = false;
         setTimeout(function () { $scope.submit_enabled = true; }, 12345);
 
         var send = {
-            team_name: $scope.team.name,
+            team_name: $scope.team_name,
             comp_id: $scope.comp_id,
-            team_tagline: $scope.team.tagline,
+            team_tagline: $scope.team_tagline,
             user_data: $scope['user_data']
         };
         console.log(send);
@@ -119,10 +118,8 @@ generic_page_app.controller('registration-section-controller', function ($scope,
     $scope.comp_id = document.getElementById('comp_data_id').value;
     $scope.num_users = document.getElementById('comp_data_max_team_size').value;
 
-    $scope.team = {
-        name: 'Team Awesome',
-        tagline: 'Test Tagline'
-    };
+    $scope.team_name = 'Team Awesome';
+    $scope.team_tagline = 'Test Tagline';
 
     $scope['user_data'] = [
         {
