@@ -30,7 +30,7 @@ html(ng-app="generic-page-app")
                                     input(type="hidden", name="redirect", value=(redirect_url || '/'))
                                     input.btn(type="submit", value="Logout", name="logout")
                         else
-                            form(acction="/api/user/logout", method="post", role="form")
+                            form(action="/api/user/logout", method="post", role="form")
                                 p Hello&nbsp;
                                     b= user_data.user_name
                                 .form-group

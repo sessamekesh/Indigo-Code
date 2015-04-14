@@ -31,6 +31,7 @@ app.use(session({secret: configuration['session_secret'] || 'Bad Secret - Use co
 
 app.use('/', routes);
 app.use('/api', require('./routes/api'));
+app.use('/competition', require('./routes/competition'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

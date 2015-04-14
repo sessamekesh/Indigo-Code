@@ -257,3 +257,4 @@ exports.register_team = function (req, res) {
     console.log('Registering new team...');
     console.log(req_params);
 };
+
