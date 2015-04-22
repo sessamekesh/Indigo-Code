@@ -2,7 +2,8 @@
  * Created by Kamaron on 4/22/2015.
  */
 
-var express = require('express');
+var express = require('express'),
+    fs = require('fs');
 
 var router = express.Router();
 
@@ -19,25 +20,23 @@ router.use('/:id', function (req, res, next) {
 });
 
 // Add router endpoints here...
-// TODO: Move endpoints to controllers...
-router.get('/', function (req, res) {
-    throw new Error('No user specified!');
-});
+var controllers = fs.readdirSync(__dirname + '/../controllers/user');
+for (var i = 0; i < controllers.length; i++) {
+    var cl = require('../controllers/user/' + controllers[i]);
+    if (Object.prototype.toString.call(cl.get) === '[object Function]') {
+        router.get('/' + controllers[i].substring(0, controllers[i].length - 3), cl.get);
+        console.log('/' + controllers[i].substring(0, controllers[i].length - 3));
+        if (controllers[i] === 'index.js') {
+            router.get('/', cl.get);
+        }
+    }
 
-router.post('/login', function (req, res) {
-    res.send('Login invoked!');
-});
-
-router.post('/logout', function (req, res) {
-    res.send('Logout invoked!');
-});
-
-router.post('/register', function (req, res) {
-    res.send('Register invoked!');
-});
-
-router.get('/:id', function (req, res) {
-    res.send('Endpoint for user ' + req.params.id);
-});
+    if (Object.prototype.toString.call(cl.post) === '[object Function]') {
+        router.post('/' + controllers[i].substring(0, controllers[i].length - 3), cl.post);
+        if (controllers[i] === 'index.js') {
+            router.post('/', cl.post);
+        }
+    }
+}
 
 module.exports = router;

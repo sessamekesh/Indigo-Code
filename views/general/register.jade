@@ -1,0 +1,65 @@
+//
+   Created by Kamaron on 4/22/2015.
+
+extends ../template
+
+block content
+   if comp_data === undefined
+      h1 Register for a competition
+      p.
+         All registrations must be for a competition - on the competition registration page,
+         you will be allowed to create a team, as well as create any users to add to that team,
+         and / or link existing site users into that team.
+      hr
+      b Upcoming Competitions
+         ul
+         each comp in (upcoming_comps || [])
+            li
+               a(href="/register/" + comp.id)= comp.name
+
+      b Ongoing Competitions
+         ul
+         each comp in (ongoing_comps || [])
+            li
+               a(href="/register/" + comp.id)= comp.name
+   else
+      h1= 'Register for competition ' + comp_data.name
+      form#new_team_form.form-horizontal(method="post", action="/register/" + comp.id + "/submit")
+         fieldset
+            legend Basic Information
+            input#comp_data_id(type="hidden", value=comp_data.id)
+            input#comp_data_max_team_size(type="hidden", value=comp_data.max_team_size)
+            // Team Name
+            .form-group
+               label.col-md-4.control-label(for="team_name") Team Name
+               .col-md-4
+                  input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="")
+               span.col-md-4#team_name_err.help-block
+            // Team Tagline
+            .form-group
+               label.col-md-4.control-label(for="team_tagline") Team Tagline
+               .col-md-4
+                  input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="We're pretty cool")
+               span.col-md-4#team_tagline_err.help-block
+         fieldset
+            legend Team Members
+            - for (var i = 0; i < comp_data.max_team_size; i++) {
+               .form-group
+                  label.col-md-4.control-label(for="usertype_" + i)= "User " + (i + 1)
+                  div.col-md-4(name="usertype_" + i, id="usertype_" + i)
+                     label.radio-inline(for="usertype_new_" + i)
+                        input(type="radio", name="usertype_" + i, value="new")
+                        |Create New User
+                     label.radio-inline(for="usertype_existing_" + i)
+                        input(type="radio", name="usertype_" + i, value="existing")
+                        |Use Existing
+                     if i > 0
+                        label.radio-inline(for="usertype_blank_" + i)
+                           input(type="radio", name="usertype_" + i, value="blank")
+                           |Use Blank
+                     span.col-md-4.help-block(id="usertype_" + i + "_err")
+               // TODO KIP: Insert here your new, existing and blank sections
+            - }
+            hr
+            .form-group
+               input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")

@@ -11,6 +11,6 @@ exports.get = function (req, res) {
     };
 
     index.fill_data(params, function (new_data) {
-        res.render('./general/index', new_data);
+        res.render('./general/about', new_data);
     });
 };
