@@ -2,6 +2,8 @@
  * Created by Kamaron on 4/22/2015.
  */
 
+var counter_dao = require('../../dao/counters');
+
 exports.get = function (req, res) {
     var params = {
         title: 'USU ACM Competition Framework',
@@ -15,6 +17,8 @@ exports.get = function (req, res) {
 
 exports.fill_data = function (data, cb) {
     data = data || {};
+
+    counter_dao.test_connection();
 
     data.user_data = undefined; // TODO KIP: Get user data from session here
     data.previous_comps = []; // TODO KIP: Get list of previous competitions here
