@@ -3,7 +3,7 @@
  */
 
 exports.get_team_data = function (team_id, cb) {
-    cb({
+    cb(null, {
         team_id: team_id,
         comp_id: 0,
         team_name: 'Team Awesome',

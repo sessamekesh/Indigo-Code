@@ -4,7 +4,3 @@
 
 // URL: The URL of the mongo database instance. Change to your mongo server
 exports.url = 'mongodb://localhost:27017/zora';
-
-exports.init_db = function (cb) {
-    // TODO KIP: Create collections here...
-};

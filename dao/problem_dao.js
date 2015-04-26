@@ -3,7 +3,7 @@
  */
 
 exports.get_problem_data = function (prob_id, cb) {
-    cb({
+    cb(null, {
         prob_id: prob_id,
         prob_name: 'Test Problem 1',
         test_cases: [{

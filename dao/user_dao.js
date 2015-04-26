@@ -3,7 +3,7 @@
  */
 
 exports.get_user_data = function (user_id, cb) {
-    cb({
+    cb(null, {
         user_id: user_id,
         username: 'Sessamekesh',
         pass_hash: 'asdf',
@@ -14,7 +14,7 @@ exports.get_user_data = function (user_id, cb) {
 
 exports.get_user_by_username = function (username, cb) {
     if (username === 'Sessamekesh') {
-        cb({
+        cb(null, {
             user_id: user_id,
             username: 'Sessamekesh',
             pass_hash: 'asdf',
@@ -22,14 +22,14 @@ exports.get_user_by_username = function (username, cb) {
             is_admin: true
         });
     } else {
-        cb(undefined);
+        cb(null, undefined);
     }
 };
 
 exports.authenticate_user = function (username, password, cb) {
     if (username === 'Sessamekesh' && password === 'asdf') {
-        cb(true);
+        cb(null, true);
     } else {
-        cb(false);
+        cb(null, false);
     }
 };
