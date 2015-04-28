@@ -5,7 +5,7 @@
 exports.get_user_data = function (user_id, cb) {
     cb(null, {
         user_id: user_id,
-        username: 'Sessamekesh',
+        username: 'sessamekesh',
         pass_hash: 'asdf',
         email_address: 'kam.is.amazing@gmail.com',
         is_admin: true
@@ -13,21 +13,21 @@ exports.get_user_data = function (user_id, cb) {
 };
 
 exports.get_user_by_username = function (username, cb) {
-    if (username === 'Sessamekesh') {
+    if (username === 'sessamekesh') {
         cb(null, {
-            user_id: user_id,
-            username: 'Sessamekesh',
+            user_id: 0,
+            username: 'sessamekesh',
             pass_hash: 'asdf',
             email_address: 'kam.is.amazing@gmail.com',
             is_admin: true
         });
     } else {
-        cb(null, undefined);
+        cb('User ' + username + ' does not exist!', undefined);
     }
 };
 
 exports.authenticate_user = function (username, password, cb) {
-    if (username === 'Sessamekesh' && password === 'asdf') {
+    if (username === 'sessamekesh' && password === 'asdf') {
         cb(null, true);
     } else {
         cb(null, false);

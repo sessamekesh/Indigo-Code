@@ -9,15 +9,16 @@ var counter_dao = require('../../dao/counters'),
 exports.get = function (req, res) {
     var params = {
         title: 'USU ACM Competition Framework',
-        subtitle: 'Version 0.3.1 - Zora'
+        subtitle: 'Version 0.3.1 - Zora',
+        redirect_url: '/'
     };
 
-    exports.fill_data(params, function (new_data) {
+    exports.fill_data(req, params, function (new_data) {
         res.render('./general/index', new_data);
     });
 };
 
-exports.fill_data = function (data, cb) {
+exports.fill_data = function (req, data, cb) {
     data = data || {};
 
     competition_dao.get_previous_competitions(function (err, res) {
@@ -46,16 +47,14 @@ exports.fill_data = function (data, cb) {
                 console.log('index controller - fill_data - error getting ongoing competitions - ' + err);
             } else {
                 data.ongoing_comps = res;
-                counters_dao.get_next_user_id(function (cerr, cres) {
-                    console.log(cres);
-                    fd_finish();
-                });
+                fd_finish();
             }
         });
     }
 
     function fd_finish() {
-        data.user_data = undefined; // TODO KIP: Get user data from session here
+        data.login_error = req.session.login_error;
+        data.user_data = req.session.user_data;
         cb(data);
     }
 };

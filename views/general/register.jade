@@ -15,19 +15,19 @@ block content
          ul
          each comp in (upcoming_comps || [])
             li
-               a(href="/register/" + comp.id)= comp.name
+               a(href="/register?id=" + comp.comp_id)= comp.name
 
       b Ongoing Competitions
          ul
          each comp in (ongoing_comps || [])
             li
-               a(href="/register/" + comp.id)= comp.name
+               a(href="/register?id=" + comp.comp_id)= comp.name
    else
       h1= 'Register for competition ' + comp_data.name
-      form#new_team_form.form-horizontal(method="post", action="/register/" + comp.id + "/submit")
+      form#new_team_form.form-horizontal(method="post", action="/register/" + comp_data.comp_id + "/submit")
          fieldset
             legend Basic Information
-            input#comp_data_id(type="hidden", value=comp_data.id)
+            input#comp_data_id(type="hidden", value=comp_data.comp_id)
             input#comp_data_max_team_size(type="hidden", value=comp_data.max_team_size)
             // Team Name
             .form-group

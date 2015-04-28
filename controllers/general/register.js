@@ -2,33 +2,38 @@
  * Created by Kamaron on 4/22/2015.
  */
 
-var index = require('../general/index');
+var index = require('../general/index'),
+    comp_dao = require('../../dao/competition_dao');
 
 exports.get = function (req, res) {
     var params = {
         title: 'USU ACM Competition Framework',
-        subtitle: 'Version 0.3.1 - Zora'
+        subtitle: 'Version 0.3.1 - Zora',
+        redirect_url: '/register' + (req.query.id !== undefined ? ('?id=' + req.query.id) : ''),
+        comp_id: req.query.id
     };
 
-    index.fill_data(params, function (new_data) {
-        exports.fill_data(new_data, function (newer_data) {
-            res.render('./general/register', newer_data);
-        });
+    exports.fill_data(req, params, function (data) {
+        res.render('./general/register', data);
     });
 };
 
-exports.fill_data = function (data, cb) {
+exports.fill_data = function (req, data, cb) {
     data = data || {};
 
     // Grab information required for registration (max team size, etc)
     // TODO KIP: Grab from competition instead
-    data.comp_data = {
-        id: 0,
-        max_team_size: 3,
-        name: "Test Prototyping Competition",
-        start_date: Date.now(),
-        end_date: Date.now() + (1000*60*60)
-    };
-
-    cb(data);
+    if (data.comp_id !== undefined) {
+        comp_dao.get_competition_data(data.comp_id, function (err, res) {
+            if (err) {
+                // TODO KIP: Re-evaluate usefulness of throwing errors as we receive them...
+                throw err;
+            } else {
+                data.comp_data = res;
+                index.fill_data(req, data, function (new_data) {
+                    cb(new_data);
+                });
+            }
+        });
+    }
 };

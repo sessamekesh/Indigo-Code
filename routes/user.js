@@ -8,14 +8,23 @@ var express = require('express'),
 var router = express.Router();
 
 router.use('/:id', function (req, res, next) {
-    // User access restrictions go here...
+    // If the user ID given is indeed a number, make sure that the
+    //  requested operation is allowed - which is only in one of two cases:
+    // 1) The visitor is an admin
+    // 2) The visitor is the user with the given user ID
 
-    // ID must be an integer...
     if (isNaN(parseInt(req.params.id || {}))) {
-        throw new Error('User ID ' + req.params.id + ' is not valid!');
-    } else {
-        console.log('For user ' + req.params.id + '!');
+        // If not a number, we're accessing a non-sensitive operation, allow.
         next();
+    } else {
+        if (req.session.user_data === undefined) {
+            throw new Error('Must be logged in to access restricted user section');
+        } else if (req.session.user_data.user_id !== req.params.id && req.session.user_data.is_admin !== true) {
+            throw new Error('User information requested is not your own - must be an admin to access another user\'s information');
+        } else {
+            // Visitor is admin or appropriate user, allow access.
+            next();
+        }
     }
 });
 
