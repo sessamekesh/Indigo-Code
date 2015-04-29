@@ -24,7 +24,7 @@ block content
                a(href="/register?id=" + comp.comp_id)= comp.name
    else
       h1= 'Register for competition ' + comp_data.name
-      form#new_team_form.form-horizontal(method="post", action="/register/" + comp_data.comp_id + "/submit")
+      form#new_team_form.form-horizontal(method="post", action="/register-submit")
          fieldset
             legend Basic Information
             input#comp_data_id(type="hidden", value=comp_data.comp_id)
@@ -46,19 +46,56 @@ block content
             - for (var i = 0; i < comp_data.max_team_size; i++) {
                .form-group
                   label.col-md-4.control-label(for="usertype_" + i)= "User " + (i + 1)
+                  // TODO KIP: I don't know how, but you need to make the radio buttons inline
                   div.col-md-4(name="usertype_" + i, id="usertype_" + i)
-                     label.radio-inline(for="usertype_new_" + i)
+                     label.radio.inline(for="usertype_new_" + i)
                         input(type="radio", name="usertype_" + i, value="new")
                         |Create New User
-                     label.radio-inline(for="usertype_existing_" + i)
+                     label.radio.inline(for="usertype_existing_" + i)
                         input(type="radio", name="usertype_" + i, value="existing")
                         |Use Existing
-                     if i > 0
-                        label.radio-inline(for="usertype_blank_" + i)
-                           input(type="radio", name="usertype_" + i, value="blank")
-                           |Use Blank
+                     label.radio.inline(for="usertype_blank_" + i)
+                        input(type="radio", name="usertype_" + i, value="blank", checked)
+                        |Use Blank
                      span.col-md-4.help-block(id="usertype_" + i + "_err")
                // TODO KIP: Insert here your new, existing and blank sections
+               div(id="new_user_" + i, style="display: none")
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_name") Name of User
+                     .col-md-4
+                        input.input-md.form-control(type="text", name="new_user_" + i + "_name", id="new_user_" + i + "_name", placeholder="Bobby Tables")
+                     span.col-md-4.help-block(id="new_user_" + i + "_name_err")
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_email") Email Address
+                     .col-md-4
+                        input.input-md.form-control(type="text", name="new_user_" + i + "_email", id="new_user_" + i + "_email", placeholder="bobby@blackhatz.ru")
+                     span.col-md-4.help-block(id="new_user_" + i + "_email_err")
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_username") Desired Username
+                     .col-md-4
+                        input.input-md.form-control(type="text", name="new_user_" + i + "_username", id="new_user_" + i + "_username", placeholder="xXxCODERxXx")
+                     span.col-md-4.help-block(id="new_user_" + i + "_username_err")
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_password") Password
+                     .col-md-4
+                        input.input-md.form-control(type="password", name="new_user_" + i + "_password", id="new_user_" + i + "_password")
+                     span.col-md-4.help-block(id="new_user_" + i + "_password_err")
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_confirm_password") Confirm Password
+                     .col-md-4
+                        input.input-md.form-control(type="password", name="new_user_" + i + "_confirm_password", id="new_user_" + i + "_confirm_password")
+                     span.col-md-4.help-block(id="new_user_" + i + "_confirm_password_err")
+               div(id="existing_user_" + i, style="display: none")
+                  .form-group
+                     label.col-md-4.control-label(for="existing_user_" + i + "_username") Username
+                     .col-md-4
+                        input.input-md.form-control(type="text", name="existing_user_" + i + "_username", id="existing_user_" + i + "_username", placeholder="some_username")
+                     span.col-md-4.help-block(id="existing_user_" + i + "_username_err")
+                  .form-group
+                     label.col-md-4.control-label(for="existing_user_" + i + "_password") Password
+                     .col-md-4
+                        input.input-md.form-control(type="password", name="existing_user_" + i + "_password", id="existing_user_" + i + "_password")
+                     span.col-md-4.help-block(id="existing_user_" + i + "_password_err")
             - }
             hr
             .form-group

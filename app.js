@@ -36,9 +36,11 @@ app.use(function(req, res, next) {
 
 // error handlers
 
-// development error handler
-// will print stacktrace
 if (app.get('env') === 'development') {
+  // Jade - force to render pretty, we don't yet want to obfuscate our code.
+  app.locals.pretty = true;
+
+  // Development error handler - will print stack trace
   app.use(function(err, req, res, next) {
     index_data_loader.fill_data(req, { message: err.message, error: err }, function (new_data) {
       res.status(err.status || 500);
