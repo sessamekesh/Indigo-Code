@@ -22,16 +22,19 @@ function get_entry_well_at_least_for_this_module(field_name, cb) {
     } else {
         MongoClient.connect(connection_settings.url, function (err, db) {
             if (err) {
+                db.close();
                 cb (err);
             } else {
                 var collection = db.collection('counters');
                 collection.find({ field: field_name}).toArray(function (aerr, aresults) {
                     if (aerr) {
+                        db.close();
                         cb (aerr);
                     } else {
                         if (aresults.length === 0) {
                             collection.insertOne({ field: field_name, next_id: 1 }, function (cerr, cres) {
                                 if (cerr) {
+                                    db.close();
                                     cb (cerr);
                                 } else {
                                     db.close();
@@ -41,6 +44,7 @@ function get_entry_well_at_least_for_this_module(field_name, cb) {
                         } else {
                             collection.updateOne({ field: field_name}, {$set: { next_id: aresults[0].next_id + 1 }}, { w: 1 }, function (berr) {
                                 if (berr) {
+                                    db.close();
                                     cb(berr);
                                 } else {
                                     console.log(aresults);
