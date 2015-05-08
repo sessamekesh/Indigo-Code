@@ -1,5 +1,5 @@
 {
-  "name": "zora-framework",
+  "name": "Rigg",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -12,6 +12,9 @@
     "express": "~4.12.2",
     "jade": "~1.9.2",
     "morgan": "~1.5.1",
-    "serve-favicon": "~2.2.0"
+    "serve-favicon": "~2.2.0",
+    "mongodb": "~2.0.28",
+    "bcrypt": "~0.8.2",
+    "express-session": "~1.11.1"
   }
 }

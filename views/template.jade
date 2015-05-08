@@ -1,0 +1,106 @@
+//
+    Created by Kamaron on 4/22/2015.
+
+doctype html
+html
+    head
+        title= title || 'UNTITLED'
+        meta(name="viewport", content="width=device-width, initial-scale=1")
+        meta(charset="utf-8")
+        link(rel="stylesheet", href="/css/bootstrap.css")
+        link(rel="stylesheet", href="/css/style.css")
+        if include_stylesheets
+            - for (var i = 0; i < include_stylesheets.length; i++) {
+                link(rel="stylesheet", href=include_stylesheets[i])
+            - }
+    body
+        #container.container-fluid
+            #header.row
+                block top-header
+                    .col-md-10
+                        h1#title.text-center= (title || 'UNTITLED')
+                        h2#subtitle.text-center= (subtitle || 'Prototype v0.3.1 (Zora)')
+                    .col-md-2
+                        if user_data === undefined
+                            if login_error !== undefined
+                                p= login_error
+                            form(action="/user/login", method="post", role="form")
+                                .form-group
+                                    input(type="hidden", name="redirect", value=(redirect_url || '/'))
+                                    input.form-control(type="text", name="username", placeholder="Username", required="")
+                                    input.form-control(type="password", name="password", required="")
+                                    input.btn.pull-left(type="submit", name="login", value="Login")
+                                    input#reg_btn.btn.pull-left(type="submit", name="register", value="Register")
+                        else if user_data.is_admin === true
+                            form(action="/user/logout", method="post", role="form")
+                                p Hello, sir&nbsp;
+                                    b= user_data.username
+                                .form-group
+                                    input(type="hidden", name="redirect", value=(redirect_url || '/'))
+                                    input.btn(type="submit", value="Logout", name="logout")
+                        else
+                            form(action="/user/logout", method="post", role="form")
+                                p Hello&nbsp;
+                                    b= user_data.username
+                                .form-group
+                                    input(type="hidden", name="redirect", value=(redirect_url || '/'))
+                                    input.btn(type="submit", value="Logout", name="logout")
+            .row
+                #sidebar.col-md-2
+                    block sidebar
+                        if user_data === undefined
+                            ul
+                                li
+                                    a(href="/") Home
+                                li
+                                    a(href="/about") About
+                                li
+                                    a(href="#", onclick="$('#reg_btn').click();") Register
+                            hr
+                            b Previous Public Competitions
+                                ul
+                                    each comp in (previous_comps || [])
+                                        li
+                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                        else
+                            ul
+                                li
+                                    a(href="/") Home
+                                li
+                                    a(href="/about") About
+                            hr
+                            if user_data.is_admin === true
+                                b Admin Functions
+                                ul
+                                    li
+                                        a(href="/admin/new_comp") Create New Competition
+                                    li
+                                        a(href="/admin/view_users") View User Data
+                                    // TODO: Add more admin functions here
+                                hr
+                                b Upcoming Competitions
+                                ul
+                                    each comp in (upcoming_comps || [])
+                                        li
+                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                            hr
+                            b Ongoing Competitions
+                            ul
+                                each comp in (ongoing_comps || [])
+                                    li
+                                        a(href=("/competition/" + comp.comp_id))= comp.name
+                            hr
+                            b Previous Competitions
+                                ul
+                                    each comp in (previous_comps || [])
+                                        li
+                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                #content.col-md-10
+                    block content
+                        h1 There doesn't seem to be any content written for this page... Sorry about that.
+    script(src="/js/jquery-2.1.3.min.js")
+    script(src="/js/bootstrap.min.js")
+    if include_scripts
+        - for (var i = 0; i < include_scripts.length; i++) {
+            script(src= include_scripts[i])
+        - }

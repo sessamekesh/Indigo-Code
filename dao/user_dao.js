@@ -1,196 +1,183 @@
 /**
- * Created by kamaron on 3/31/15.
+ * Created by Kamaron on 4/22/2015.
  */
-'use strict';
 
-var bcrypt = require('bcrypt'),
-    credentials = require('./credentials'),
-    entities = require('entities');
+var MongoClient = require('mongodb').MongoClient,
+    connection_settings = require('./connection_settings'),
+    counters = require('./counters'),
+    bcrypt = require('bcrypt'),
+    work_factor = 10;
 
-var work_factor = 10;
-
-exports.checkUserExists = function (username, cb) {
+/**
+ * A method provided to external code that allows the caller to insert a new
+ *  user record
+ * @param username The username of the new user to insert (must be unique)
+ * @param password The password of the new user to insert (is encrypted with bcrypt library, not stored plaintext)
+ * @param email The email address of the new user to insert
+ * @param is_admin True for admin, false otherwise. Determines if user is, by default, an admin to competitions
+ * @param cb Callback on success or fail - formed as such: callback(err, new_user_id)
+ */
+exports.create_new_user = function (username, password, email, is_admin, cb) {
     if (username === undefined || username === '') {
-        callback(undefined, 'No user information provided!');
-    } else {
-        credentials.zora_query('SELECT id FROM User WHERE user_name = ?;', username, function (err, res) {
-            if (err) {
-                callback(null, err);
-            } else {
-                callback(res.length > 0);
-            }
-        });
-    }
-};
-
-exports.authUser = function (username, password, cb) {
-    if (username === undefined || username === '') {
-        cb(undefined, 'No username provided!');
+        cb('Must provide username');
     } else if (password === undefined || password === '') {
-        cb(undefined, 'No password provided!');
+        cb('Must provide password');
+    } else if (email === undefined || email === '') {
+        cb('Must provide email');
+    } else if (is_admin === undefined || (is_admin !== true && is_admin !== false)) {
+        cb('Must provide boolean is_admin');
     } else {
-        credentials.zora_query('SELECT pass_hash FROM User WHERE user_name = ?;', username,
-            function (err, res) {
-                if (err) {
-                    callback(undefined, 'SQL error: ' + err);
-                } else if (res.length != 1) {
-                    callback(undefined, 'User not found');
-                } else {
-                    auth(res[0].pass_hash);
-                }
-            }
-        );
-    }
-
-    function auth(ph) {
-        bcrypt.compare(password, ph, function (err, res) {
+        // Make sure username does not already exist
+        MongoClient.connect(connection_settings.url, function (err, db) {
             if (err) {
-                callback(undefined, 'Error authenticating password: ' + err);
+                db.close();
+                cb(err);
             } else {
-                callback(res);
-            }
-        });
-    }
-};
-
-/**
- * getUserData: Gets information about the user with the given username
- * @param username Username of user in question
- * @param sensitive True to return sensitive user data, false to omit
- * @param cb Callback to invoke on read (res, err)
- */
-exports.getUserData = function (username, sensitive, cb) {
-    if (username === undefined || username === '') {
-        cb(undefined, 'Must provide user name');
-    } else if (sensitive === true) {
-        credentials.zora_query('SELECT User.id, User.user_name, User.email_address, User.name, User.is_admin, '
-            + 'UserType.name AS type FROM User LEFT JOIN UserType ON UserType.id = User.user_type WHERE '
-            + 'User.user_name = ?;', username, function (err, res) {
-            if (res.length != 1) {
-                cb(undefined, 'User not found!');
-            } else {
-                cb({
-                    id: res[0].id,
-                    user_name: res[0].user_name,
-                    email_address: res[0].email_address,
-                    name: res[0].name,
-                    is_admin: res[0].is_admin[0],
-                    type: res[0].type
-                });
-            }
-        });
-    } else {
-        credentials.zora_query('SELECT User.id, User.user_name, User.is_admin, '
-            + 'UserType.name AS type FROM User LEFT JOIN UserType ON UserType.id = User.user_type WHERE '
-            + 'User.user_name = ?;', username, function (err, res) {
-            if (res.length != 1) {
-                cb(undefined, 'User not found!');
-            } else {
-                cb({
-                    id: res[0].id,
-                    user_name: res[0].user_name,
-                    is_admin: res[0].is_admin[0],
-                    type: res[0].type
-                });
-            }
-        });
-    }
-};
-
-/**
- * getUserByID: Gets a given user from the database, given that user's ID.
- *              Useful in administrative functions
- * @param userID ID of user
- * @param sensitive True to include sensitive user data, false to omit
- * @param cb Callback to invoke on read (res, err)
- */
-exports.getUserById = function (userID, sensitive, cb) {
-    if (userID === undefined) {
-        cb(undefined, 'Must provide User ID!');
-    } else if (sensitive === true) {
-        credentials.zora_query('SELECT User.id, User.user_name, User.email_address, User.name, User.is_admin, '
-        + 'UserType.name AS type FROM User LEFT JOIN UserType ON UserType.id = User.user_type WHERE '
-        + 'User.id = ?;', userID, function (err, res) {
-            if (res.length != 1) {
-                cb(undefined, 'User not found!');
-            } else {
-                cb({
-                    id: res[0].id,
-                    user_name: res[0].user_name,
-                    email_address: res[0].email_address,
-                    name: res[0].name,
-                    is_admin: res[0].is_admin[0],
-                    type: res[0].type
-                });
-            }
-        });
-    } else {
-        credentials.zora_query('SELECT User.id, User.user_name, User.is_admin, '
-        + 'UserType.name AS type FROM User LEFT JOIN UserType ON UserType.id = User.user_type WHERE '
-        + 'User.id = ?;', userID, function (err, res) {
-            if (res.length != 1) {
-                cb(undefined, 'User not found!');
-            } else {
-                cb({
-                    id: res[0].id,
-                    user_name: res[0].user_name,
-                    is_admin: res[0].is_admin[0],
-                    type: res[0].type
-                });
-            }
-        });
-    }
-};
-
-/**
- * Method to add a user to the database
- * @param name Name of the user (e.g., "Kamaron Peterson")
- * @param user_name Username for the new user (e.g., "Sessamekesh")
- * @param password Password to use. This is NOT stored plain text.
- * @param email_address Email address of the user (e.g., "kamaron.peterson@gmail.com")
- * @param is_admin Boolean specifying whether user is an admin or not
- * @param user_type User type - int, corresponds to entry from "UserType" table/dao)
- * @param cb Callback function to invoke after user is added or on failure (res, err)
- *          Res will be true on success, undefined on failure
- */
-exports.addUser = function (name, user_name, password, email_address, user_type, cb) {
-    if (name === undefined || name === '') {
-        cb(undefined, 'Must specify the name of the account owner');
-    } else if (user_name === undefined || user_name === '') {
-        cb(undefined, 'Must specify the user name of the new user');
-    } else if (password === undefined ||  password === '') {
-        cb(undefined, 'Must specify the password of the new user');
-    } else if (email_address === undefined || email_address === '') {
-        cb(undefined, 'Must provide an email address of the new user');
-    } else if (user_type === undefined || parseInt(user_type) === NaN) {
-        cb(undefined, 'Must provide a user type');
-    } else {
-        encrypt_password();
-    }
-
-    function encrypt_password () {
-        bcrypt.genSalt(work_factor, function (err, salt) {
-            if (err) {
-                cb(undefined, 'Error generating salt for password encryption: ' + err);
-            } else {
-                bcrypt.hash(password, salt, function (err, hash) {
-                    if (err) {
-                        cb(undefined, 'Error encrypting password: ' + err);
+                var collection = db.collection('user_data');
+                // Make sure there is no user with the given username already
+                collection.find({ username: username }, function (aerr, aresults) {
+                    if (aerr) {
+                        db.close();
+                        cb(aerr);
                     } else {
-                        insert_data(hash);
+                        if (aresults.length !== 0) {
+                            db.close();
+                            cb('Username ' + username + ' is already taken');
+                        } else {
+                            counters.get_next_user_id(function (berr, uid) {
+                                if (berr) {
+                                    db.close();
+                                    cb(berr);
+                                } else {
+                                    // Generate salt for encryption...
+                                    bcrypt.genSalt(work_factor, function (cerr, salt) {
+                                        if (cerr) {
+                                            cb(cerr);
+                                        } else {
+                                            bcrypt.hash(password, salt, function (derr, hash) {
+                                                if (derr) {
+                                                    cb(derr);
+                                                } else {
+                                                    collection.insertOne({
+                                                        user_id: uid,
+                                                        username: username,
+                                                        pass_hash: hash,
+                                                        email: email,
+                                                        is_admin: is_admin
+                                                    }, function (eerr, cres) {
+                                                        if (eerr) {
+                                                            db.close();
+                                                            cb(eerr);
+                                                        } else {
+                                                            console.log('To sate my curiosity, the result is ' + cres);
+                                                            db.close();
+                                                            cb(uid);
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
             }
         });
     }
+};
 
-    function insert_data (pw_hash) {
-        credentials.zora_query('INSERT INTO User (user_name, name, pass_hash, email_address, user_type) '
-        + 'VALUES (?, ?, ?, ?, ?);', [user_name, name, pw_hash, email_address, user_type], function (err, res) {
+exports.get_user_data = function (user_id, cb) {
+    if (user_id === undefined || isNaN(parseInt(user_id))) {
+        cb('No valid user ID provided!');
+    } else {
+        MongoClient.connect(connection_settings.url, function (err, db) {
             if (err) {
-                cb(undefined, 'MYSQL error: ' + err);
+                db.close();
+                cb(err);
             } else {
-                cb(true);
+                var collection = db.collection('user_data');
+                collection.find({ user_id: user_id }).toArray(function (aerr, aresults) {
+                    if (aerr) {
+                        db.close();
+                        cb(aerr);
+                    } else {
+                        if (aresults.length === 0) {
+                            db.close();
+                            cb();
+                        } else {
+                            db.close();
+                            cb(null, aresults[0]);
+                        }
+                    }
+                });
+            }
+        });
+    }
+};
+
+exports.get_user_by_username = function (username, cb) {
+    if (username === undefined || username === '') {
+        cb('No valid username provided');
+    } else {
+        MongoClient.connect(connection_settings.url, function (err, db){
+            if (err) {
+                db.close();
+                cb(err);
+            } else {
+                var collection = db.collection('user_data');
+                collection.find({ username: username }).toArray(function (aerr, ares) {
+                    if (aerr) {
+                        db.close();
+                        cb(aerr);
+                    } else {
+                        if (ares.length === 0) {
+                            db.close();
+                            cb();
+                        } else {
+                            db.close();
+                            cb(null, ares[0]);
+                        }
+                    }
+                });
+            }
+        });
+    }
+};
+
+exports.authenticate_user = function (username, password, cb) {
+    if (username === undefined || username === '') {
+        cb('Must provide valid username');
+    } else if (password === undefined || password === '') {
+        cb('Must provide password');
+    } else {
+        MongoClient.connect(connection_settings.url, function (err, db) {
+            if (err) {
+                db.close();
+                cb(err);
+            } else {
+                var collection = db.collection('user_data');
+                collection.find({ username: username }).toArray(function (aerr, ares) {
+                    if (aerr) {
+                        db.close();
+                        cb(aerr);
+                    } else {
+                        if (ares.length === 0){
+                            db.close();
+                            cb(undefined, false);
+                        } else {
+                            bcrypt.compare(password, ares[0].pass_hash, function (berr, bres) {
+                                if (berr) {
+                                    db.close();
+                                    cb(berr);
+                                } else {
+                                    cb(null, bres);
+                                }
+                            });
+                        }
+                    }
+                });
             }
         });
     }
