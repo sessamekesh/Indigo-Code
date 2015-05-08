@@ -16,6 +16,10 @@ exports.get_next_problem_id = function (cb) {
     get_entry_well_at_least_for_this_module('next_problem_id', cb);
 };
 
+exports.get_next_team_id = function (cb) {
+    get_entry_well_at_least_for_this_module('next_team_id', cb);
+};
+
 function get_entry_well_at_least_for_this_module(field_name, cb) {
     if (field_name === undefined || field_name === '') {
         cb('No field name provided!');

@@ -8,6 +8,15 @@ var MongoClient = require('mongodb').MongoClient,
     bcrypt = require('bcrypt'),
     work_factor = 10;
 
+/**
+ * A method provided to external code that allows the caller to insert a new
+ *  user record
+ * @param username The username of the new user to insert (must be unique)
+ * @param password The password of the new user to insert (is encrypted with bcrypt library, not stored plaintext)
+ * @param email The email address of the new user to insert
+ * @param is_admin True for admin, false otherwise. Determines if user is, by default, an admin to competitions
+ * @param cb Callback on success or fail - formed as such: callback(err, new_user_id)
+ */
 exports.create_new_user = function (username, password, email, is_admin, cb) {
     if (username === undefined || username === '') {
         cb('Must provide username');
@@ -25,6 +34,7 @@ exports.create_new_user = function (username, password, email, is_admin, cb) {
                 cb(err);
             } else {
                 var collection = db.collection('user_data');
+                // Make sure there is no user with the given username already
                 collection.find({ username: username }, function (aerr, aresults) {
                     if (aerr) {
                         db.close();
@@ -42,27 +52,26 @@ exports.create_new_user = function (username, password, email, is_admin, cb) {
                                     // Generate salt for encryption...
                                     bcrypt.genSalt(work_factor, function (cerr, salt) {
                                         if (cerr) {
-                                            db.close();
                                             cb(cerr);
                                         } else {
-                                            bcrypt.hash(password, salt, function (derr, pass_hash) {
+                                            bcrypt.hash(password, salt, function (derr, hash) {
                                                 if (derr) {
-                                                    db.close();
                                                     cb(derr);
                                                 } else {
                                                     collection.insertOne({
                                                         user_id: uid,
                                                         username: username,
-                                                        pass_hash: pass_hash,
+                                                        pass_hash: hash,
                                                         email: email,
                                                         is_admin: is_admin
-                                                    }, function (cerr, cres) {
-                                                        if (cerr) {
+                                                    }, function (eerr, cres) {
+                                                        if (eerr) {
                                                             db.close();
-                                                            cb(cerr);
+                                                            cb(eerr);
                                                         } else {
+                                                            console.log('To sate my curiosity, the result is ' + cres);
                                                             db.close();
-                                                            cb(null, uid);
+                                                            cb(uid);
                                                         }
                                                     });
                                                 }
