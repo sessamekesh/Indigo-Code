@@ -27,8 +27,8 @@ html
                             form(action="/user/login", method="post", role="form")
                                 .form-group
                                     input(type="hidden", name="redirect", value=(redirect_url || '/'))
-                                    input.form-control(type="text", name="username", placeholder="Username", required="")
-                                    input.form-control(type="password", name="password", required="")
+                                    input.form-control(type="text", name="username", placeholder="Username")
+                                    input.form-control(type="password", name="password")
                                     input.btn.pull-left(type="submit", name="login", value="Login")
                                     input#reg_btn.btn.pull-left(type="submit", name="register", value="Register")
                         else if user_data.is_admin === true

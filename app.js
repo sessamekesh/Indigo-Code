@@ -24,18 +24,7 @@ app.use(session({ secret: 'rigg-sessamekesh', resave: false, saveUninitialized: 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Router setup...
-app.use('/', general_route);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
 // error handlers
-
 if (app.get('env') === 'development') {
   // Jade - force to render pretty, we don't yet want to obfuscate our code.
   app.locals.pretty = true;
@@ -47,18 +36,25 @@ if (app.get('env') === 'development') {
       res.render('error', new_data);
     });
   });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
+} else {
+  // production error handler
+  // no stacktraces leaked to user
   app.use(function(err, req, res, next) {
     index_data_loader.fill_data(req, { message: err.message, error: {} }, function (new_data) {
       res.status(err.status || 500);
       res.render('error', new_data);
     });
   });
-});
+}
 
+// Router setup...
+app.use('/', general_route);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
 
 module.exports = app;

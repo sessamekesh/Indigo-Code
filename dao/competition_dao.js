@@ -2,78 +2,141 @@
  * Created by Kamaron on 4/22/2015.
  */
 
-// TODO KIP: Replace with Mongo access
+var db = require('./db');
+
+/**
+ *
+ * @param id {number} ID of the competition specified
+ * @param name {string} Name of the competition specified
+ * @param start_date {number} UNIX timestamp of start date (milliseconds)
+ * @param end_date {number} UNIX timestamp of end date (milliseconds)
+ * @param time_penalty {number} Time penalty, in seconds, of incorrect submission
+ * @param max_team_size {number} Maximum size of a team allowed
+ * @return {{id: number, name: string, start_date: number, end_date: number, time_penalty: number, max_team_size: number}}
+ * @constructor
+ */
+exports.CompData = function (id, name, start_date, end_date, time_penalty, max_team_size) {
+    this.id = id;
+    this.name = name;
+    this.start_date = start_date;
+    this.end_date = end_date;
+    this.time_penalty = time_penalty;
+    this.max_team_size = max_team_size;
+};
+
+/**
+ * Get competition data for the given competition
+ * @param comp_id {number} ID of the competition in question
+ * @param cb {function} Callback, taking err, result as parameters (result is type CompData)
+ */
 exports.get_competition_data = function (comp_id, cb) {
-    cb(null, {
-        comp_id: comp_id,
-        name: 'Test Previous Competition',
-        start_date: 1429680148000,
-        end_date: 1429690948000,
-        problems: [0, 1, 2],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    });
+    if (isNaN(parseInt(comp_id))) {
+        cb(new Error('Must provide an integer competition ID'));
+    } else {
+        db.owl_query('SELECT id, name, start_date, end_date, time_penalty, max_team_size '
+            + 'FROM competition WHERE id=?;',
+            [comp_id],
+            function (err, res) {
+                if (err) {
+                    cb(err);
+                } else {
+                    if (res.length !== 1) {
+                        cb(new Error('No competition found with given ID'));
+                    } else {
+                        cb(null, new exports.CompData(res[0].id, res[0].name, res[0].start_date, res[0].end_date,
+                            res[0].time_penalty, res[0].max_team_size));
+                    }
+                }
+            }
+        );
+    }
 };
 
-// TODO KIP: Replace with Mongo access
+/**
+ * Calls callback containing an array of previous competitions (all CompData objects)
+ * @param cb {function}
+ */
 exports.get_previous_competitions = function (cb) {
-    cb(null, [{
-        comp_id: 0,
-        name: 'Test Previous Competition 1',
-        start_date: 1429680148000,
-        end_date: 1429690948000,
-        problems: [0, 1, 2],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    }, {
-        comp_id: 1,
-        name: 'Test Previous Competition 2',
-        start_date: 1429680148000,
-        end_date: 1429690948000,
-        problems: [3, 4, 5],
-        max_team_size: 3,
-        scoreboard: [ { user_id: 1, score: 2, time_penalty: 15 }, { user_id: 0, score: 1, time_penalty: 35 } ]
-    }]);
+    db.owl_query('SELECT id, name, start_date, end_date, time_penalty, max_team_size FROM competition '
+        + 'WHERE end_date < FROM_UNIXTIME(?);', [Date.now() / 1000], function (err, res) {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, res.map(function (element) {
+                    return new exports.CompData(element.id, element.name, element.start_date,
+                        element.end_date, element.time_penalty, element.max_team_size);
+                }));
+            }
+        }
+    );
 };
 
-// TODO KIP: Replace with Mongo access
+/**
+ * Calls callback function containing an array of ongoing competitions (all CompData objects)
+ * @param cb {function}
+ */
 exports.get_ongoing_competitions = function (cb) {
-    cb(null, [{
-        comp_id: 2,
-        name: 'Test Ongoing Competition 1',
-        start_date: 1429991073050,
-        end_date: 1482695064000,
-        problems: [6, 7, 8],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    }, {
-        comp_id: 3,
-        name: 'Test Ongoing Competition 2',
-        start_date: 1429991073000,
-        end_date: 1482695064000,
-        problems: [9, 10],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    }]);
+    db.owl_query('SELECT id, name, start_date, end_date, time_penalty, max_team_size FROM competition '
+        + 'WHERE end_date > FROM_UNIXTIME(?) AND start_date < FROM_UNIXTIME(?);', [Date.now() / 1000, Date.now() / 1000], function (err, res) {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, res.map(function (element) {
+                    return new exports.CompData(element.id, element.name, element.start_date,
+                        element.end_date, element.time_penalty, element.max_team_size);
+                }));
+            }
+        }
+    );
 };
 
-// TODO KIP: Replace with Mongo access
+/**
+ * Calls callback with list of competitions that are upcoming (all CompData objects)
+ * @param cb {function}
+ */
 exports.get_upcoming_competitions = function (cb) {
-    cb(null, [{
-        comp_id: 4,
-        name: 'Test Upcoming Competition 1',
-        start_date: 1482695064000,
-        end_date: 1482696084000,
-        problems: [11, 12, 13, 14],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    }, {
-        comp_id: 5,
-        name: 'Test Upcoming Competition 2',
-        start_date: 1429991073000,
-        end_date: 1482696084000,
-        problems: [15, 16, 17, 18, 19],
-        max_team_size: 3,
-        scoreboard: [{ user_id: 0, score: 2, time_penalty: 15 }, { user_id: 1, score: 2, time_penalty: 26 }]
-    }]);
+    db.owl_query('SELECT id, name, start_date, end_date, time_penalty, max_team_size FROM competition '
+        + 'WHERE start_date > FROM_UNIXTIME(?);', [Date.now() / 1000], function (err, res) {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, res.map(function (element) {
+                    return new exports.CompData(element.id, element.name, element.start_date,
+                        element.end_date, element.time_penalty, element.max_team_size);
+                }));
+            }
+        }
+    );
+};
+
+/**
+ * Create a new database entry with a competition
+ * @param comp_data {exports.CompData} Object containing competition data to be inserted
+ * @param cb {function}
+ */
+exports.create_competition = function (comp_data, cb) {
+    if (!comp_data.name || comp_data.name === '') {
+        cb(new Error('Must provide a name for the competition!'));
+    } else if (isNaN(parseInt(comp_data.start_date))) {
+        cb(new Error('Start date must be provided, and a positive integer'));
+    } else if (isNaN(parseInt(comp_data.end_date))) {
+        cb(new Error('End date must be provided, and a positive integer'));
+    } else if (isNaN(parseInt(comp_data.time_penalty))) {
+        cb(new Error('Time penalty must be provided, and a positive integer'));
+    } else if (isNaN(parseInt(comp_data.max_team_size))) {
+        cb(new Error('Max team size must be provided, and a postitive integer'));
+    } else {
+        db.owl_query('INSERT INTO competition (name, start_date, end_date, time_penalty, max_team_size) VALUES '
+            + ' (?, ?, ?, ?, ?);',
+            [comp_data.name, comp_data.start_date, comp_data.end_date, comp_data.time_penalty, comp_data.max_team_size],
+            function (err, res) {
+                if (err) {
+                    cb(err);
+                } else {
+                    cb(null, new exports.CompData(res.insertId, comp_data.name, comp_data.start_date,
+                        comp_data.end_date, comp_data.time_penalty, comp_data.max_team_size));
+                }
+            }
+        );
+    }
 };

@@ -2,9 +2,7 @@
  * Created by Kamaron on 4/22/2015.
  */
 
-var counter_dao = require('../../dao/counters'),
-    competition_dao = require('../../dao/competition_dao'),
-    counters_dao = require('../../dao/counters');
+var competition_dao = require('../../dao/competition_dao');
 
 exports.get = function (req, res) {
     var params = {
@@ -24,20 +22,22 @@ exports.fill_data = function (req, data, cb) {
     competition_dao.get_previous_competitions(function (err, res) {
         if (err) {
             console.log('index controller - fill_data - An error occurred getting previous competitions - ' + err);
+            data.previous_comps = [];
         } else {
             data.previous_comps = res;
-            fd_upcoming_comps();
         }
+        fd_upcoming_comps();
     });
 
     function fd_upcoming_comps() {
         competition_dao.get_upcoming_competitions(function (err, res) {
             if (err) {
                 console.log('index controller - fill_data - error getting upcoming competitions - ' + err);
+                data.upcoming_comps = [];
             } else {
                 data.upcoming_comps = res;
-                fd_ongoing_comps();
             }
+            fd_ongoing_comps();
         });
     }
 
@@ -45,10 +45,11 @@ exports.fill_data = function (req, data, cb) {
         competition_dao.get_ongoing_competitions(function (err, res) {
             if (err) {
                 console.log('index controller - fill_data - error getting ongoing competitions - ' + err);
+                data.ongoing_comps = [];
             } else {
                 data.ongoing_comps = res;
-                fd_finish();
             }
+            fd_finish();
         });
     }
 

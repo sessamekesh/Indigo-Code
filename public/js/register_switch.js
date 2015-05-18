@@ -11,6 +11,7 @@ $(document).ready(function () {
     // On select new user...
     for (var i = 0; i < max_team_size; i++) {
         activate_section(i);
+        // TODO KIP: This would be a good place to add default value (blank, existing, new) for state
     }
 });
 

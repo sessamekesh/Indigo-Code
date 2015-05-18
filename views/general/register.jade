@@ -15,32 +15,34 @@ block content
          ul
          each comp in (upcoming_comps || [])
             li
-               a(href="/register?id=" + comp.comp_id)= comp.name
+               a(href="/register?id=" + comp.id)= comp.name
 
       b Ongoing Competitions
          ul
          each comp in (ongoing_comps || [])
             li
-               a(href="/register?id=" + comp.comp_id)= comp.name
+               a(href="/register?id=" + comp.id)= comp.name
    else
       h1= 'Register for competition ' + comp_data.name
+      if (page_errors.getError('general') !== '')
+         h2= 'Error in creating team: ' + page_errors.getError('general')
       form#new_team_form.form-horizontal(method="post", action="/register-submit")
          fieldset
             legend Basic Information
-            input#comp_data_id(type="hidden", value=comp_data.comp_id)
-            input#comp_data_max_team_size(type="hidden", value=comp_data.max_team_size)
+            input#comp_data_id(type="hidden", name="comp_id", value=comp_data.id)
+            input#comp_data_max_team_size(type="hidden", name="max_team_size", value=comp_data.max_team_size)
             // Team Name
             .form-group
                label.col-md-4.control-label(for="team_name") Team Name
                .col-md-4
                   input#team_name.form-control.input-md(name="team_name", type="text", placeholder="team_awesome", required="")
-               span.col-md-4#team_name_err.help-block
+               span.col-md-4#team_name_err.help-block= page_errors.getError('team_name')
             // Team Tagline
             .form-group
                label.col-md-4.control-label(for="team_tagline") Team Tagline
                .col-md-4
                   input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="We're pretty cool")
-               span.col-md-4#team_tagline_err.help-block
+               span.col-md-4#team_tagline_err.help-block= page_errors.getError('team_tagline')
          fieldset
             legend Team Members
             - for (var i = 0; i < comp_data.max_team_size; i++) {
@@ -57,45 +59,45 @@ block content
                      label.radio.inline(for="usertype_blank_" + i)
                         input(type="radio", name="usertype_" + i, value="blank", checked)
                         |Use Blank
-                     span.col-md-4.help-block(id="usertype_" + i + "_err")
+                     span.col-md-4.help-block(id="usertype_" + i + "_err")= page_errors.getError('usertype_' + i)
                // TODO KIP: Insert here your new, existing and blank sections
                div(id="new_user_" + i, style="display: none")
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_name") Name of User
                      .col-md-4
                         input.input-md.form-control(type="text", name="new_user_" + i + "_name", id="new_user_" + i + "_name", placeholder="Bobby Tables")
-                     span.col-md-4.help-block(id="new_user_" + i + "_name_err")
+                     span.col-md-4.help-block(id="new_user_" + i + "_name_err")= page_errors.getError('new_user_' + i + '_name')
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_email") Email Address
                      .col-md-4
                         input.input-md.form-control(type="text", name="new_user_" + i + "_email", id="new_user_" + i + "_email", placeholder="bobby@blackhatz.ru")
-                     span.col-md-4.help-block(id="new_user_" + i + "_email_err")
+                     span.col-md-4.help-block(id="new_user_" + i + "_email_err")= page_errors.getError('new_user_' + i + '_email')
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_username") Desired Username
                      .col-md-4
                         input.input-md.form-control(type="text", name="new_user_" + i + "_username", id="new_user_" + i + "_username", placeholder="xXxCODERxXx")
-                     span.col-md-4.help-block(id="new_user_" + i + "_username_err")
+                     span.col-md-4.help-block(id="new_user_" + i + "_username_err")= page_errors.getError('new_user_' + i + '_username')
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_password") Password
                      .col-md-4
                         input.input-md.form-control(type="password", name="new_user_" + i + "_password", id="new_user_" + i + "_password")
-                     span.col-md-4.help-block(id="new_user_" + i + "_password_err")
+                     span.col-md-4.help-block(id="new_user_" + i + "_password_err")= page_errors.getError('new_user_' + i + '_password')
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_confirm_password") Confirm Password
                      .col-md-4
                         input.input-md.form-control(type="password", name="new_user_" + i + "_confirm_password", id="new_user_" + i + "_confirm_password")
-                     span.col-md-4.help-block(id="new_user_" + i + "_confirm_password_err")
+                     span.col-md-4.help-block(id="new_user_" + i + "_confirm_password_err")= page_errors.getError('new_user_' + i + '_confirm_password')
                div(id="existing_user_" + i, style="display: none")
                   .form-group
                      label.col-md-4.control-label(for="existing_user_" + i + "_username") Username
                      .col-md-4
                         input.input-md.form-control(type="text", name="existing_user_" + i + "_username", id="existing_user_" + i + "_username", placeholder="some_username")
-                     span.col-md-4.help-block(id="existing_user_" + i + "_username_err")
+                     span.col-md-4.help-block(id="existing_user_" + i + "_username_err")= page_errors.getError('existing_user_' + i + '_username')
                   .form-group
                      label.col-md-4.control-label(for="existing_user_" + i + "_password") Password
                      .col-md-4
                         input.input-md.form-control(type="password", name="existing_user_" + i + "_password", id="existing_user_" + i + "_password")
-                     span.col-md-4.help-block(id="existing_user_" + i + "_password_err")
+                     span.col-md-4.help-block(id="existing_user_" + i + "_password_err")= page_errors.getError('existing_user_' + i + '_password')
             - }
             hr
             .form-group
