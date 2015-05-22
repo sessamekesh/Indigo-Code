@@ -76,7 +76,7 @@ exports.getUserByUsername = function (username, sensitive, cb) {
     if (!username || username === '') {
         cb(new Error('Must provide user name'));
     } else if (sensitive === true) {
-        db.owl_query('SELECT id, user_name, is_admin, user_type FROM user WHERE user_name=?;', [username], function (err, res) {
+        db.owl_query('SELECT id, user_name, is_admin FROM user WHERE user_name=?;', [username], function (err, res) {
             if (err) {
                 cb(err);
             } else {
@@ -88,7 +88,7 @@ exports.getUserByUsername = function (username, sensitive, cb) {
             }
         });
     } else {
-        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash, user_type FROM user WHERE user_name=?;', [username], function (err, res) {
+        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash FROM user WHERE user_name=?;', [username], function (err, res) {
             if (err) {
                 cb(err);
             } else {
@@ -112,7 +112,7 @@ exports.getUserById = function (user_id, sensitive, cb) {
     if (isNaN(parseInt(user_id))) {
         cb(new Error('Must provide user ID!'));
     } else if (sensitive === true) {
-        db.owl_query('SELECT id, user_name, is_admin, user_type FROM user WHERE id = ?;', [user_id], function (err, res) {
+        db.owl_query('SELECT id, user_name, is_admin FROM user WHERE id = ?;', [user_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
@@ -124,7 +124,7 @@ exports.getUserById = function (user_id, sensitive, cb) {
             }
         });
     } else {
-        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash, user_type FROM user WHERE id=?;', [user_id], function (err, res) {
+        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash FROM user WHERE id=?;', [user_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
@@ -145,10 +145,9 @@ exports.getUserById = function (user_id, sensitive, cb) {
  * @param password {string} Password of user. Encrypted before entering into database.
  * @param email_address {string} Email address of user
  * @param is_admin {boolean} True if user is, by default, an admin in competitions. False otherwise
- * @param user_type {number} Represents ID of user type, used by competition administrators (optionally)
  * @param cb {function} callback (error, result)
  */
-exports.addUser = function (name, user_name, password, email_address, is_admin, user_type, cb) {
+exports.addUser = function (name, user_name, password, email_address, is_admin, cb) {
     if (!name || name === '') {
         cb(new Error('Must provide a name for the user!'));
     } else if (!user_name || user_name === '') {
@@ -159,16 +158,14 @@ exports.addUser = function (name, user_name, password, email_address, is_admin, 
         cb(new Error('Must provide an email address for the user!'));
     } else if (is_admin === undefined ||is_admin === null || !(is_admin === true || is_admin === false)) {
         cb(new Error('Must provide a boolean true/false for is_admin field in user!'));
-    } else if (user_type === undefined || isNaN(parseInt(user_type))) {
-        cb(new Error('Must provide an integer value for user type!'));
     } else {
         bcrypt.genSalt(work_factor, function (err, salt) {
             if (err) {
                 cb(err);
             } else {
                 bcrypt.hash(password, salt, function (aerr, hash) {
-                    db.owl_query('INSERT INTO user (name, user_name, email_address, is_admin, pass_hash, user_type) VALUES (?, ?, ?, ?, ?, ?);',
-                        [name, user_name, email_address, is_admin, hash, user_type], function (berr, res) {
+                    db.owl_query('INSERT INTO user (name, user_name, email_address, is_admin, pass_hash) VALUES (?, ?, ?, ?, ?);',
+                        [name, user_name, email_address, is_admin, hash], function (berr, res) {
                             if (berr) {
                                 cb(berr);
                             } else {
@@ -176,8 +173,7 @@ exports.addUser = function (name, user_name, password, email_address, is_admin, 
                                 cb(null, {
                                     id: res.insertId,
                                     user_name: user_name,
-                                    is_admin: is_admin === 1,
-                                    user_type: user_type
+                                    is_admin: is_admin
                                 });
                             }
                         }

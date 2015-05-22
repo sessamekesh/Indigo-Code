@@ -91,7 +91,6 @@ exports.post = function (req, res) {
                         req.body['new_user_' + i + '_password'],
                         req.body['new_user_' + i + '_email'],
                         false,
-                        0,
                         function (err, res) {
                             if (err) {
                                 // TODO KIP: Check for exact errors here?
