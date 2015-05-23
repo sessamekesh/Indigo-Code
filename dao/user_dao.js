@@ -17,6 +17,59 @@ var db = require('./db');
 var work_factor = 10;
 
 /**
+ * Information about a user, in standard form for the rest of the competition.
+ * @param id {number} User ID, unique ID used to reference that user
+ * @param username {string} Unique name used for that user, what should be used on public facing data
+ * @param is_admin {boolean} True if the user is allowed into general admin functionality
+ * @param public_facing {boolean} True if the user wants to be publicly shown (a profile)
+ * @param first_name {string} First name of user. Not publicly visible.
+ * @param last_name {string} Last name of user. Not publicly visible.
+ * @param email_address {string} Email address of user. Not publicly visible.
+ * @constructor
+ */
+exports.UserData = function (id, username, is_admin, public_facing, first_name, last_name, email_address) {
+    this.id = id;
+    this.username = username;
+    this.is_admin = is_admin;
+    this.public_facing = public_facing;
+    this.first_name = first_name;
+    this.last_name = last_name;
+    this.email_address = email_address;
+};
+
+/**
+ * Is the UserData object complete with everything? Essentially, are all the fields non-null?
+ * @return {boolean}
+ */
+exports.UserData.prototype.isCompleteForEntry = function () {
+    return !!this.username && (this.is_admin === true || this.is_admin === false)
+        && (this.public_facing === true || this.public_facing === false) && !!this.first_name && !!this.last_name
+        && !!this.email_address;
+};
+
+/**
+ * Fill up data about a team, and the users which are on it.
+ * @param id {number} ID of team
+ * @param comp_id {number} ID of competition for to which the team belongs
+ * @param team_name {string} Name of the team. Must be unique among the team names in the given competition
+ * @param team_tagline {string} Tagline of the team. Trust me, you want to provide a tagline.
+ * @param is_admin {boolean} Is this an admin team? Admin teams cannot compete, but they can access the competition
+ *                              before it begins, add problems, test cases, etc.
+ * @param public_code {boolean} Does this team provide its code to other users after the competition?
+ * @param user_ids {Array<number>} List of user IDs of the users on this team
+ * @constructor
+ */
+exports.TeamData = function (id, comp_id, team_name, team_tagline, is_admin, public_code, user_ids) {
+    this.id = id;
+    this.comp_id = comp_id;
+    this.team_name = team_name;
+    this.team_tagline = team_tagline || ''; // Optional parameter
+    this.is_admin = (is_admin == null) ? false : is_admin;
+    this.public_code = (public_code == null) ? true : public_code;
+    this.user_ids = user_ids || [];
+};
+
+/**
  * @param username {string}
  * @param cb {function}
  */
@@ -24,7 +77,7 @@ exports.checkUserExists = function (username, cb) {
     if (!username || username === '') {
         cb(new Error('No user information provided!'));
     } else {
-        db.owl_query('SELECT id FROM user WHERE user_name = ?;', username, function (err, res) {
+        db.owl_query('SELECT id FROM user WHERE username = ?;', username, function (err, res) {
             if (err) {
                 cb (err);
             } else {
@@ -46,13 +99,13 @@ exports.authUser = function (username, password, cb) {
     } else if (!password || password === '') {
         cb(new Error('No password provided'));
     } else {
-        db.owl_query('SELECT pass_hash FROM user WHERE user_name = ?;', username, function (err, res) {
+        db.owl_query('SELECT pass_hash FROM user WHERE username = ?;', username, function (err, res) {
             if (err) {
                 cb(err);
             } else if (res.length !== 1) {
                 cb(new Error('User not found!'));
             } else {
-                bcrypt.compare(password, ph, function (aerr, ares) {
+                bcrypt.compare(password, res[0].pass_hash, function (aerr, ares) {
                     if (aerr) {
                         cb(aerr);
                     } else if (!ares) {
@@ -76,26 +129,40 @@ exports.getUserByUsername = function (username, sensitive, cb) {
     if (!username || username === '') {
         cb(new Error('Must provide user name'));
     } else if (sensitive === true) {
-        db.owl_query('SELECT id, user_name, is_admin FROM user WHERE user_name=?;', [username], function (err, res) {
+        db.owl_query('SELECT id, is_admin, username, public_facing FROM user WHERE username=?;', [username], function (err, res) {
             if (err) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
                     cb(new Error('No results returned, user not found'));
                 } else {
-                    cb(null, res);
+                    cb(null, new exports.UserData(
+                        res[0].id,
+                        res[0].username,
+                        res[0].is_admin[0],
+                        res[0].public_facing[0],
+                        null, null, null
+                    ));
                 }
             }
         });
     } else {
-        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash FROM user WHERE user_name=?;', [username], function (err, res) {
+        db.owl_query('SELECT id, first_name, last_name, username, email_address, is_admin, public_facing, pass_hash FROM user WHERE username=?;', [username], function (err, res) {
             if (err) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
                     cb(new Error('No results returned, user was not found'));
                 } else {
-                    cb(null, res);
+                    cb(null, new exports.UserData(
+                        res[0].id,
+                        res[0].username,
+                        res[0].is_admin,
+                        res[0].public_facing,
+                        res[0].first_name,
+                        res[0].last_name,
+                        res[0].email_address
+                    ));
                 }
             }
         });
@@ -112,26 +179,40 @@ exports.getUserById = function (user_id, sensitive, cb) {
     if (isNaN(parseInt(user_id))) {
         cb(new Error('Must provide user ID!'));
     } else if (sensitive === true) {
-        db.owl_query('SELECT id, user_name, is_admin FROM user WHERE id = ?;', [user_id], function (err, res) {
+        db.owl_query('SELECT id, username, is_admin, public_facing FROM user WHERE id = ?;', [user_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
                     cb(new Error('No results returned, user not found!'));
                 } else {
-                    cb(null, res);
+                    cb(null, new exports.UserData(
+                        res[0].id,
+                        res[0].username,
+                        res[0].is_admin,
+                        res[0].public_facing,
+                        null, null, null
+                    ));
                 }
             }
         });
     } else {
-        db.owl_query('SELECT id, name, user_name, email_address, is_admin, pass_hash FROM user WHERE id=?;', [user_id], function (err, res) {
+        db.owl_query('SELECT id, name, username, email_address, is_admin, pass_hash FROM user WHERE id=?;', [user_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
                     cb(new Error('No results returned, user was not found'));
                 } else {
-                    cb(null, res);
+                    cb(null, new exports.UserData(
+                        res[0].id,
+                        res[0].username,
+                        res[0].is_admin,
+                        res[0].public_facing,
+                        res[0].first_name,
+                        res[0].last_name,
+                        res[0].email_address
+                    ));
                 }
             }
         });
@@ -139,42 +220,33 @@ exports.getUserById = function (user_id, sensitive, cb) {
 };
 
 /**
- * Method to add a user to the database
- * @param name {string} Actual name of user (e.g., 'Kamaron Peterson')
- * @param user_name {string} Desired name of user (e.g., 'Sessamekesh')
- * @param password {string} Password of user. Encrypted before entering into database.
- * @param email_address {string} Email address of user
- * @param is_admin {boolean} True if user is, by default, an admin in competitions. False otherwise
- * @param cb {function} callback (error, result)
+ * Add a new user to the database
+ * @param user_data {exports.UserData} Data about the user (except password)
+ * @param password {string} Password the new user wants
+ * @param cb {function} Callback, with error, result
  */
-exports.addUser = function (name, user_name, password, email_address, is_admin, cb) {
-    if (!name || name === '') {
-        cb(new Error('Must provide a name for the user!'));
-    } else if (!user_name || user_name === '') {
-        cb(new Error('Must provide a username for the user!'));
-    } else if (!password || password === '') {
-        cb(new Error('Must provide a password for the user!'));
-    } else if (!email_address || email_address === '') {
-        cb(new Error('Must provide an email address for the user!'));
-    } else if (is_admin === undefined ||is_admin === null || !(is_admin === true || is_admin === false)) {
-        cb(new Error('Must provide a boolean true/false for is_admin field in user!'));
+exports.addUser = function (user_data, password, cb) {
+    if (!user_data.isCompleteForEntry()) {
+        cb(new Error('User data is incomplete, please submit complete user_data object'));
+    } else if (!password) {
+        cb(new Error('Must provide new password'));
     } else {
         bcrypt.genSalt(work_factor, function (err, salt) {
             if (err) {
                 cb(err);
             } else {
                 bcrypt.hash(password, salt, function (aerr, hash) {
-                    db.owl_query('INSERT INTO user (name, user_name, email_address, is_admin, pass_hash) VALUES (?, ?, ?, ?, ?);',
-                        [name, user_name, email_address, is_admin, hash], function (berr, res) {
+                    db.owl_query('INSERT INTO user (first_name, last_name, username, pass_hash, email_address, is_admin, public_facing) '
+                        + 'VALUES(?, ?, ?, ?, ?, ?, ?);',
+                        [user_data.first_name, user_data.last_name, user_data.username, hash,
+                        user_data.email_address, user_data.is_admin, user_data.public_facing], function (berr, res) {
                             if (berr) {
                                 cb(berr);
                             } else {
                                 // On success, return the user information that is not sensitive (login data)
-                                cb(null, {
-                                    id: res.insertId,
-                                    user_name: user_name,
-                                    is_admin: is_admin
-                                });
+                                cb(null, new exports.UserData(res.insertId,
+                                    user_data.username, user_data.is_admin, user_data.public_facing,
+                                null, null, null));
                             }
                         }
                     );
@@ -196,8 +268,9 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
         cb(new Error('Must provide a valid integer user ID!'));
     } else if (isNaN(parseInt(comp_id))) {
         cb(new Error('Must provide a valid integer competition ID!'));
-    } else if (sensitive === true) {
-        db.owl_query('SELECT team.id AS id, team.comp_id AS comp_id, team.team_name AS team_name, team.tagline AS team_tagline '
+    } else if (true || sensitive === true) {
+        // This may be changed, if I decide there is sensitive data in a team. I don't think there is.
+        db.owl_query('SELECT team.id, team.comp_id, team.name, team.tagline, team.is_admin, team.public_code '
             + 'FROM userteam LEFT JOIN team ON team.id = userteam.team_id '
             + 'WHERE userteam.user_id = ? AND userteam.comp_id = ?;',
             [user_id, comp_id],
@@ -205,32 +278,21 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
                 if (err) {
                     cb(err);
                 } else {
-                    cb(null, {
-                        id: res.id,
-                        comp_id: res.comp_id,
-                        team_name: res.team_name,
-                        team_tagline: res.team_tagline,
-                        is_admin: res.is_admin === 1
-                    });
-                }
-            }
-        );
-    } else {
-        db.owl_query('SELECT team.id AS id, team.comp_id AS comp_id, team.team_name AS team_name, team.tagline AS team_tagline, team.notes AS notes '
-            + 'FROM userteam LEFT JOIN team ON team.id = userteam.team_id '
-            + 'WHERE userteam.user_id = ? AND userteam.comp_id = ?;',
-            [user_id, comp_id],
-            function (err, res) {
-                if (err) {
-                    cb(err);
-                } else {
-                    cb(null, {
-                        id: res.id,
-                        comp_id: res.comp_id,
-                        team_name: res.team_name,
-                        team_tagline: res.team_tagline,
-                        is_admin: res.is_admin === 1,
-                        team_notes: res.notes
+                    // Grab user data...
+                    db.owl_query('SELECT user_id FROM user_team WHERE team_id = ?;', [res.id], function (aerr, ares) {
+                        if (aerr) {
+                            cb(err);
+                        } else {
+                            cb(null, exports.TeamData(
+                                res[0].id,
+                                res[0].comp_id,
+                                res[0].name,
+                                res[0].team_tagline,
+                                res[0].is_admin,
+                                res[0].public_code,
+                                ares.map(function (a) { return a.user_id })
+                            ));
+                        }
                     });
                 }
             }
@@ -240,82 +302,27 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
 
 /**
  * Creates a team with the provided information. All users must already exist in the database.
- * @param comp_id {number} Competition for which this team is being created
- * @param team_name {string} Desired team name, must be unique to teams in this competition
- * @param team_tagline {string} (optional) Desired team tagline
- * @param notes {string} (optional) Notes attached to this team, can be viewed by admins only
- * @param user_id_list {array[number]} Array of user IDs for users to include in this team
- * @param is_admin_team {boolean} (optional) True or false to specify admin status of team, null to default to highest
- *                      user status (i.e., admin if an admin user exists on team)
+ * @param team_data {exports.TeamData} Data of the team to insert
  * @param cb {function}
  */
-exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id_list, is_admin_team, cb) {
-    // Optional parameters, set empty if not included
-    if (!team_tagline) {
-        team_tagline = '';
-    }
-
-    if (!notes) {
-        notes = '';
-    }
-
-    if (isNaN(parseInt(comp_id))) {
+exports.create_team = function (team_data, cb) {
+    if (isNaN(parseInt(team_data.comp_id))) {
         cb(new Error('Must provide an integer competition ID'));
-    } else if (!team_name || team_name === '') {
+    } else if (!team_data.team_name || team_data.team_name === '') {
         cb(new Error('Team name cannot be empty'));
-    } else if (Object.prototype.toString.call(user_id_list) !== '[object Array]' || user_id_list.length === 0) {
+    } else if (Object.prototype.toString.call(team_data.user_ids) !== '[object Array]' || team_data.user_ids.length === 0) {
         cb(new Error('Must give array of user IDs with at least one entry'));
     } else {
         // Begin our long process of validation and whatnot
         // TODO KIP: This isn't an elegant way to chain validation, make it a list of functions instead.
         validateUsers(function () {
-            findIsAdmin(function () {
-                validateUserCount(function () {
-                    createTeam();
-                });
+            validateUserCount(function () {
+                createTeam();
             });
         });
     }
 
     // --- Validations for team entries, to be used by this function ---
-    /**
-     * Determine if any user in the given user_id_list is indeed an admin
-     * @param fiacb {function} The next function to call in line, on success. Parameters: none
-     */
-    function findIsAdmin(fiacb) {
-
-        // Assume that no user is an admin, on find an admin, change this to true
-        is_admin_team = false;
-
-        // Start checking at the first user, see if they're an admin.
-        isThisUserAnAdmin(0);
-
-        /**
-         * Determine if the user at position i in the array is indeed an admin
-         * @param i {number} Index in the array at which to search
-         */
-        function isThisUserAnAdmin(i) {
-            if (i >= user_id_list.length) {
-                fiacb();
-            } else {
-                exports.getUserById(user_id_list[i], true, function (err, res) {
-                    if (err) {
-                        // This is not the user authenticating function, so if a user lookup fails,
-                        //  just blow past it.
-                        isThisUserAnAdmin(i + 1);
-                    } else {
-                        if (res.is_admin === true) {
-                            is_admin_team = true;
-                            fiacb();
-                        } else {
-                            isThisUserAnAdmin(i + 1);
-                        }
-                    }
-                });
-            }
-        }
-    }
-
     /**
      * Determine if all the users in the given user_id_list indeed exist in the table
      * @param vucb {function} The next function to call in line, on success. Parameters: none
@@ -329,17 +336,17 @@ exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id
          * @param i {number} Index in user_id_list at which to check the corresponding user for database existance
          */
         function validateIndividualUser(i) {
-            if (i >= user_id_list.length) {
+            if (i >= team_data.user_ids.length) {
                 // Made it through all of them? Success!
                 vucb();
             } else {
-                db.owl_query('SELECT COUNT(*) AS user_count FROM user WHERE id = ?;', [user_id_list[i]], function (err, res) {
+                db.owl_query('SELECT COUNT(*) AS user_count FROM user WHERE id = ?;', [team_data.user_ids[i]], function (err, res) {
                     if (err) {
                         // Apparently the user doesn't exist, or malformed query - get out here.
                         cb(err);
                     } else {
                         if (!res[0] || !res[0].user_count || res[0].user_count < 1) {
-                            cb(new Error('Invalid user ID: ' + user_id_list[i]));
+                            cb(new Error('Invalid user ID: ' + team_data.user_ids[i]));
                         } else {
                             validateIndividualUser(i + 1);
                         }
@@ -355,11 +362,11 @@ exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id
      * @param vuccb {function} The next function to call in line, on success. Parameters: none
      */
     function validateUserCount(vuccb){
-        db.owl_query('SELECT max_team_size FROM competition WHERE id = ?;', [comp_id], function (err, res) {
+        db.owl_query('SELECT max_team_size FROM competition WHERE id = ?;', [team_data.comp_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
-                if (res[0].max_team_size < user_id_list.length) {
+                if (res[0].max_team_size < team_data.user_ids.length) {
                     cb(new Error('Too many users on the team - this competition has a maximum team size of ' + res[0].max_team_size));
                 } else {
                     vuccb();
@@ -373,19 +380,21 @@ exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id
      *  returns the team data
      */
     function createTeam() {
-        db.owl_query('INSERT INTO team (comp_id, team_name, tagline, notes, is_admin) VALUES (?, ? ,?, ?, ?);',
-            [comp_id, team_name, team_tagline, notes, is_admin_team],
+        db.owl_query('INSERT INTO team (comp_id, name, tagline, is_admin, public_code) VALUES (?, ? ,?, ?, ?);',
+            [team_data.comp_id, team_data.team_name, team_data.team_tagline, team_data.is_admin, team_data.public_code],
             function (err, res) {
                 if (err) {
                     cb(err);
                 } else {
-                    createUserTeamEntry({
-                        id: res.insertID,
-                        comp_id: comp_id,
-                        team_name: team_name,
-                        team_tagline: team_tagline,
-                        is_admin: is_admin_team
-                    }, 0);
+                    createUserTeamEntry(new exports.TeamData(
+                        res.insertId,
+                        team_data.comp_id,
+                        team_data.team_name,
+                        team_data.team_tagline,
+                        team_data.is_admin,
+                        team_data.public_code,
+                        team_data.user_ids
+                    ), 0);
                 }
             }
         );
@@ -393,22 +402,16 @@ exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id
 
     /**
      * Create a userteam entry for the given team, with the given user ID
-     * @param team_data {object} Team data to be returned, also useful for having team ID included, required for inserts
+     * @param team_data {exports.TeamData} Team data to be returned, also useful for having team ID included, required for inserts
      * @param i {number} Index of user_id_list corresponding to the user id to add to the team
      */
     function createUserTeamEntry(team_data, i) {
-        if (i >= user_id_list.length) {
-            cb(null, {
-                id: team_data.id,
-                comp_id: team_data.comp_id,
-                team_name: team_data.team_name,
-                team_tagline: team_data.team_tagline,
-                is_admin: team_data.is_admin
-            });
+        if (i >= team_data.user_ids.length) {
+            cb(null, team_data);
         } else {
-            db.owl_query('INSERT INTO userteam (team_id, user_id, comp_id) VALUES (?, ?, ?);',
-                [team_data.team_id, user_id_list[i], team_data.comp_id],
-                function (err, res) {
+            db.owl_query('INSERT INTO user_team (user_id, team_id) VALUES (?, ?);',
+                [team_data.user_ids[i], team_data.id],
+                function (err) {
                     if (err) {
                         // In addition to sending out error message, also undo all actions involved
                         //  in creating the team
@@ -430,11 +433,11 @@ exports.create_team = function (comp_id, team_name, team_tagline, notes, user_id
     function undoUserTeamEntriesAndTeamCreation(team_data) {
         // Step one: remove user team entries
         // TODO KIP: I'm a little nervous about the security here, add a limit clause perhaps?
-        db.owl_query('DELETE FROM userteam WHERE team_id = ?;', [team_data.id], function (err, res) {
+        db.owl_query('DELETE FROM userteam WHERE team_id = ?;', [team_data.id], function (err) {
             if (err) {
                 console.log('user_dao[create_team][undoUserTeamEntriesAndTeamCreation]: An error occurred deleting userteam entries: ' + err.message);
             }
-            db.owl_query('DELETE FROM team WHERE id = ?;', [team_data.id], function (aerr, ares) {
+            db.owl_query('DELETE FROM team WHERE id = ?;', [team_data.id], function (aerr) {
                 if (aerr) {
                     console.log('user_dao[create_team][undoUserTeamEntriesAndTeamCreation]: An error occurred deleting the team: ' + err.message);
                 }

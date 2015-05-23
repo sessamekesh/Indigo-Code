@@ -17,7 +17,7 @@ function getCredentials() {
         host: 'localhost',
         user: 'zora',
         password: 'easy',
-        database: 'zora'
+        database: 'zoradb'
     };
 }
 

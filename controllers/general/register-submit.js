@@ -86,24 +86,26 @@ exports.post = function (req, res) {
                     page_errors.addError('new_user_' + i + '_confirm_password', 'Must match password');
                     add_next_user(i + 1);
                 } else {
-                    user_dao.addUser(req.body['new_user_' + i + '_name'],
+                    user_dao.addUser(new user_dao.UserData(
+                        null,
                         req.body['new_user_' + i + '_username'],
-                        req.body['new_user_' + i + '_password'],
-                        req.body['new_user_' + i + '_email'],
                         false,
-                        function (err, res) {
-                            if (err) {
-                                // TODO KIP: Check for exact errors here?
-                                page_errors.addError('general', 'Could not add user for database reasons (check log)');
-                                console.log('register-submit.js: Could not add new user: ' + err.message);
-                                add_next_user(i + 1);
-                            } else {
-                                created_user_ids.push(res.id);
-                                user_ids.push(res.id);
-                                add_next_user(i + 1);
-                            }
+                        !!req.body['new_user_' + i + '_public_profile'],
+                        req.body['new_user_' + i + '_first_name'],
+                        req.body['new_user_' + i + '_last_name'],
+                        req.body['new_user_' + i + '_email']
+                    ), req.body['new_user_' + i + '_password'], function (err, res) {
+                        if (err) {
+                            // TODO KIP: Check for exact errors here?
+                            page_errors.addError('general', 'Could not add user for database reasons (check log)');
+                            console.log('register-submit.js: Could not add new user: ' + err.message);
+                            add_next_user(i + 1);
+                        } else {
+                            created_user_ids.push(res.id);
+                            user_ids.push(res.id);
+                            add_next_user(i + 1);
                         }
-                    );
+                    });
                 }
             } else if (req.body['usertype_' + i] ==='existing') {
                 // Existing user - authenticate user, get user ID
@@ -160,16 +162,22 @@ exports.post = function (req, res) {
             });
             destroy_created_users(created_user_ids);
         } else {
-            // TODO KIP: Missing notes addition. Add place for notes? What is the use case for notes?
-            user_dao.create_team(req.body.comp_id, req.body.team_name, req.body.team_tagline, '', user_ids, null,
+            user_dao.create_team(
+                new user_dao.TeamData(
+                    null,
+                    req.body.comp_id,
+                    req.body.team_name,
+                    req.body.team_tagline,
+                    null,
+                    !!req.body.team_share_code,
+                    user_ids),
                 function (err, ares) {
-                    // TODO KIP: Add team to session variable, instead of console logging it
-                    console.log(ares);
                     if (err) {
                         destroy_created_users(created_user_ids);
-                        res.render('./error', err);
+                        res.render('./error', {message: err.message, error: err});
                     } else {
-                        res.render('./error', new Error('Success!'));
+                        // TODO KIP: Replace this with an actual confirmation page.
+                        res.redirect('register-success');
                     }
                 }
             );

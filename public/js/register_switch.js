@@ -25,13 +25,13 @@ function activate_section(idx) {
             $("#existing_user_" + idx).hide(400);
 
             // Should we hide old values, or not?
-            $("#new_user_" + idx).find("input").val("").prop("required", false);
+            $("#new_user_" + idx).find("input").not("input[type='checkbox']").val("").prop("required", false);
             $("#existing_user_" + idx).find("input").val("").prop("required", false);
 
             // Show the new thing...
             if (value === 'new') {
-                $("#new_user_" + idx).show(400);
-                $("#new_user_" + idx).find("input").val("").prop("required", true);
+                $("#new_user_" + idx).not("input[type='checkbox']").show(400);
+                $("#new_user_" + idx).find("input").not("input[type='checkbox']").val("").prop("required", true);
             } else if (value === 'existing') {
                 $("#existing_user_" + idx).show(400);
                 $("#existing_user_" + idx).find("input").val("").prop("required", true);

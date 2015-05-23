@@ -43,6 +43,12 @@ block content
                .col-md-4
                   input#team_tagline.form-control.input-md(name="team_tagline", type="text", placeholder="We're pretty cool")
                span.col-md-4#team_tagline_err.help-block= page_errors.getError('team_tagline')
+            .form-group
+               label.col-md-4.checkbox-inline(for="team_share_code")
+               .col-md-4
+                  input#team_share_code.form-control.input-md(name="team_share_code", type="checkbox", value="Yes", checked)
+                  |Share code after competition
+               span.col-md-4#team_share_code_err.help-block= page_errors.getError('team_share_code')
          fieldset
             legend Team Members
             - for (var i = 0; i < comp_data.max_team_size; i++) {
@@ -63,10 +69,15 @@ block content
                // TODO KIP: Insert here your new, existing and blank sections
                div(id="new_user_" + i, style="display: none")
                   .form-group
-                     label.col-md-4.control-label(for="new_user_" + i + "_name") Name of User
+                     label.col-md-4.control-label(for="new_user_" + i + "_first_name") First Name of User
                      .col-md-4
-                        input.input-md.form-control(type="text", name="new_user_" + i + "_name", id="new_user_" + i + "_name", placeholder="Bobby Tables")
-                     span.col-md-4.help-block(id="new_user_" + i + "_name_err")= page_errors.getError('new_user_' + i + '_name')
+                        input.input-md.form-control(type="text", name="new_user_" + i + "_first_name", id="new_user_" + i + "_first_name", placeholder="Bobby")
+                     span.col-md-4.help-block(id="new_user_" + i + "_first_name_err")= page_errors.getError('new_user_' + i + '_first_name')
+                  .form-group
+                     label.col-md-4.control-label(for="new_user_" + i + "_last_name") Last Name of User
+                     .col-md-4
+                        input.input-md.form-control(type="text", name="new_user_" + i + "_last_name", id="new_user_" + i + "_last_name", placeholder="Tables")
+                     span.col-md-4.help-block(id="new_user_" + i + "_last_name_err")= page_errors.getError('new_user_' + i + '_last_name')
                   .form-group
                      label.col-md-4.control-label(for="new_user_" + i + "_email") Email Address
                      .col-md-4
@@ -87,6 +98,11 @@ block content
                      .col-md-4
                         input.input-md.form-control(type="password", name="new_user_" + i + "_confirm_password", id="new_user_" + i + "_confirm_password")
                      span.col-md-4.help-block(id="new_user_" + i + "_confirm_password_err")= page_errors.getError('new_user_' + i + '_confirm_password')
+                  .form-group
+                     label.col-md-4.checkbox-inline(for="new_user_" + i + "_public_profile")
+                        input(type="checkbox", id="new_user_" + i + "_public_profile", name="new_user_" + i + "_public_profile", value="Yes")
+                        |Make profile public
+                     span.col-md-4.help-block(id="new_user_" + i + "_public_profile")= page_errors.getError('new_user_' + i + '_public_profile')
                div(id="existing_user_" + i, style="display: none")
                   .form-group
                      label.col-md-4.control-label(for="existing_user_" + i + "_username") Username
