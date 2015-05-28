@@ -9,27 +9,22 @@ exports.post = function (req, res) {
     // On success, redirect and add user data to session
     // On fail, redirect and add error_message to session
 
-    var uname = req.body.username,
-        upass = req.body.password,
-        redirect_to = req.body.redirect;
+    var uname = req.body.username;
+    var upass = req.body.password;
+    var redirect_to = req.body.redirect;
 
     if (req.body.login === 'Login') {
         // Login requested
-        user_dao.authenticate_user(uname, upass, function (err, ares) {
+        user_dao.authUser(uname, upass, function (err, ares) {
             if (err) {
-                throw err;
+                // TODO: Redirect to login-error instead
+                res.render('./error', {message: err.message, error: err});
             } else {
-                if (ares === true) {
+                if (ares) {
                     // Success, get user data into session...
-                    req.session.login_error = undefined;
-                    user_dao.get_user_by_username(uname, function (aerr, bres) {
-                        if (aerr) {
-                            throw aerr;
-                        } else {
-                            req.session.user_data = bres;
-                            res.redirect(redirect_to || '/');
-                        }
-                    });
+                    req.session.user_data = ares;
+                    res.redirect(redirect_to || '/');
+
                 } else {
                     // Failure, notify user...
                     req.session.login_error = 'Invalid login!';

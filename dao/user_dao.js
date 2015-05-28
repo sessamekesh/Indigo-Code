@@ -30,8 +30,8 @@ var work_factor = 10;
 exports.UserData = function (id, username, is_admin, public_facing, first_name, last_name, email_address) {
     this.id = id;
     this.username = username;
-    this.is_admin = is_admin;
-    this.public_facing = public_facing;
+    this.is_admin = !!is_admin;
+    this.public_facing = !!public_facing;
     this.first_name = first_name;
     this.last_name = last_name;
     this.email_address = email_address;
@@ -64,8 +64,8 @@ exports.TeamData = function (id, comp_id, team_name, team_tagline, is_admin, pub
     this.comp_id = comp_id;
     this.team_name = team_name;
     this.team_tagline = team_tagline || ''; // Optional parameter
-    this.is_admin = (is_admin == null) ? false : is_admin;
-    this.public_code = (public_code == null) ? true : public_code;
+    this.is_admin = (is_admin == null) ? false : !!is_admin;
+    this.public_code = (public_code == null) ? true : !!public_code;
     this.user_ids = user_ids || [];
 };
 
@@ -261,7 +261,7 @@ exports.addUser = function (user_data, password, cb) {
  * @param user_id {number} ID of user in question
  * @param comp_id {number} ID of the competition in question
  * @param sensitive {boolean} True if only public facing data is to be returned
- * @param cb {function}
+ * @param cb {function(err: Error=, exports.TeamData=)}
  */
 exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
     if (isNaN(parseInt(user_id))) {
@@ -271,19 +271,21 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
     } else if (true || sensitive === true) {
         // This may be changed, if I decide there is sensitive data in a team. I don't think there is.
         db.owl_query('SELECT team.id, team.comp_id, team.name, team.tagline, team.is_admin, team.public_code '
-            + 'FROM userteam LEFT JOIN team ON team.id = userteam.team_id '
-            + 'WHERE userteam.user_id = ? AND userteam.comp_id = ?;',
+            + 'FROM user_team LEFT JOIN team ON team.id = user_team.team_id '
+            + 'WHERE user_team.user_id = ? AND team.comp_id = ?;',
             [user_id, comp_id],
             function (err, res) {
                 if (err) {
                     cb(err);
+                } else if (res.length === 0) {
+                    cb();
                 } else {
                     // Grab user data...
                     db.owl_query('SELECT user_id FROM user_team WHERE team_id = ?;', [res.id], function (aerr, ares) {
                         if (aerr) {
                             cb(err);
                         } else {
-                            cb(null, exports.TeamData(
+                            cb(null, new exports.TeamData(
                                 res[0].id,
                                 res[0].comp_id,
                                 res[0].name,

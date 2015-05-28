@@ -61,7 +61,7 @@ html
                                 ul
                                     each comp in (previous_comps || [])
                                         li
-                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                                            a(href=("/competition/" + comp.id))= comp.name
                         else
                             ul
                                 li
@@ -82,19 +82,19 @@ html
                                 ul
                                     each comp in (upcoming_comps || [])
                                         li
-                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                                            a(href=("/competition/" + comp.id))= comp.name
                             hr
                             b Ongoing Competitions
                             ul
                                 each comp in (ongoing_comps || [])
                                     li
-                                        a(href=("/competition/" + comp.comp_id))= comp.name
+                                        a(href=("/competition/" + comp.id))= comp.name
                             hr
                             b Previous Competitions
                                 ul
                                     each comp in (previous_comps || [])
                                         li
-                                            a(href=("/competition/" + comp.comp_id))= comp.name
+                                            a(href=("/competition/" + comp.id))= comp.name
                 #content.col-md-10
                     block content
                         h1 There doesn't seem to be any content written for this page... Sorry about that.

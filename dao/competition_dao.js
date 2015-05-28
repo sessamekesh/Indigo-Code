@@ -27,7 +27,7 @@ exports.CompData = function (id, name, start_date, end_date, time_penalty, max_t
 /**
  * Get competition data for the given competition
  * @param comp_id {number} ID of the competition in question
- * @param cb {function} Callback, taking err, result as parameters (result is type CompData)
+ * @param cb {function(err: Error, result: exports.CompData=)} Callback, taking err, result as parameters (result is type CompData)
  */
 exports.get_competition_data = function (comp_id, cb) {
     if (isNaN(parseInt(comp_id))) {

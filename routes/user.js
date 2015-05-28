@@ -13,7 +13,7 @@ router.use('/:id', function (req, res, next) {
     // 1) The visitor is an admin
     // 2) The visitor is the user with the given user ID
 
-    if (isNaN(parseInt(req.params.id || {}))) {
+    if (isNaN(parseInt(req.params.id))) {
         // If not a number, we're accessing a non-sensitive operation, allow.
         next();
     } else {
