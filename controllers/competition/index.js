@@ -4,21 +4,6 @@
 
 var general_layer = require('../general/index');
 
-//var competition_dao = require('../../dao/competition_dao');
-//
-//exports.get = function (req, res) {
-//    var params = {
-//        title: 'USU ACM Competition Framework',
-//        subtitle: 'Version 0.3.1 - Zora',
-//        redirect_url: '/'
-//    };
-//
-//    exports.fill_data(req, params, function (new_data) {
-//        res.render('./general/index', new_data);
-//    });
-//};
-//
-
 exports.get = function (req, res) {
     exports.fill_data(req, {
         title: req.comp_data.name,

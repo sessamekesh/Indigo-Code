@@ -1,0 +1,35 @@
+//
+   Created by Kamaron on 5/30/2015.
+
+extends ./index
+
+block content
+   p
+   | Select which users will be added to the admin team. You have by default been added,
+   | but can remove yourself if you want. If you do, you will no longer be able to edit this
+   | competition after it is created. You will not be able to create a competition with no
+   | admins. Any user selected will not be able to compete in this competition, and will be
+   | allowed full access to create/modify problems and test cases for this competition.
+   | Only site administrators are able to create new test case comparison scripts.
+   if page_errors.isFatal()
+      h2 Errors were found, please correct them before continuing
+   form.form-horizontal(method="post", action="/admin/new-comp-desc-files")
+      fieldset
+         legend Select Competition Admins
+         input#comp_id(name="comp_id", type="hidden", value=comp_id)
+         // Add section
+         .form-group
+            label.col-md-4.control-label(for="add_admin") Add administrator
+            .col-md-4
+               input#add_admin.form-control.input-md(name="add_admin", type="text", placeholder="sessamekesh")
+            .col-md-4
+               span.btn.btn-primary Add
+            span.col-md-4.help-block
+         ul.list-group
+            - for (var i = 0; i < admins_list.length; i++) {
+               li.list-group-item
+                  span.btn.btn-danger.pull-left X
+                  p.list-group-item-text= admins_list[i].username
+            - }
+         .form-group
+            input.btn-primary.btn.col-md-offset-4#submit(type="submit", value="Next Step")

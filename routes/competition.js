@@ -38,42 +38,16 @@ router.use('/:id', function (req, res, next) {
                 throw aerr;
             } else {
                 if (comp_data) {
-                    if (!user_data) {
-                        // Filthy guest rules
-                        authenticateGuest(comp_data, function (is_authenticated, notes) {
-                            if (is_authenticated) {
-                                req.comp_data = comp_data;
-                                req.team_data = null;
-                                next();
-                            } else {
-                                throw new Error('Access denied - ' + notes);
-                            }
-                        });
-                    } else {
-                        if (user_data.is_admin) {
-                            // Admin rules
-                            auth_function = authenticateAdmin;
+                    gatekeeper(team_data, comp_data, function (is_authenticated, rejection_message) {
+                        if (is_authenticated) {
+                            req.comp_data = comp_data;
+                            req.team_data = team_data;
+                            req.user_data = user_data;
+                            next();
                         } else {
-                            // Peasant rules
-                            auth_function = authenticateUser;
+                            throw new Error('Access denied - ' + notes);
                         }
-                        user_dao.getTeamOfUser(user_data.id, comp_data.id, true, function (berr, team_data) {
-                            if (berr) {
-                                throw berr;
-                            } else {
-                                auth_function(user_data, team_data, comp_data, function (is_authenticated, notes) {
-                                    if (is_authenticated) {
-                                        req.comp_data = comp_data;
-                                        req.team_data = team_data;
-                                        req.user_data = user_data;
-                                        next();
-                                    } else {
-                                        throw new Error('Access denied - '+ notes);
-                                    }
-                                });
-                            }
-                        });
-                    }
+                    });
                 } else {
                     throw new Error('No competition found with the given ID, or whatever.');
                 }
@@ -105,41 +79,31 @@ for (var i = 0; i < controllers.length; i++) {
 }
 
 /**
- * Authenticate a competition against a team that is administrators in the system
- * @param userData {user_dao.UserData}
- * @param teamData {user_dao.TeamData}
+ * Authenticates a viewer to the system, based on their user and team data,
+ *  as well as the competition data for the competition they are trying to access.
+ * @param teamData {user_dao.TeamData=}
  * @param compData {comp_dao.CompData}
- * @param cb {function (result: Boolean, notes: String=)} result is true if user is authenticated. If not, a message is attached.
+ * @param cb {function(result: boolean, notes: string=)}
  */
-function authenticateAdmin(userData, teamData, compData, cb) {
-    console.log(userData);
-    console.log(teamData);
-    console.log(compData);
-    cb(true);
-}
-
-/**
- * Authenticate a competition against a team that is not an administrator in the system
- * @param userData {user_dao.UserData}
- * @param teamData {user_dao.TeamData}
- * @param compData {comp_dao.CompData}
- * @param cb {function (result: Boolean, notes: String=)} result is true if user is authenticated. If not, a message is attached.
- */
-function authenticateUser(userData, teamData, compData, cb) {
-    console.log(userData);
-    console.log(teamData);
-    console.log(compData);
-    cb(true);
-}
-
-/**
- * Authenticate a guest to a competition
- * @param compData {comp_dao.CompData}
- * @param cb {function (result: Boolean, notes: String=)} result is true if user is authenticated. If not, a message is attached.
- */
-function authenticateGuest(compData, cb) {
-    console.log(compData);
-    cb(true);
+function gatekeeper(teamData, compData, cb) {
+    if (teamData && teamData.is_admin === true) {
+        // Admin team? Brush them right in.
+        cb(true);
+    } else if (compData.end_date < Date.now()) {
+        // The competition is over, let anybody see it.
+        cb(true);
+    } else if (compData.start_date < Date.now()) {
+        // The competition has begun...
+        if (!!teamData) {
+            // And the user is a member of a team, pass on through
+            cb(true);
+        } else {
+            // And the user is not on a team, deny
+            cb(false, "Must be a member of a team to view an ongoing competition");
+        }
+    } else {
+        cb(false, "Competition has not yet begun, must be on an admin team to continue");
+    }
 }
 
 module.exports = router;

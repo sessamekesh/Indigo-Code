@@ -1,0 +1,44 @@
+//
+   Created by Kamaron on 5/30/2015.
+
+extends ./index
+
+block content
+   if page_errors.isFatal()
+      h2 Errors were found, please correct them before continuing
+   form#new_comp_form.form-horizontal(method="post", action="/admin/new-comp-team-select")
+      fieldset
+         legend Basic Competition Information
+         // Competition Name
+         .form-group
+            label.col-md-4.control-label(for="comp_name") Competition Name
+            .col-md-4
+               input#comp_name.form-control.input-md(name="comp_name", type="text", placeholder="2015F Whale Shark", required="")
+            span.col-md-4.help-block= page_errors.getError('comp_name')
+         // Start Date
+            TODO KIP: Change these to actual datetime pickers, instead of just text boxes
+         .form-group
+            label.col-md-4.control-label(for="start_date") Start Date
+            .col-md-4
+               input#start_date.form-control.input-md(name="start_date", type="text", placeholder="2015-06-06 18:00", required="")
+            span.col-md-4.help-block= page_errors.getError('start_date')
+         // End Date
+            TODO KIP: Change these to actual datetime pickers, instead of just text boxes
+         .form-group
+            label.col-md-4.control-label(for="end_date") End Date
+            .col-md-4
+               input#end_date.form-control.input-md(name="end_date", type="text", placeholder="2015-06-06 21:00", required="")
+            span.col-md-4.help-block= page_errors.getError('end_date')
+         // Maximum team size
+         .form-group
+            label.col-md-4.control-label(for="max_team_size") Maximum Team Size
+               input#max_team_size.form-control.input-md(name="max_team_size", type="number", min="1", placeholder="3", required="")
+            span.col-md-4.help-block= page_errors.getError('max_team_size')
+         // Time penalty (in seconds)
+            TODO KIP: Change this to have a drop down menu that specifies time penalty unit, seconds or minutes
+         .form-group
+            label.col-md-4.control-label(for="time_penalty") Time Penalty (seconds)
+               input#time_penalty.form-control.input-md(name="time_penalty", type="number", max="3600", placeholder="300", required="")
+            span.col-md-4.help-block= page_errors.getError('time_penalty')
+         .form-group
+            input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Next Step")

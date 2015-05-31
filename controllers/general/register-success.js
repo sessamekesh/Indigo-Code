@@ -25,6 +25,10 @@ exports.get = function (req, res) {
 exports.fill_data = function (req, data, cb) {
     data = data || {};
 
+    if (req.body) {
+        data.form_data = req.body;
+    }
+
     index.fill_data(req, data, function (new_data) {
         cb(new_data);
     });

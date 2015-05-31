@@ -1,0 +1,13 @@
+In here, I'm going to put notes that I want to refer to later during development, but don't belong in the use case
+diagrams, database diagrams, flowcharts, and what have you. This should all end up in comments too.
+
+-------------------- Competition Assets --------------------
+
+Competition descriptions are provided as a .jade file, and are located under /views/competition/descriptions/:id.jade
+Likewise, the rules are provided under /views/competition/rules/:id.jade
+
+A CompetitionDescription model is passed to the description file, and a CompetitionRules model is passed to the rules file.
+
+Any variables available in them may be used by the description writer.
+
+Also, .jade files will typically only extend the "content" block, though they may modify other elements as well.

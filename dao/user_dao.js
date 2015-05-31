@@ -54,7 +54,7 @@ exports.UserData.prototype.isCompleteForEntry = function () {
  * @param team_name {string} Name of the team. Must be unique among the team names in the given competition
  * @param team_tagline {string} Tagline of the team. Trust me, you want to provide a tagline.
  * @param is_admin {boolean} Is this an admin team? Admin teams cannot compete, but they can access the competition
- *                              before it begins, add problems, test cases, etc.
+ *                              before it begins, add problem, test cases, etc.
  * @param public_code {boolean} Does this team provide its code to other users after the competition?
  * @param user_ids {Array<number>} List of user IDs of the users on this team
  * @constructor

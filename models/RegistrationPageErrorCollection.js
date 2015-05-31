@@ -22,7 +22,7 @@ module.exports = function () {
      * @type {number}
      */
     this.err_count = 0;
-}
+};
 
 /**
  * Adds an error to the registration page error collection
