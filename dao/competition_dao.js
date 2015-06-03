@@ -25,6 +25,44 @@ exports.CompData = function (id, name, start_date, end_date, time_penalty, max_t
 };
 
 /**
+ * Attempt to find any problems with the CompData object before inserting
+ * @returns Array<object>
+ */
+exports.CompData.prototype.validateInsert = function() {
+    var err_list = [];
+
+    if (!this.name) {
+        err_list.push({ field: 'name', error: 'No competition name provided' });
+    }
+
+    if (!this.start_date) {
+        err_list.push({ field: 'start_date', error: 'No starting date and time provided' });
+    }
+
+    if (!this.end_date) {
+        err_list.push({ field: 'end_date', error: 'No ending date and time provided' });
+    }
+
+    if (new Date(this.start_date) > new Date(this.end_date)) {
+        err_list.push({ field: 'end_date', error: 'Ending date happens before starting date' });
+    }
+
+    if (isNaN(parseInt(this.time_penalty))) {
+        err_list.push({ field: 'time_penalty', error: 'No time penalty provided' });
+    }
+
+    if (isNaN(parseInt(this.max_team_size))) {
+        err_list.push({ field: 'max_team_size', error: 'No maximum team size provided' });
+    }
+
+    if (this.max_team_size < 1) {
+        err_list.push({ field: 'max_team_size', error: 'Maximum team size must be at least one' });
+    }
+
+    return err_list;
+};
+
+/**
  * Get competition data for the given competition
  * @param comp_id {number} ID of the competition in question
  * @param cb {function(err: Error, result: exports.CompData=)} Callback, taking err, result as parameters (result is type CompData)
@@ -112,7 +150,7 @@ exports.get_upcoming_competitions = function (cb) {
 /**
  * Create a new database entry with a competition
  * @param comp_data {exports.CompData} Object containing competition data to be inserted
- * @param cb {function}
+ * @param cb {function (Error=, exports.CompData=)}
  */
 exports.create_competition = function (comp_data, cb) {
     if (!comp_data.name || comp_data.name === '') {

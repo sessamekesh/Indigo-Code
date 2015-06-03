@@ -15,6 +15,7 @@ router.use('/:id', function (req, res, next) {
 
     /** @type {user_dao.UserData} */
     var user_data = req.session.user_data;
+    var team_data = req.session.team_data;
 
     // ID must be an integer...
     if (isNaN(parseInt(req.params.id || {}))) {
@@ -45,7 +46,7 @@ router.use('/:id', function (req, res, next) {
                             req.user_data = user_data;
                             next();
                         } else {
-                            throw new Error('Access denied - ' + notes);
+                            throw new Error('Access denied - ' + rejection_message);
                         }
                     });
                 } else {

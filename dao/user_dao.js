@@ -16,15 +16,19 @@ var db = require('./db');
  */
 var work_factor = 10;
 
+exports.ADMIN_TEAM_DOES_NOT_EXIST_ERROR = 'No administrative team found';
+exports.USERNAME_NOT_FOUND = 'No user by that name found';
+exports.DELETION_FROM_ADMIN_TEAM_FAILED = 'Failed to delete user from admin team';
+
 /**
  * Information about a user, in standard form for the rest of the competition.
  * @param id {number} User ID, unique ID used to reference that user
  * @param username {string} Unique name used for that user, what should be used on public facing data
  * @param is_admin {boolean} True if the user is allowed into general admin functionality
  * @param public_facing {boolean} True if the user wants to be publicly shown (a profile)
- * @param first_name {string} First name of user. Not publicly visible.
- * @param last_name {string} Last name of user. Not publicly visible.
- * @param email_address {string} Email address of user. Not publicly visible.
+ * @param first_name {string=} First name of user. Not publicly visible.
+ * @param last_name {string=} Last name of user. Not publicly visible.
+ * @param email_address {string=} Email address of user. Not publicly visible.
  * @constructor
  */
 exports.UserData = function (id, username, is_admin, public_facing, first_name, last_name, email_address) {
@@ -299,6 +303,117 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
                 }
             }
         );
+    }
+};
+
+/**
+ * For the competition with the given comp_id, fetches a list of all the users that are registered as
+ *  admins for that team, or in other words, are on the admin team
+ * @param comp_id {number} ID of the admin team
+ * @param cb {function (Error=, Array<exports.UserData>=)} err for any errors, members is list of users
+ *  on the admin team for this competition
+ */
+exports.getAdminTeamMembers = function (comp_id, cb) {
+    if (isNaN(parseInt(comp_id))) {
+        cb(new Error('Must provide an integer competition ID'));
+    } else {
+        db.owl_query('SELECT user.id AS id, user.is_admin AS is_admin, user.username AS username, user.public_facing AS public_facing'
+            + ' FROM user'
+            + ' LEFT JOIN user_team ON user_team.user_id = user.id'
+            + ' LEFT JOIN team ON team.id = user_team.team_id'
+            + ' WHERE team.is_admin = 1 AND team.comp_id = ?;', [comp_id], function (err, res) {
+            if (err) {
+                cb(err);
+            } else if (res.length === 0) {
+                cb(new Error(exports.ADMIN_TEAM_DOES_NOT_EXIST_ERROR));
+            } else {
+                // TODO KIP: Modify
+                cb(null, res.map(function (mySQL_result) {
+                    return new exports.UserData(
+                        mySQL_result.id,
+                        mySQL_result.username,
+                        mySQL_result.is_admin,
+                        mySQL_result.public_facing);
+                }));
+            }
+        });
+    }
+};
+
+/**
+ * Promote a user to team administrator for a competition
+ * @param comp_id {number}
+ * @param username {string}
+ * @param cb {function (Error=)}
+ */
+exports.addAdminToTeam = function (comp_id, username, cb) {
+    if (isNaN(parseInt(comp_id))) {
+        cb(new Error('Must provide a valid competition ID'));
+    } else if (!username) {
+        cb(new Error('Must provide a valid username'));
+    } else {
+        exports.getUserByUsername(username, true, function (err, res) {
+            if (err) {
+                cb(err);
+            } else if (!res) {
+                cb(new Error(exports.USERNAME_NOT_FOUND));
+            } else {
+                db.owl_query('SELECT team.id AS id FROM team WHERE comp_id = ? AND is_admin = 1;', [comp_id],
+                    function (aerr, ares) {
+                        if (aerr) {
+                            cb(aerr);
+                        } else if (ares.length === 0) {
+                            cb(new Error(exports.ADMIN_TEAM_DOES_NOT_EXIST_ERROR));
+                        } else {
+                            db.owl_query('INSERT INTO user_team (user_id, team_id) VALUES (? ,?);',
+                                [res.id, ares[0].id],
+                                function (cerr, cres) {
+                                    if (cerr) {
+                                        cb(cerr);
+                                    } else {
+                                        cb();
+                                    }
+                                }
+                            );
+                        }
+                    }
+                );
+            }
+        });
+    }
+};
+
+/**
+ * Remove a competition administrator from the administrative team
+ * @param comp_id {number}
+ * @param user_id {number}
+ * @param cb {function (Error=)}
+ */
+exports.removeAdminFromTeam = function (comp_id, user_id, cb) {
+    if (isNaN(parseInt(comp_id))) {
+        cb(new Error('Must provide a valid integer competition ID'));
+    } else if (isNaN(parseInt(user_id))) {
+        cb(new Error('Must provide a valid integer user ID'));
+    } else {
+        db.owl_query('SELECT team.id AS id FROM team WHERE comp_id = ?;', [comp_id], function (err, res) {
+            if (err) {
+                cb(err);
+            } else if (res.length === 0) {
+                cb(new Error(exports.ADMIN_TEAM_DOES_NOT_EXIST_ERROR));
+            } else {
+                db.owl_query('DELETE FROM user_team WHERE user_id = ? AND team_id = ? LIMIT 1;', [user_id, res[0].id],
+                    function (aerr, ares) {
+                        if (aerr) {
+                            cb(aerr);
+                        } else if (res.affectedRows === 0) {
+                            cb(new Error(exports.DELETION_FROM_ADMIN_TEAM_FAILED));
+                        } else {
+                            cb();
+                        }
+                    }
+                );
+            }
+        });
     }
 };
 

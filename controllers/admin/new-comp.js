@@ -11,6 +11,11 @@
 var admin_layer = require('./index');
 var RegistrationPageErrorCollection = require('../../models/RegistrationPageErrorCollection');
 
+/**
+ * Get may happen if the form fails to validate, so information will be filled in as it's available
+ * @param req {object}
+ * @param res {object}
+ */
 exports.get = function (req, res) {
     exports.fill_data(req, {
         title: 'Create a New Competition',
@@ -34,6 +39,8 @@ exports.fill_data = function (req, data, cb) {
     // Get page errors from session, if they exist, or just create a new, empty object.
     data.page_errors = req.session.new_comp_errors || new RegistrationPageErrorCollection();
     req.session.new_comp_errors = null;
+
+    // TODO KIP: Insert in data that was valid
 
     admin_layer.fill_data(req, data, function (new_data) {
         cb(new_data);
