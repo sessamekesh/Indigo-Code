@@ -1,0 +1,67 @@
+//
+   Created by Kamaron on 6/8/2015.
+
+extends ./index
+
+block content
+   // iframes to preview content
+   .row
+      iframe.col-md-4#description_preview(src="/competition/" + comp_data.id + "/" name="description-preview")
+      iframe.col-md-4#rules_preview(src="/competition/" + comp_data.id + " /rules" name="rules-preview")
+   // Buttons to upload new jade files
+   .row
+      .col-md-4
+         // TODO KIP Create /controllers/admin/new-comp-upload-description.js
+         form(action="/admin/new-comp-upload-description" method="post" target="description-preview")
+            input(type="file" name="new-desc-file")
+            input.btn.btn-primary(type="submit" name="submit_new_file" value="Upload Description")
+         // TODO HANSY or // TODO KIP Create /controllers/admin/new-comp-reset-default-description.js
+            This will do something very similar to what new-comp-desc-files does.
+            It will delete /views/competition/descriptions/<comp_id>.jade
+            Then it will copy /views/competition/descriptions/template.jade into /views/competition/descriptions/<comp_id>.jade
+            After that, do a res.redirect('/competition/<comp_id>') to display the new data in the iframe
+         form(action="/admin/new-comp-reset-default-description" method="post" target="description-preview")
+            input.btn.btn-primary(type="submit" name="submit_reset_desc" value="Load Template")
+         // TODO KIP Create a view-description-source endpoint
+         form(action="/admin/new-comp-view-description-source" method="post" target="description-preview")
+            input.btn.btn-primary(type="submit" name="submit_view_source" value="View Source")
+      .col-md-4
+         form(action="/admin/new-comp-upload-rules" method="post" target="rules-preview")
+            input(type="file" name="new-rules-file")
+            input.btn.btn-primary(type="submit" name="submit_new_file" value="Upload Rules Page")
+         // TODO HANSY or // TODO KIP Create /controllers/admin/new-comp-reset-default-rules.js
+            This will do something very similar to what new-comp-desc-files does.
+            It will delete /views/competition/rules/<comp_id>.jade
+            Then it will copy /views/competition/rules/template.jade into /views/competition/rules/<comp_id>.jade
+            After that, do a res.redirect('/competition/<comp_id>/rules') to display the new data in the iframe
+         form(action="/admin/new-comp-reset-default-rules" method="post" target="rules-preview")
+            input.btn.btn-primary(type="submit" name="submit_reset_rules" value="Load Template")
+         // TODO KIP Create a view-rules-source endpoint
+         form(action="/admin/new-comp-view-rules-source" method="post" target="rules-preview")
+            input.btn.btn-primary(type="submit" name="submit_view_source" value="View Source")
+   // Description of things available
+   .row
+      .col-md-4
+         h3 Variables available to description document:
+         ul
+            li comp_data
+            ul
+               li id
+               li name
+               li start_date
+               li end_date
+               li max_team_size
+      .col-md-4
+         h3 Variables available to rules document:
+         ul
+            li comp_data
+            ul
+               li id
+               li name
+               li start_date
+               li end_date
+               li max_team_size
+   // Submit
+   .row
+      form(action="/admin" method="get")
+         input(type="submit" value="Return to Admin Panel" name="submit")

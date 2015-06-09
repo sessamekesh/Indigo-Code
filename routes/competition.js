@@ -15,7 +15,7 @@ router.use('/:id', function (req, res, next) {
 
     /** @type {user_dao.UserData} */
     var user_data = req.session.user_data;
-    var team_data = req.session.team_data;
+    var team_data;
 
     // ID must be an integer...
     if (isNaN(parseInt(req.params.id || {}))) {
@@ -26,27 +26,41 @@ router.use('/:id', function (req, res, next) {
         console.log('For competition ' + req.params.id + '!');
         if (user_data) {
             console.log('-- ' + (user_data.is_admin ? 'SIR ' + user_data.username : user_data.username + ' THE PEASANT'));
+            // Load in team data from dao...
+            user_dao.getTeamOfUser(req.session.user_data.id, req.params.id, true, function (team_err, user_team_data) {
+                if (team_err) {
+                    console.log('-- Could not load team data - ' + team_err.message);
+                } else {
+                    team_data = user_team_data;
+                }
+                auth();
+            });
         } else {
             console.log('-- FILTHY GUEST');
         }
+    }
 
+    /**
+     * Perform the actual work, once team data is loaded
+     */
+    function auth() {
         competition_dao.get_competition_data(req.params.id, function (aerr, comp_data) {
-            /** @type {null|function(user_dao.UserData, user_dao.TeamData, comp_dao.CompData, function (boolean, String=))} */
-            var auth_function;
-
             if (aerr) {
                 console.log('Failed to get competition data: ' + aerr.message);
                 throw aerr;
             } else {
                 if (comp_data) {
                     gatekeeper(team_data, comp_data, function (is_authenticated, rejection_message) {
+                        var err;
+
                         if (is_authenticated) {
                             req.comp_data = comp_data;
                             req.team_data = team_data;
                             req.user_data = user_data;
                             next();
                         } else {
-                            throw new Error('Access denied - ' + rejection_message);
+                            err = new Error('Access denied - ' + rejection_message);
+                            res.render('./error', { message: err.message, error: err });
                         }
                     });
                 } else {

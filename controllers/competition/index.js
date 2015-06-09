@@ -3,6 +3,7 @@
  */
 
 var general_layer = require('../general/index');
+var CompetitionDescription = require('../../models/CompetitionDescription');
 
 exports.get = function (req, res) {
     exports.fill_data(req, {
@@ -10,7 +11,10 @@ exports.get = function (req, res) {
         subtitle: 'Version 0.3.1 - Zora',
         redirect_url: '/competition/' + req.comp_data.id + '/'
     }, function (new_data) {
-        res.render('./competition/index.jade', new_data);
+        // I'm putting this here, because it only applies to the index page.
+        new_data.comp_desc = new CompetitionDescription(new_data.comp_data);
+
+        res.render('./competition/descriptions/' + req.comp_data.id + '.jade', new_data);
     });
 };
 
@@ -29,7 +33,6 @@ exports.fill_data = function (req, data, cb) {
     data.comp_data = req.comp_data;
 
     general_layer.fill_data(req, data, function (new_data) {
-        // TODO KIP: Add in additional data, to fill in comp_data object
         cb(new_data);
     });
 };

@@ -33,7 +33,10 @@ html
                                     input#reg_btn.btn.pull-left(type="submit", name="register", value="Register")
                         else if user_data.is_admin === true
                             form(action="/user/logout", method="post", role="form")
-                                p Hello, sir&nbsp;
+                                // TODO HANSY: Right now, we address admins as 'sir ___username___', like 'sir sessamekesh'.
+                                    This won't do, because we have female officers at USU, and I'd really rather something
+                                    more gender neutral, but also obviously displaying administrative status.
+                                p Hello, sir &nbsp;
                                     b= user_data.username
                                 .form-group
                                     input(type="hidden", name="redirect", value=(redirect_url || '/'))

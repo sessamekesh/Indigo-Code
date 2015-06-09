@@ -11,5 +11,5 @@ var comp_dao = require('../dao/competition_dao');
  * @constructor
  */
 module.exports = function(comp_data) {
-    this.comp_name = comp_data.name;
+    this.comp_data = comp_data;
 };

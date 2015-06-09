@@ -4,4 +4,6 @@
 extends ../../template
 
 block content
-   p= "This is where you put the rules for competition " + name + ", using the CompetitionRules model data"
+   // TODO FE: This is just wrong, we need a prettier page for the default template.
+      Something that also shows off what data members you can use, and maybe some other Jade features
+   p= "This is where you put the rules for competition " + comp_data.name + ", using the CompetitionRules model data"
