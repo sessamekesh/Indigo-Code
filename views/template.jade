@@ -52,13 +52,10 @@ html
                 #sidebar.col-md-2
                     block sidebar
                         if user_data === undefined
-                            ul
-                                li
-                                    a(href="/") Home
-                                li
-                                    a(href="/about") About
-                                li
-                                    a(href="#", onclick="$('#reg_btn').click();") Register
+                            div.list-group
+                                    a.list-group-item(href="/") Home
+                                    a.list-group-item(href="/about") About
+                                    a.list-group-item(href="#", onclick="$('#reg_btn').click();") Register
                             hr
                             b Previous Public Competitions
                                 ul
