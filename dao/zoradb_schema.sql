@@ -35,6 +35,8 @@
 -- Table structure for table `allowed_language`
 --
 
+CREATE DATABASE zoradb;
+
 DROP TABLE IF EXISTS `allowed_language`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -62,6 +64,7 @@ CREATE TABLE `competition` (
   `start_date` datetime NOT NULL,
   `end_date` datetime NOT NULL,
   `max_team_size` int(11) NOT NULL DEFAULT '3',
+  `time_penalty` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores metadata about a competition. Competition files are stored in directory structure, not in database.';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -237,5 +240,12 @@ CREATE TABLE `user_team` (
 
 CREATE USER 'zora'@'localhost' IDENTIFIED BY 'easy';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zoradb.* TO 'zora'@'localhost';
+
+--
+-- Test competition data (until I have the site filled up completely
+--
+INSERT INTO competition (name, start_date, end_date, max_team_size, time_penalty) VALUES (
+  "Test Competition" ,"2012-01-01", "2020-01-01", 3, 300
+)
 
 -- Dump completed on 2015-05-21 22:17:00
