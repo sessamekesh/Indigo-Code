@@ -1,0 +1,35 @@
+nav.navbar.navbar-default.navbar-static-top
+  .container-fluid
+    .navbar-header
+      a.navbar-brand(href='/') Indigo-Code
+    #collapse.navbar-collapse
+      ul.nav.navbar-nav
+        //- li.active
+        //-   a(href='/')
+        //-     | Home 
+        //-     span.sr-only (current)
+        li
+          a(href="/about") About
+        li
+          a(href="/register") Register
+          
+      if user_data === undefined
+          if login_error !== undefined
+              p= login_error
+          form(action="/user/login", method="post", role="form").navbar-form.nav.navbar-nav.navbar-right
+              .form-group
+                  input(type="hidden", name="redirect", value=(redirect_url || '/'))
+                  input.form-control(type="text", name="username", placeholder="Username")
+                  input.form-control(type="password", name="password", placeholder="Password")
+                  input.btn.btn-default(type="submit", name="login", value="Login")
+      else 
+        form(action="/user/logout", method="post", role="form").navbar-form.nav.navbar-nav.navbar-right
+            .form-group
+
+              input(type="hidden", name="redirect", value=(redirect_url || '/'))
+              input.btn.btn-default(type="submit", value="Logout", name="logout")
+        if user_data.is_admin === true
+          p.nav.navbar-right.navbar-text="hello, Sir "+user_data.username
+        else
+          p.nav.navbar-right.navbar-text=user_data.username
+      
