@@ -24,37 +24,31 @@ html
                           div.list-group
                           hr
                           b Previous Public Competitions
-                              ul.list-group
+                              div.list-group
                                   each comp in (previous_comps || [])
-                                      li.list-group-item
-                                          a(href=("/competition/" + comp.id))= comp.name
+                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
                       else
                           if user_data.is_admin === true
                               b Admin Functions
-                              ul.list-group
-                                  li.list-group-item
-                                      a(href="/admin/new-comp") Create New Competition
-                                  li.list-group-item
-                                      a(href="/admin/view-users") View User Data
+                              div.list-group
+                                  a.list-group-item(href="/admin/new-comp") Create New Competition
+                                  a.list-group-item(href="/admin/view-users") View User Data
                                   // TODO: Add more admin functions here
                               hr
                               b Upcoming Competitions
-                              ul.list-group
+                              div.list-group
                                   each comp in (upcoming_comps || [])
-                                      li.list-group-item
-                                          a(href=("/competition/" + comp.id))= comp.name
+                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
                           hr
                           b Ongoing Competitions
-                          ul.list-group
+                          div.list-group
                               each comp in (ongoing_comps || [])
-                                  li.list-group-item
-                                      a(href=("/competition/" + comp.id))= comp.name
+                                  a.list-group-item(href=("/competition/" + comp.id))= comp.name
                           hr
                           b Previous Competitions
-                              ul.list-group
+                              div.list-group
                                   each comp in (previous_comps || [])
-                                      li.list-group-item
-                                          a(href=("/competition/" + comp.id))= comp.name
+                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
               #content.col-md-10
                   block content
                       h1 There doesn't seem to be any content written for this page... Sorry about that.
