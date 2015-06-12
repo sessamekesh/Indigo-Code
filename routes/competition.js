@@ -60,7 +60,8 @@ router.use('/:id', function (req, res, next) {
                             next();
                         } else {
                             err = new Error('Access denied - ' + rejection_message);
-                            res.render('./error', { message: err.message, error: err });
+                            console.log(comp_data.id);
+                            res.render('./error', { message: err.message, error: err, competition: comp_data.id });
                         }
                     });
                 } else {
