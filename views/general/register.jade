@@ -12,16 +12,14 @@ block content
          and / or link existing site users into that team.
       hr
       b Upcoming Competitions
-         ul
+         div.list-group
          each comp in (upcoming_comps || [])
-            li
-               a(href="/register?id=" + comp.id)= comp.name
+            a.list-group-item(href="/register?id=" + comp.id)= comp.name
 
       b Ongoing Competitions
-         ul
+         div.list-group
          each comp in (ongoing_comps || [])
-            li
-               a(href="/register?id=" + comp.id)= comp.name
+            a.list-group-item(href="/register?id=" + comp.id)= comp.name
    else
       h1= 'Register for competition ' + comp_data.name
       if (page_errors.getError('general') !== '')
