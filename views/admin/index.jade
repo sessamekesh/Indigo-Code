@@ -3,6 +3,25 @@
 
 extends ../template
 
+block sidebar
+   .list-group
+      a.list-group-item(href="/") Main Page
+   hr
+   b General Admin Functions
+   .list-group
+      a.list-group-item(href="/admin") Admin Panel Home
+      a.list-group-item(href="/admin/view-users") View User Data
+   hr
+   b Competition Admin Functions
+   .list-group
+      a.list-group-item(href="/admin/new-comp") Create New Competition
+   hr
+   b Problem Admin Functions
+   .list-group
+   hr
+   b Build System Management
+   .list-group
+
 block content
    p= "Welcome to the admin system. TODO KIP: You should fill in more here"
    p Actually, what you SHOULD do is you should completely re-vamp the sidebar...

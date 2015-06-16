@@ -29,10 +29,8 @@ html
                                       a.list-group-item(href=("/competition/" + comp.id))= comp.name
                       else
                           if user_data.is_admin === true
-                              b Admin Functions
                               div.list-group
-                                  a.list-group-item(href="/admin/new-comp") Create New Competition
-                                  a.list-group-item(href="/admin/view-users") View User Data
+                                  a.list-group-item(href="/admin") Admin Panel
                                   // TODO: Add more admin functions here
                               hr
                               b Upcoming Competitions
