@@ -3,6 +3,15 @@
 
 extends ../template
 
+// TODO FE
+// TODO KAM
+// TODO HANSY
+// Anyone can do this - there's a 'field_values' object that will be accessible
+   here, which will contain the values passed to the form before (on invalid submission)
+   Pretty much, I just need all the boxes to be populated with those values, if they exist.
+   For example, username: input#username(type="text", value=field_values.username || "")
+   where the addition is value=field_values.username || ""
+
 block content
    if comp_data === undefined
       h1 Register for a competition
@@ -14,17 +23,17 @@ block content
       b Upcoming Competitions
          div.list-group
          each comp in (upcoming_comps || [])
-            a.list-group-item(href="/register?id=" + comp.id)= comp.name
+            a.list-group-item(href="/register-team?id=" + comp.id)= comp.name
 
       b Ongoing Competitions
          div.list-group
          each comp in (ongoing_comps || [])
-            a.list-group-item(href="/register?id=" + comp.id)= comp.name
+            a.list-group-item(href="/register-team?id=" + comp.id)= comp.name
    else
       h1= 'Register for competition ' + comp_data.name
       if (page_errors.getError('general') !== '')
          h2= 'Error in creating team: ' + page_errors.getError('general')
-      form#new_team_form.form-horizontal(method="post", action="/register-submit")
+      form#new_team_form.form-horizontal(method="post", action="/register-team-submit")
          fieldset
             legend Basic Information
             input#comp_data_id(type="hidden", name="comp_id", value=comp_data.id)

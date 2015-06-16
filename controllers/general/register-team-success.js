@@ -10,14 +10,14 @@ exports.get = function (req, res) {
     var params = {
         title: 'USU ACM Competition Framework',
         subtitle: 'Version 0.3.1 - Zora',
-        redirect_url: '/register-success'
+        redirect_url: '/register-team-success'
     };
 
     exports.fill_data(req, params, function (data) {
         if (data.error) {
             res.render('./error', data);
         } else {
-            res.render('./general/register', data);
+            res.render('./general/register-team', data);
         }
     });
 };

@@ -37,6 +37,7 @@ router.use('/:id', function (req, res, next) {
             });
         } else {
             console.log('-- FILTHY GUEST');
+            auth();
         }
     }
 
@@ -50,14 +51,46 @@ router.use('/:id', function (req, res, next) {
                 throw aerr;
             } else {
                 if (comp_data) {
-                    gatekeeper(team_data, comp_data, function (is_authenticated, rejection_message) {
+                    gatekeeper(team_data, comp_data, function (is_authenticated, needs_to_register, rejection_message) {
                         var err;
-
                         if (is_authenticated) {
-                            req.comp_data = comp_data;
-                            req.team_data = team_data;
-                            req.user_data = user_data;
-                            next();
+                            // TODO KAM: If needs_to_register, create a new team here
+                            if (needs_to_register) {
+                                if (user_data) {
+                                    user_dao.create_team(new user_dao.TeamData(
+                                        null,
+                                        comp_data.id,
+                                        ' ' + user_data.username,
+                                        'For the lulz',
+                                        false,
+                                        user_data.public_facing, // TODO KIP: A way to customize this better?
+                                        [user_data.id]
+                                    ), function (reg_err, reg_res) {
+                                        if (reg_err) {
+                                            res.render('./error', { message: 'Could not access competition - could not create team for individual user. Check logs' });
+                                            console.log('competition.js: Could not create team for individual user ' + user_data.username + ': ' + reg_err.message);
+                                        } else {
+                                            req.comp_data = comp_data;
+                                            req.team_data = reg_res;
+                                            req.user_data = user_data;
+                                            next();
+                                        }
+                                    });
+                                } else {
+                                    req.comp_data = comp_data;
+                                    req.team_data = team_data;
+                                    req.user_data = user_data;
+                                    next();
+                                }
+                            } else {
+                                req.comp_data = comp_data;
+                                req.team_data = team_data;
+                                req.user_data = user_data;
+                                next();
+                            }
+                        } else if (needs_to_register) {
+                            console.log(comp_data.id);
+                            res.redirect('/register-team?comp_id=' + comp_data.id);
                         } else {
                             err = new Error('Access denied - ' + rejection_message);
                             console.log(comp_data.id);
@@ -99,26 +132,26 @@ for (var i = 0; i < controllers.length; i++) {
  *  as well as the competition data for the competition they are trying to access.
  * @param teamData {user_dao.TeamData=}
  * @param compData {comp_dao.CompData}
- * @param cb {function(result: boolean, notes: string=)}
+ * @param cb {function(result: boolean, should_register: boolean, notes: string=)}
  */
 function gatekeeper(teamData, compData, cb) {
     if (teamData && teamData.is_admin === true) {
         // Admin team? Brush them right in.
-        cb(true);
+        cb(true, false);
     } else if (compData.end_date < Date.now()) {
         // The competition is over, let anybody see it.
-        cb(true);
+        cb(true, !teamData);
     } else if (compData.start_date < Date.now()) {
         // The competition has begun...
         if (!!teamData) {
             // And the user is a member of a team, pass on through
-            cb(true);
+            cb(true, false);
         } else {
             // And the user is not on a team, deny
-            cb(false, "Must be a member of a team to view an ongoing competition");
+            cb(false, true, "Must be a member of a team to view an ongoing competition");
         }
     } else {
-        cb(false, "Competition has not yet begun, must be on an admin team to continue");
+        cb(false, true, "Competition has not yet begun, must be on an admin team to continue");
     }
 }
 

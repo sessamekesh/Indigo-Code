@@ -5,6 +5,6 @@ block content
   h4= error.status
   
   if competition != undefined
-    a(href="/register?id=" + competition) Maybe you should register
+    a(href="/register-team?id=" + competition) Maybe you should register
   else
     pre #{error.stack}

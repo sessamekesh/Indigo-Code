@@ -12,7 +12,7 @@ exports.get = function (req, res) {
     var params = {
         title: 'USU ACM Competition Framework',
         subtitle: 'Version 0.3.1 - Zora',
-        redirect_url: '/register' + (req.query.id !== undefined ? ('?id=' + req.query.id) : ''),
+        redirect_url: '/register-team' + (req.query.id !== undefined ? ('?id=' + req.query.id) : ''),
         comp_id: req.query.id,
         page_errors: new RegistrationPageErrorCollection(),
         field_values: {}
@@ -22,7 +22,7 @@ exports.get = function (req, res) {
         if (data.error) {
             res.render('./error', data);
         } else {
-            res.render('./general/register', data);
+            res.render('./general/register-team', data);
         }
     });
 };

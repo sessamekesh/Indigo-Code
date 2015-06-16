@@ -1,0 +1,47 @@
+//
+   Created by Kamaron on 6/15/2015.
+
+extends ../template
+
+block content
+   form#new_user_form.form-horizontal(method="post", action="/register-user-submit")
+      fieldset
+         legend New User Data
+         h2= page_errors.getError('general')
+         .form-group
+            label.col-md-4.control-label(for="first_name") First Name
+            .col-md-4
+               input.input-md.form-control(type="text", name="first_name", placeholder="Bobby", required)
+            span.col-md-4.help-block= page_errors.getError('first_name')
+         .form-group
+            label.col-md-4.control-label(for="last_name") Last Name
+            .col-md-4
+               input.input-md.form-control(type="text", name="last_name", placeholder="Tables", required)
+            span.col-md-4.help-block= page_errors.getError('last_name')
+         .form-group
+            label.col-md-4.control-label(for="email") Email Adderss
+            .col-md-4
+               input.input-md.form-control(type="text", name="email", placeholder="bobbytables@blackhat.io", required)
+            span.col-md-4.help-block= page_errors.getError('email')
+         .form-group
+            label.col-md-4.control-label(for="username") Desired Username
+            .col-md-4
+               input.input-md.form-control(type="text", name="username", placeholder="ROFL_Copter", required)
+            span.col-md-4.help-block= page_errors.getError('username')
+         .form-group
+            label.col-md-4.control-label(for="password") Password
+            .col-md-4
+               input.input-md.form-control(type="password", name="password", required)
+            span.col-md-4.help-block= page_errors.getError('password')
+         .form-group
+            label.col-md-4.control-label(for="confirm_password") Confirm Password
+            .col-md-4
+               input.input-md.form-control(type="password", name="confirm_password", required)
+            span.col-md-4.help-block= page_errors.getError('confirm_password')
+         .form-group
+            label.col-md-4.checkbox-inline(for="public_profile")
+               input(type="checkbox", id="public_profile", name="public_profile", value="Yes")
+               |Make profile public
+            span.col-md-4.help-block= page_errors.getError('public_profile')
+         .form-group
+            input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")

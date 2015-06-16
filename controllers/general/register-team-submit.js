@@ -6,56 +6,15 @@
 //  For instance, logs should generate some searchable number where an admin can find the error. Perhaps save errors with the user viewing?
 //  Or just save errors to some global place, but then an error ID can be searched? Like a MySQL entry?
 
-    /*
-    Sample input (remove elements as they're handled):
-     { comp_id: '3',
-     team_name: 'Team Awesome',
-     team_tagline: 'Team Cool Awesome Headline',
-     usertype_0: 'new',
-     new_user_0_name: 'Kamaron Peterson',
-     new_user_0_email: 'kam.is.amazing@gmail.com',
-     new_user_0_username: 'sessamekesh',
-     new_user_0_password: 'asdf',
-     new_user_0_confirm_password: 'asdf',
-     existing_user_0_username: '',
-     existing_user_0_password: '',
-     usertype_1: 'existing',
-     new_user_1_name: '',
-     new_user_1_email: '',
-     new_user_1_username: '',
-     new_user_1_password: '',
-     new_user_1_confirm_password: '',
-     existing_user_1_username: 'indigofrost92',
-     existing_user_1_password: 'asdfasdf',
-     usertype_2: 'blank',
-     new_user_2_name: '',
-     new_user_2_email: '',
-     new_user_2_username: '',
-     new_user_2_password: '',
-     new_user_2_confirm_password: '',
-     existing_user_2_username: '',
-     existing_user_2_password: '',
-     usertype_3: 'blank',
-     new_user_3_name: '',
-     new_user_3_email: '',
-     new_user_3_username: '',
-     new_user_3_password: '',
-     new_user_3_confirm_password: '',
-     existing_user_3_username: '',
-     existing_user_3_password: '' }
-     */
-
 var user_dao = require('../../dao/user_dao');
-var register_controller = require('./register');
+var register_controller = require('./register-team');
 var RegistrationPageErrorCollection = require('../../models/RegistrationPageErrorCollection');
 
 exports.get = function (req, res) {
-    // TODO KIP: Send away the user in shame here
-    res.send("Hooray!");
+    res.redirect('/register-team');
 };
 
 exports.post = function (req, res) {
-    // TODO KIP: Parse team registration form here
     var info = req.body;
     var user_ids = [];
     var created_user_ids = [];
@@ -66,6 +25,9 @@ exports.post = function (req, res) {
     } else if (req.method !== 'POST') {
         throw new Error('Information must be sent via POST (for security)'); // Pretty pointless, don't you think?
     } else {
+        if (req.body.team_name[0] === ' ') {
+            page_errors.addError('team_name', 'Team name cannot begin with a space');
+        }
         add_next_user(0);
     }
 
@@ -97,8 +59,16 @@ exports.post = function (req, res) {
                     ), req.body['new_user_' + i + '_password'], function (err, res) {
                         if (err) {
                             // TODO KIP: Check for exact errors here?
+                            // TODO HANSY: You could also do this.
+                            // TODO SAM: You could also do this.
+                            // Pretty much, in the addUser method, I am returning an err object if something wrong happened.
+                            //  I want to know which field went wrong - for example, if it was the username that went wrong,
+                            //  I would say page_errors.addError('new_user_' + i + '_username', error message) and that would show the problem
+                            //  next to the username box.
+                            // It would also be nice if I could have multiple errors happen - so maybe, err could be a list
+                            //  instead of a single object?
                             page_errors.addError('general', 'Could not add user for database reasons (check log)');
-                            console.log('register-submit.js: Could not add new user: ' + err.message);
+                            console.log('register-team-submit.js: Could not add new user: ' + err.message);
                             add_next_user(i + 1);
                         } else {
                             created_user_ids.push(res.id);
@@ -115,7 +85,7 @@ exports.post = function (req, res) {
                         if (err) {
                             // TODO KIP: Check for exact errors here
                             page_errors.addError('existing_user_' + i + '_username', 'Database errors - check log');
-                            console.log('register-submit.js: Could not add existing user: ' + err.message);
+                            console.log('register-team-submit.js: Could not add existing user: ' + err.message);
                             add_next_user(i + 1);
                         } else {
                             user_ids.push(ares.id);
@@ -129,7 +99,7 @@ exports.post = function (req, res) {
             } else {
                 // Well, this should never happen.
                 page_errors.addError('usertype_' + i, 'Invalid user type ' + req.body['usertype_' + i] + ' found');
-                console.log('register-submit.js - unexpected user type ' + req.body['usertype_' + i] + ' found!');
+                console.log('register-team-submit.js - unexpected user type ' + req.body['usertype_' + i] + ' found!');
                 add_next_user(i + 1);
             }
         }
@@ -149,7 +119,7 @@ exports.post = function (req, res) {
             register_controller.fill_data(req, {
                 title: 'USU ACM Competition Framework',
                 subtitle: 'Version 0.3.1 - Zora',
-                redirect_url: '/register?id=' + req.body.comp_id,
+                redirect_url: '/register-team?id=' + req.body.comp_id,
                 comp_id: req.body.comp_id,
                 page_errors: page_errors,
                 field_values: req.body
@@ -157,7 +127,7 @@ exports.post = function (req, res) {
                 if (data.error) {
                     res.render('./error', data);
                 } else {
-                    res.render('./general/register', data);
+                    res.render('./general/register-team', data);
                 }
             });
             destroy_created_users(created_user_ids);
@@ -177,7 +147,7 @@ exports.post = function (req, res) {
                         res.render('./error', {message: err.message, error: err});
                     } else {
                         // TODO KIP: Replace this with an actual confirmation page.
-                        res.redirect('register-success');
+                        res.redirect('register-team-success');
                     }
                 }
             );

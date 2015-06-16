@@ -35,7 +35,7 @@ exports.post = function (req, res) {
     } else if (req.body.register === 'Register') {
         // Register requested
         // TODO KIP: If on a competition webpage, redirect to register for that competition specifically
-        res.redirect('/register');
+        res.redirect('/register-user');
     } else {
         // Request is malformed
         throw new Error('Bad request - login page must receive request for login or registration');
