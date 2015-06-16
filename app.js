@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var index_data_loader = require('./controllers/general/index');
+var multer = require('multer');
 
 var general_route = require('./routes/general');
 
@@ -20,6 +21,13 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({
+  dest: './uploads/',
+  limits: {
+    fields: 200,
+    fileSize: 200 * 1024 // TODO KIP: Move this to a configuration file
+  }
+}));
 app.use(session({ secret: 'rigg-sessamekesh', resave: false, saveUninitialized: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
