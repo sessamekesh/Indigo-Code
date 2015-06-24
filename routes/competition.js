@@ -89,11 +89,9 @@ router.use('/:id', function (req, res, next) {
                                 next();
                             }
                         } else if (needs_to_register) {
-                            console.log(comp_data.id);
-                            res.redirect('/register-team?comp_id=' + comp_data.id);
+                            res.redirect('/register-team?id=' + comp_data.id);
                         } else {
                             err = new Error('Access denied - ' + rejection_message);
-                            console.log(comp_data.id);
                             res.render('./error', { message: err.message, error: err, competition: comp_data.id });
                         }
                     });

@@ -17,7 +17,7 @@ router.use('/', function (req, res, next) {
     /** @type {user_dao.UserData} */
     var user_data = req.session.user_data;
 
-    if (true || user_data && user_data.is_admin) {
+    if (user_data && user_data.is_admin) {
         req.user_data = user_data;
         next();
     } else {

@@ -10,6 +10,8 @@
 var bcrypt = require('bcrypt');
 var db = require('./db');
 
+var CompData = require('./competition_dao').CompData;
+
 /**
  * Work factor in computing password hashes.
  * @type {number}
@@ -19,6 +21,18 @@ var work_factor = 10;
 exports.ADMIN_TEAM_DOES_NOT_EXIST_ERROR = 'No administrative team found';
 exports.USERNAME_NOT_FOUND = 'No user by that name found';
 exports.DELETION_FROM_ADMIN_TEAM_FAILED = 'Failed to delete user from admin team';
+exports.NO_USER_PARTICIPATION_FOUND = 'The user provided has not participated in any coding competitions';
+exports.USER_ID_NOT_FOUND = 'No user with the given ID found';
+
+exports.USER_FIELDS = {
+    ID: 'id',
+    FIRST_NAME: 'first_name',
+    LAST_NAME: 'last_name',
+    USERNAME: 'username',
+    EMAIL_ADDRESS: 'email_address',
+    IS_ADMIN: 'is_admin',
+    PUBLIC_FACING: 'public_facing'
+};
 
 /**
  * Information about a user, in standard form for the rest of the competition.
@@ -49,6 +63,19 @@ exports.UserData.prototype.isCompleteForEntry = function () {
     return !!this.username && (this.is_admin === true || this.is_admin === false)
         && (this.public_facing === true || this.public_facing === false) && !!this.first_name && !!this.last_name
         && !!this.email_address;
+};
+
+/**
+ * UserParticipation object - holds information about a user's participation in competitions.
+ * @param userData {exports.UserData}
+ * @param compData {CompData}
+ * @param teamData {exports.TeamData}
+ * @constructor
+ */
+exports.UserParticipation = function(userData, compData, teamData) {
+    this.userData = userData;
+    this.compData = compData;
+    this.teamData = teamData;
 };
 
 /**
@@ -156,7 +183,7 @@ exports.getUserByUsername = function (username, sensitive, cb) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
-                    cb(new Error('No results returned, user was not found'));
+                    cb(new Error(exports.USER_ID_NOT_FOUND));
                 } else {
                     cb(null, new exports.UserData(
                         res[0].id,
@@ -201,12 +228,12 @@ exports.getUserById = function (user_id, sensitive, cb) {
             }
         });
     } else {
-        db.owl_query('SELECT id, name, username, email_address, is_admin, pass_hash FROM user WHERE id=?;', [user_id], function (err, res) {
+        db.owl_query('SELECT id, first_name, last_name, username, email_address, is_admin, pass_hash FROM user WHERE id=?;', [user_id], function (err, res) {
             if (err) {
                 cb(err);
             } else {
                 if (!res || res.length === 0) {
-                    cb(new Error('No results returned, user was not found'));
+                    cb(new Error(exports.USER_ID_NOT_FOUND));
                 } else {
                     cb(null, new exports.UserData(
                         res[0].id,
@@ -221,6 +248,56 @@ exports.getUserById = function (user_id, sensitive, cb) {
             }
         });
     }
+};
+
+/**
+ * Used by administrators. Returns all users in the database, sorted on a given field (if provided)
+ *  Options:
+ *  - sensitive: True if the response is sensitive, i.e., if you only want to include non-sensitive data. Default: false
+ *  - sort_by: Column on which to sort the data. Default: exports.USER_FIELDS.USERNAME
+ *  - sort_ascending: True to sort ascending, false to sort descending. Default: true
+ * @param options {object=} Optional options for this call
+ * @param cb {function(Error=, Array<exports.UserData>=)} Callback on completion of method
+ */
+exports.getAllUsers = function (options, cb) {
+    // Establish options...
+    options = options || {};
+    options.sensitive = !!options.sensitive;
+    options.sort_ascending = options.sort_ascending === undefined ? true : !!options.sort_ascending;
+    // TODO HANSY: I know this is grunt work code maintenance, but originally I made this whole thing long. I only really need the else condition, make it... shorter...
+    if (options.sort_by === exports.USER_FIELDS.EMAIL_ADDRESS) {
+    } else if (options.sort_by === exports.USER_FIELDS.FIRST_NAME) {
+    } else if (options.sort_by === exports.USER_FIELDS.LAST_NAME) {
+    } else if (options.sort_by === exports.USER_FIELDS.ID) {
+    } else if (options.sort_by === exports.USER_FIELDS.IS_ADMIN) {
+    } else if (options.sort_by === exports.USER_FIELDS.PUBLIC_FACING) {
+    } else if (options.sort_by === exports.USER_FIELDS.USERNAME) {
+    } else {
+        options.sort_by = exports.USER_FIELDS.USERNAME;
+    }
+
+    db.owl_query(
+        'SELECT id, first_name, last_name, username, email_address, is_admin, public_facing '
+        + 'FROM user ORDER BY ? ' + (options.sort_ascending ? 'ASC' : 'DESC'),
+        [options.sort_by],
+        function (err, res) {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, res.map(function (row) {
+                    return new exports.UserData(
+                        row.id,
+                        row.username,
+                        !!row.is_admin,
+                        !!row.public_facing,
+                        (options.sensitive || null) && row.first_name,
+                        (options.sensitive || null) && row.last_name,
+                        (options.sensitive || null) && row.email_address
+                    )
+                }));
+            }
+        }
+    );
 };
 
 /**
@@ -579,6 +656,54 @@ exports.remove_user = function (user_id, cb) {
                 cb(null, res);
             }
         });
+    }
+};
+
+/**
+ * Given a user ID, get what teams they have participated in, and which competitions.
+ * @param userData {exports.UserData}
+ * @param cb
+ */
+exports.getUserParticipation = function (userData, cb) {
+    if (!userData) {
+        cb(new Error('Must provide user data in order to get their participation information!'));
+    } else {
+        db.owl_query('SELECT c.id AS compID, c.name AS compName, c.start_date AS compStartDate, '
+            + 'c.end_date AS compEndDate, c.max_team_size AS compMaxTeamSize, c.time_penalty AS compTimePenalty, '
+            + 't.id AS teamID, t.name AS teamName, t.tagline AS teamTagline, t.is_admin AS teamIsAdmin, '
+            + 't.public_code AS teamPublicCode FROM user_team LEFT JOIN team AS t ON user_team.team_id = t.id '
+            + 'LEFT JOIN competition AS c ON c.id = t.comp_id WHERE user_team.user_id = ?;', [userData.id],
+            function (err, res) {
+                if (err) {
+                    cb(err);
+                } else if (res.length === 0) {
+                    cb(new Error(exports.NO_USER_PARTICIPATION_FOUND));
+                } else {
+                    cb(null, res.map(function (row) {
+                        return new exports.UserParticipation(
+                            userData,
+                            new CompData(
+                                row.compID,
+                                row.compName,
+                                row.compStartDate,
+                                row.compEndDate,
+                                row.compTimePenalty,
+                                row.compMaxTeamSize
+                            ),
+                            new exports.TeamData(
+                                row.teamID,
+                                row.compID,
+                                row.teamName,
+                                row.teamTagline,
+                                row.teamIsAdmin,
+                                row.teamPublicCode,
+                                [] // TODO KAM: Really, should you have an empty array here?
+                            )
+                        );
+                    }));
+                }
+            }
+        );
     }
 };
 

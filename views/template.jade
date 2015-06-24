@@ -1,7 +1,8 @@
+doctype html
+
 //
     Created by Kamaron on 4/22/2015.
 
-doctype html
 html
     head
         title= title || 'UNTITLED'
@@ -14,45 +15,44 @@ html
                 link(rel="stylesheet", href=include_stylesheets[i])
             - }
     body
-      include ./navigation.jade
+        include ./navigation.jade
     
-      #container.container-fluid
-          .row
-              #sidebar.col-md-2
-                  block sidebar
-                      if user_data === undefined
-                          div.list-group
-                          hr
-                          b Previous Public Competitions
-                              div.list-group
-                                  each comp in (previous_comps || [])
-                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
-                      else
-                          if user_data.is_admin === true
-                              div.list-group
-                                  a.list-group-item(href="/admin") Admin Panel
-                                  // TODO: Add more admin functions here
-                              hr
-                              b Upcoming Competitions
-                              div.list-group
-                                  each comp in (upcoming_comps || [])
-                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
-                          hr
-                          b Ongoing Competitions
-                          div.list-group
-                              each comp in (ongoing_comps || [])
-                                  a.list-group-item(href=("/competition/" + comp.id))= comp.name
-                          hr
-                          b Previous Competitions
-                              div.list-group
-                                  each comp in (previous_comps || [])
-                                      a.list-group-item(href=("/competition/" + comp.id))= comp.name
-              #content.col-md-10
-                  block content
-                      h1 There doesn't seem to be any content written for this page... Sorry about that.
-  script(src="/js/jquery-2.1.3.min.js")
-  script(src="/js/bootstrap.min.js")
-  if include_scripts
-      - for (var i = 0; i < include_scripts.length; i++) {
-          script(src= include_scripts[i])
-      - }
+        #container.container-fluid
+            .row
+                #sidebar.col-md-2
+                    block sidebar
+                        if user_data === undefined
+                            div.list-group
+                            hr
+                            b Previous Public Competitions
+                            div.list-group
+                                each comp in (previous_comps || [])
+                                    a.list-group-item(href=("/competition/" + comp.id))= comp.name
+                        else
+                            if user_data.is_admin === true
+                                div.list-group
+                                    a.list-group-item(href="/admin") Admin Panel
+                                    // TODO: Add more admin functions here
+                                hr
+                                b Upcoming Competitions
+                                div.list-group
+                                    each comp in (upcoming_comps || [])
+                                        a.list-group-item(href=("/competition/" + comp.id))= comp.name
+                            hr
+                            b Ongoing Competitions
+                            div.list-group
+                                each comp in (ongoing_comps || [])
+                                    a.list-group-item(href=("/competition/" + comp.id))= comp.name
+                            hr
+                            b Previous Competitions
+                                div.list-group
+                                    each comp in (previous_comps || [])
+                                        a.list-group-item(href=("/competition/" + comp.id))= comp.name
+                #content.col-md-10
+                    block content
+                        h1 There doesn't seem to be any content written for this page... Sorry about that.
+        script(src="/js/jquery-2.1.3.min.js")
+        script(src="/js/bootstrap.min.js")
+        if include_scripts
+            each script_url in include_scripts
+                script(src= script_url)

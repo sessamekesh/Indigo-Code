@@ -54,7 +54,6 @@ exports.fill_data = function (req, data, cb) {
     }
 
     function fd_finish() {
-        console.log(req.session);
         data.login_error = req.session.login_error;
         data.user_data = req.session.user_data;
         cb(data);
