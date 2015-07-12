@@ -1,0 +1,9 @@
+//
+   Created by Kamaron on 7/11/2015.
+
+extends ./index
+
+block content
+   ul
+      each buildServer in buildServers
+         li= JSON.stringify(buildServer)

@@ -65,4 +65,19 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+// TODO KAM: Remove this, this is horrible. This is horrible. Use only for debugging.
+var BuildServerManager = require('./buildServerManager/BuildServerManager').BuildServerManager;
+var BuildServer = require('./buildServerManager/models/BuildServer').BuildServer;
+var t = new BuildServer('localhost', 8080, 1, function (err) {
+  if (err) {
+    console.log('Error connecting to build server - ' + JSON.stringify(err));
+  } else {
+    BuildServerManager.registerBuildServer(t, function (err2) {
+      if (err2) {
+        console.log('Error registering build server - ' + JSON.stringify(err2));
+      }
+    });
+  }
+});
+
 module.exports = app;
