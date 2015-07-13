@@ -32,7 +32,7 @@ exports.get = function (req, res) {
 exports.fill_data = function (req, data, cb) {
     data = data || {};
 
-    // TODO: Get the list of connected build servers
+    // TODO KAM: Establish, via Websockets, an updating connection here
     data.buildServers = BuildServerManager.getBuildServerList();
 
     adminLayer.fill_data(req, data, function (new_data) {

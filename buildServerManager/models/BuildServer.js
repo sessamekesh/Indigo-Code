@@ -45,7 +45,7 @@ var BuildServer = function (hostname, port, apiVersion, cb) {
     this.connected = false;
 
     /**
-     * @type {BuildSystemData|null}
+     * @type {ServerData|null}
      * @private
      */
     this._serverData = null;
@@ -191,6 +191,20 @@ BuildServer.prototype.ping = function (cb) {
     this.getBuildStatus(function (bserr) {
         cb(bserr || null)
     });
+};
+
+/**
+ * @return {BuildServerStatus|null}
+ */
+BuildServer.prototype.getCachedServerState = function() {
+    return this._serverStatus;
+};
+
+/**
+ * @return {ServerData|null}
+ */
+BuildServer.prototype.getCachedServerData = function () {
+    return this._serverData;
 };
 
 exports.BuildServer = BuildServer;

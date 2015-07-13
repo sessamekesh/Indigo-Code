@@ -4,6 +4,33 @@
 extends ./index
 
 block content
-   ul
+   table.table.table-hover
+      tr
+         thead
+            td Server Name
+            td Version
+            td UUID
+            td Status
+            td Queued Builds
+            td Executing Builds
+            td Update Status
+            td Disconnect
       each buildServer in buildServers
-         li= JSON.stringify(buildServer)
+         // TODO KAM: If any of the states in buildServer are null (which is very possible), this will crash. Fix this.
+         // TODO KAM: On click a build server, bring up a list of build systems supported.
+         // TODO KAM: This should support websockets, the build server manager should be able to send out status updates periodically
+         - var className;
+         - if (buildServer.connected === true && buildServer.getCachedServerState().status === 'READY') { className = 'success' }
+         - else if (buildServer.connected === true) { className = 'warning' }
+         - else { className = 'danger' }
+         tr(class=className)
+            td= buildServer.getCachedServerData().serverName + ' (' + buildServer.getCachedServerData().namespace + ')'
+            td= buildServer.getCachedServerData().version
+            td= buildServer.getCachedServerData().serverUUID
+            td= buildServer.getCachedServerState().status
+            td= buildServer.getCachedServerState().queued
+            td= buildServer.getCachedServerState().executing
+            td
+               .btn.btn-primary(onclick="alert('TODO');") Update Values
+            td
+               .btn.btn-danger(onclick="alert('TODO');") Disconnect
