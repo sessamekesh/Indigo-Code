@@ -24,10 +24,12 @@ block content
          - else if (buildServer.connected === true) { className = 'warning' }
          - else { className = 'danger' }
          tr(class=className)
-            td= buildServer.getCachedServerData().serverName + ' (' + buildServer.getCachedServerData().namespace + ')'
+            // TODO: I KNOW THIS IS HORRIBLE I'M GOING TO FIX IT I PROMISE!!!
+            td(onclick="(function () { var list=''; " + JSON.stringify(buildServer.getCachedComparisonSystems() || []) + ".forEach(function (a) { list += JSON.stringify(a) + '   ' }); alert(list); })()")= buildServer.getCachedServerData().serverName + ' (' + buildServer.getCachedServerData().namespace + ')'
             td= buildServer.getCachedServerData().version
             td= buildServer.getCachedServerData().serverUUID
-            td= buildServer.getCachedServerState().status
+            // TODO: I KNOW THIS IS HORRIBLE I'M GOING TO FIX IT I PROMISE!!!
+            td(onclick="(function () { var list=''; " + JSON.stringify(buildServer.getCachedBuildSystems() || []) + ".forEach(function (a) { list += JSON.stringify(a) + '   ' }); alert(list); })()")= buildServer.getCachedServerState().status
             td= buildServer.getCachedServerState().queued
             td= buildServer.getCachedServerState().executing
             td

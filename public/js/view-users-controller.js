@@ -7,7 +7,7 @@ $(function() {
         $(this).on('click', function() {
             var user_id = $(this).attr('data-user-id');
             $.get('/user/participation?id=' + user_id, function (data) {
-                var dialog = $("#user-participation-dialog");
+                var dialog = $('#user-participation-dialog');
                 // TODO: I'm sure there's a more elegant way than this, I'm just not in the mood right now
                 //  I'm thinking like dialog.children.appendChild('table')... etc, etc. Append rows, etc.
                 // TODO: Also, instead of just data fields, make both items links, where you can click and go to either the competition or the team data page.
@@ -22,7 +22,7 @@ $(function() {
                 dialog.dialog();
             }).error(function (xhr) {
                 var responseData = xhr.responseJSON;
-                var dialog = $("#user-participation-dialog");
+                var dialog = $('#user-participation-dialog');
                 dialog.removeClass('hidden');
                 dialog.attr('title', 'Error fetching participation data');
                 dialog.children('p').html(

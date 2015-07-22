@@ -51,8 +51,8 @@ var ServerData = function (namespace, version, serverName, serverUUID, buildCons
 };
 
 /**
- * @param systemID {String|function (Array.<BuildSystem>)} If included, name of build system in question
- * @param cb {function (Array.<BuildSystem>)|null} Callback that returns list of build systems supported
+ * @param systemID {String|function (Array.<BuildSystemData>)} If included, name of build system in question
+ * @param cb {function (err: Error, Array.<BuildSystemData>=)=} Callback that returns list of build systems supported
  */
 ServerData.prototype.buildSystem = function (systemID, cb) {
     if (Object.prototype.toString.call(systemID) === '[object Function]') {
@@ -60,7 +60,9 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
         systemID = null;
     }
 
-    http.get(this._buildSystems + (systemID ? ('name=' + systemID) : ''), function (res) {
+    var query = this._buildSystems + (systemID ? ('name=' + systemID) : '');
+
+    http.get(query, function (res) {
         var data = '';
         res.on('data', function (chunk) {
             data += chunk;
@@ -68,8 +70,9 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
         res.on('end', function () {
             try {
                 var list = JSON.parse(data);
+                list = list['buildSystemList'];
                 if (Object.prototype.toString.call(list) === '[object Array]') {
-                    cb(list.map(function (element) {
+                    cb(null, list.map(function (element) {
                         return new BuildSystem(
                             element.id,
                             element.name,
@@ -77,7 +80,7 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
                         )
                     }));
                 } else {
-                    cb([new BuildSystem(
+                    cb(null, [new BuildSystem(
                         list.id,
                         list.name,
                         list.description
@@ -85,26 +88,28 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
                 }
             } catch (e) {
                 console.log('ServerData.buildSystems() JSON Parse error: ' + e.message);
-                cb([]);
+                cb(new Error('JSON Parse error: ' + e.message));
             }
         });
     }).on('error', function (e) {
         console.log('ServerData.buildSystems() error: ' + e.message);
-        cb([]);
+        cb(new Error('Error requesting resource from build server: ' + e.message));
     });
 };
 
 /**
- * @param systemID {String|function (Array.<BuildSystem>)} If included, name of comparison system in question
- * @param cb {function (Array.<BuildSystem>)|null} Callback that returns list of comparison systems supported
+ * @param systemID {String|function (Array.<ComparisonSystem>)} If included, name of comparison system in question
+ * @param cb {function (err: Error|null, Array.<ComparisonSystem>=)=} Callback that returns list of comparison systems supported
  */
-ServerData.prototype.buildSystem = function (systemID, cb) {
+ServerData.prototype.comparisonSystems = function (systemID, cb) {
     if (Object.prototype.toString.call(systemID) === '[object Function]') {
         cb = systemID;
         systemID = null;
     }
 
-    http.get(this._comparisonSystems + (systemID ? ('name=' + systemID) : ''), function (res) {
+    var query = this._comparisonSystems + (systemID ? ('name=' + systemID) : '');
+
+    http.get(query, function (res) {
         var data = '';
         res.on('data', function (chunk) {
             data += chunk;
@@ -112,8 +117,9 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
         res.on('end', function () {
             try {
                 var list = JSON.parse(data);
+                list = list['comparisonSystemList'];
                 if (Object.prototype.toString.call(list) === '[object Array]') {
-                    cb(list.map(function (element) {
+                    cb(null, list.map(function (element) {
                         return new ComparisonSystem(
                             element.id,
                             element.name,
@@ -121,24 +127,24 @@ ServerData.prototype.buildSystem = function (systemID, cb) {
                         )
                     }));
                 } else {
-                    cb([new ComparisonSystem(
+                    cb(null, [new ComparisonSystem(
                         list.id,
                         list.name,
                         list.description
                     )]);
                 }
             } catch (e) {
-                console.log('ServerData.buildSystems() JSON Parse error: ' + e.message);
-                cb([]);
+                console.log('ServerData.comparisonSystems() JSON Parse error: ' + e.message);
+                cb(new Error('JSON Parse error: ' + e.message));
             }
         });
     }).on('error', function (e) {
-        console.log('ServerData.buildSystems() error: ' + e.message);
-        cb([]);
+        console.log('ServerData.comparisonSystems() error: ' + e.message);
+        cb(new Error('Error requesting resource from build server: ' + e.message));
     });
 };
 
 module.exports.ServerData = ServerData;
 
-BuildSystem = require('./BuildSystemData');
-ComparisonSystem = require('./ComparisonSystem');
+BuildSystem = require('./BuildSystemData').BuildSystemData;
+ComparisonSystem = require('./ComparisonSystem').ComparisonSystem;

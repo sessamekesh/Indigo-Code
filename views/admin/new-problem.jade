@@ -1,0 +1,37 @@
+//
+   Created by Kamaron on 7/21/2015.
+
+extends ./index
+
+block content
+   if page_errors.isFatal()
+      h2 Errors were found, please correct them before continuing
+   form#new_problem_form.form-horizontal(method="post", action="/admin/new-problem-description/")
+      fieldset
+         legend Basic Problem Information
+         .form-group
+            label.col-md-4.control-label(for="prob_name") Problem Name
+            .col-md-4
+               input#prob_name.form-control.input-md(name="prob_name", type="text", placeholder="BlockClocking", required="")
+            span.col-md-4.help-block= page_errors.getError('prob_name')
+         .form-group
+            label.col-md-4.control-label(for="comp_id") Competition
+            .col-md-4
+               select#comp-id.form-control
+                  option(val="NaN", disabled="disabled") Previous Competitions
+                  each pComp in previousCompetitions
+                     option(val=pComp.id)= pComp.name
+                  option(val="NaN", disabled="disabled") Ongoing Competitions
+                  each oComp in ongoingCompetitions
+                     option(val=oComp.id)= oComp.name
+                  option(val="NaN", disabled="disabled") Upcoming Competitions
+                  each uComp in upcomingCompetitions
+                     option(val=uComp.id)= uComp.name
+            span.col-md-4.help-block= page_errors.getError('comp_id')
+         .form-group
+            label.col-md-4.control-label(for="default_time_limit") Default Time Limit (ms)
+            .col-md-4
+               input#default_time_limit.form-control.input-md(name="default_time_limit", type="text", placeholder="3000", required="")
+            span.col-md-4.help-block= page_errors.getError('default_time_limit')
+         .form-group
+            input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Next Step")

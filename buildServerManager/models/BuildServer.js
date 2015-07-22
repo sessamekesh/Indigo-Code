@@ -56,6 +56,18 @@ var BuildServer = function (hostname, port, apiVersion, cb) {
      */
     this._serverStatus = null;
 
+    /**
+     * @type {Array.<BuildSystemData>|null}
+     * @private
+     */
+    this._buildSystemCache = null;
+
+    /**
+     * @type {Array.<ComparisonSystem>|null}
+     * @private
+     */
+    this._compareSystemCache = null;
+
     this.refresh(cb || function () {});
 };
 
@@ -82,8 +94,8 @@ BuildServer.prototype.getServerData = function (cb) {
                             data['buildConstraints']['queueSize'],
                             data['buildConstraints']['resultsAvailabilityTimeout']
                         ),
-                        data['buildSystems'],
-                        data['comparisonSystems']
+                        data['buildSystemsList'],
+                        data['comparisonSystemsList']
                     );
                     me.connected = true;
                     cb(null, me._serverData);
@@ -158,24 +170,128 @@ BuildServer.prototype.getBuildStatus = function (cb) {
 };
 
 /**
+ * Get a list of build systems that this build server supports
+ * @param cb {function (err: Error|null, systems: Array.<BuildSystemData>=)}
+ */
+BuildServer.prototype.getBuildSystems = function (cb) {
+    var me = this;
+
+    if (this._buildSystemCache) {
+        cb (null, this._buildSystemCache);
+    } else {
+        if (this._serverData) {
+            this._serverData.buildSystem(function (err, systems) {
+                if (systems) me._buildSystemCache = systems;
+                cb (err, systems);
+            });
+        } else {
+            this.refresh(function (err) {
+                if (err) {
+                    cb(err);
+                } else {
+                    if (this._serverData) {
+                        this._serverData.buildSystem(function (bserr, systems) {
+                            if (systems) me._buildSystemCache = systems;
+                            cb (bserr, systems);
+                        });
+                    } else {
+                        // This piece of code should never be reachable, but I haven't proved that yet, so I'm going to leave
+                        //  it in anyways. If this is reached, it means that the this.refresh function returned a non-error
+                        //  status, but somehow _serverData is still not set.
+                        cb (new Error('Server data was unreachable, but an error was not returned. Contact an administrator, this is a problem.'));
+                    }
+                }
+            });
+        }
+    }
+};
+
+/**
+ * @return {Array.<BuildSystemData>|null}
+ */
+BuildServer.prototype.getCachedBuildSystems = function () {
+    return this._buildSystemCache;
+};
+
+/**
+ * Get a list of comparison systems that this build server supports
+ * @param cb {function (err: Error|null, systems: Array.<ComparisonSystem>=)}
+ */
+BuildServer.prototype.getComparisonSystems = function (cb) {
+    if (this._compareSystemCache) {
+        cb(null, this._compareSystemCache);
+    } else {
+        var me = this;
+        if (this._serverData) {
+            this._serverData.comparisonSystems(function (err, systems) {
+                if (systems) me._compareSystemCache = systems;
+                cb (err, systems);
+            });
+        } else {
+            this.refresh(function (err) {
+                if (err) {
+                    cb (err);
+                } else {
+                    if (this._serverData) {
+                        this._serverData.comparisonSystems(function (bserr, systems) {
+                            if (systems) me._compareSystemCache = systems;
+                            cb (bserr, systems);
+                        });
+                    } else {
+                        // See comment in getBuildSystems
+                        cb (new Error('Server data was unreachable, but an error was not returned. Contact an administrator, this is a problem.'));
+                    }
+                }
+            });
+        }
+    }
+};
+
+/**
+ * @return {Array.<ComparisonSystem>|null}
+ */
+BuildServer.prototype.getCachedComparisonSystems = function () {
+    return this._compareSystemCache;
+};
+
+/**
  * Force a refresh of the data in the build server. Re-fetches all information.
  * @param cb {function (err: Error|null)}
  */
 BuildServer.prototype.refresh = function (cb) {
     var me = this;
+    console.log('Starting refresh of server ' + (this._serverData ? this._serverData.serverName : '[unidentified]') + '...');
     this._serverData = null;
     this._serverStatus = null;
+    this._buildSystemCache = null;
+    this._compareSystemCache = null;
+    // TODO KAM: Change this to async
     this.getServerData(function (sderr) {
         if (sderr) {
-            console.log('Error refreshing server data - ' + sderr.message);
+            console.log('BuildServer.js: Error refreshing server data - ' + sderr.message);
             cb (sderr);
         } else {
             me.getBuildStatus(function (bserr) {
                 if (bserr) {
-                    console.log('Error refreshing build status - ' + bserr.message);
+                    console.log('BuildServer.js: Error refreshing build status - ' + bserr.message);
                     cb(bserr);
                 } else {
-                    cb(null);
+                    me.getComparisonSystems(function (cserr) {
+                        if (cserr) {
+                            cb(cserr);
+                            console.log('BuildServer.js: Error refreshing comparison system list - ' + cserr.message);
+                        } else {
+                            me.getBuildSystems(function (bsserr) {
+                                if (bsserr) {
+                                    cb(bseerr);
+                                    console.log('BuildServer.js: Error refreshing build system list - ' + bsserr.message);
+                                } else {
+                                    console.log('Success!');
+                                    cb(null);
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }
