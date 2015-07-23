@@ -6,7 +6,7 @@ extends ./index
 block content
    if page_errors.isFatal()
       h2 Errors were found, please correct them before continuing
-   form#new_problem_form.form-horizontal(method="post", action="/admin/new-problem-description/")
+   form#new_problem_form.form-horizontal(method="post", action="/admin/new-problem-submit/", enctype="multipart/form-data")
       fieldset
          legend Basic Problem Information
          .form-group
@@ -17,21 +17,26 @@ block content
          .form-group
             label.col-md-4.control-label(for="comp_id") Competition
             .col-md-4
-               select#comp-id.form-control
-                  option(val="NaN", disabled="disabled") Previous Competitions
+               select#comp_id.form-control(name="comp_id")
+                  option(value="NaN", disabled="disabled") Previous Competitions
                   each pComp in previousCompetitions
-                     option(val=pComp.id)= pComp.name
-                  option(val="NaN", disabled="disabled") Ongoing Competitions
+                     option(value=pComp.id)= pComp.name
+                  option(value="NaN", disabled="disabled") Ongoing Competitions
                   each oComp in ongoingCompetitions
-                     option(val=oComp.id)= oComp.name
-                  option(val="NaN", disabled="disabled") Upcoming Competitions
+                     option(value=oComp.id)= oComp.name
+                  option(value="NaN", disabled="disabled") Upcoming Competitions
                   each uComp in upcomingCompetitions
-                     option(val=uComp.id)= uComp.name
+                     option(value=uComp.id)= uComp.name
             span.col-md-4.help-block= page_errors.getError('comp_id')
          .form-group
             label.col-md-4.control-label(for="default_time_limit") Default Time Limit (ms)
             .col-md-4
                input#default_time_limit.form-control.input-md(name="default_time_limit", type="text", placeholder="3000", required="")
             span.col-md-4.help-block= page_errors.getError('default_time_limit')
+         .form-group
+            label.col-md-4.control-label(for="problem_description") Problem Description File
+            .col-md-4
+               input#problem_description.form-control.input-md(type="file" name="problem_description")
+            span.col-md-4.help-block= page_errors.getError('problem_description')
          .form-group
             input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Next Step")

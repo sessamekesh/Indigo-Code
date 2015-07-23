@@ -11,7 +11,6 @@ block content
    // Buttons to upload new jade files
    .row
       .col-md-4
-         // TODO KIP Create /controllers/admin/new-comp-upload-description.js
          form(action="/admin/new-comp-upload-description" method="post" target="description-preview" enctype="multipart/form-data")
             input(type="file" name="new-desc-file")
             input.btn.btn-primary(type="submit" name="submit_new_file" value="Upload Description")
