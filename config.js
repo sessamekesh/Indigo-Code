@@ -23,4 +23,10 @@ config.buildServerUpdateTimeout = 750;
  */
 config.buildServerReconnectAttempts = 15;
 
+/**
+ * The maximum size an uploaded file may be (global configuration, may be set more specifically in other places)
+ * @type {number}
+ */
+config.maxFileSize = 512 * 1024 * 1024;
+
 exports.config = config;

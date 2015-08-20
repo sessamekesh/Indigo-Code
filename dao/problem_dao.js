@@ -6,7 +6,8 @@ var db = require('./db');
 
 exports.ERRORS = {
     EMPTY_PROBLEM_DATA: 'Problem data provided is empty',
-    INCOMPLETE_PROBLEM_DATA: 'Problem data provided is incomplete or malformed'
+    INCOMPLETE_PROBLEM_DATA: 'Problem data provided is incomplete or malformed',
+    INVALID_PROBLEM_ID: 'Problem ID provided is invalid'
 };
 
 /**
@@ -68,5 +69,24 @@ exports.insertProblem = function (problemData, callback) {
                 }
             }
         )
+    }
+};
+
+/**
+ * Removes the given problem from the database
+ * @param problemId {number}
+ * @param callback {function (err: Error, res: bool)} True if an item was successfully removed, false otherwise
+ */
+exports.removeProblem = function (problemId, callback) {
+    if (isNaN(parseInt(problemId)) || problemId < 0) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else {
+        db.owl_query('DELETE FROM problem WHERE id = ? LIMIT 1;', [problemId], function (removeError, removeResult) {
+            if (removeError) {
+                callback(removeError);
+            } else {
+                callback(null, removeResult.affectedRows > 0);
+            }
+        });
     }
 };

@@ -48,7 +48,7 @@ exports.post = function (req, res) {
     source.on('end', function () {
         fs.unlink(file.path, function (delete_file_error) {
             if (delete_file_error) {
-                console.log('new-comp-upload-description.js: Error deleteing file ' + file.path + ' - ' + delete_file_error.message);
+                console.log('new-comp-upload-description.js: Error deleting file ' + file.path + ' - ' + delete_file_error.message);
             }
         });
 

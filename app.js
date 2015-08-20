@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var index_data_loader = require('./controllers/general/index');
 var multer = require('multer');
+var config = require('./config');
 
 var general_route = require('./routes/general');
 
@@ -22,10 +23,10 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({
-  dest: './uploads/',
+  dest: '../uploads/',
   limits: {
     fields: 200,
-    fileSize: 200 * 1024 // TODO KIP: Move this to a configuration file
+    fileSize: config.maxFileSize
   }
 }));
 app.use(session({ secret: 'rigg-sessamekesh', resave: false, saveUninitialized: false }));
