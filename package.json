@@ -19,6 +19,8 @@
     "multer": "^0.1.8",
     "mysql": "^2.6.2",
     "restler": "^3.3.0",
-    "serve-favicon": "~2.2.0"
+    "rimraf": "^2.4.2",
+    "serve-favicon": "~2.2.0",
+    "tar-fs": "^1.8.1"
   }
 }

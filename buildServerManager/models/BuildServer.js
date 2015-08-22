@@ -323,6 +323,42 @@ BuildServer.prototype.getCachedServerData = function () {
     return this._serverData;
 };
 
+/**
+ * @param buildSystemId {string} ID of the build system in question
+ * @returns {BuildSystemData|null}
+ */
+BuildServer.prototype.getBuildSystemSync = function (buildSystemId) {
+    if (!this._buildSystemCache) {
+        return null;
+    } else {
+        for (var i = 0; i < this._buildSystemCache.length; i++) {
+            if (this._buildSystemCache[i].id === buildSystemId) {
+                return this._buildSystemCache[i];
+            }
+        }
+
+        return null;
+    }
+};
+
+/**
+ * @param comparisonSystemId {string} ID of the comparison system in question
+ * @returns {ComparisonSystem|null}
+ */
+BuildServer.prototype.getComparisonSystemSync = function (comparisonSystemId) {
+    if (!this._compareSystemCache) {
+        return null;
+    } else {
+        for (var i = 0; i < this._compareSystemCache.length; i++) {
+            if (this._compareSystemCache[i].id === comparisonSystemId) {
+                return this._compareSystemCache[i];
+            }
+        }
+
+        return null;
+    }
+};
+
 exports.BuildServer = BuildServer;
 
 BuildSystemData = require('./BuildSystemData').BuildSystemData;

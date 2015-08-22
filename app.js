@@ -3,6 +3,7 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var fs = require('fs');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var index_data_loader = require('./controllers/general/index');
@@ -80,5 +81,20 @@ var t = new BuildServer('localhost', 8080, 1, function (err) {
     });
   }
 });
+
+// Make sure all of our data directories exist...
+function makeSureDirectoryExists(path) {
+  try {
+    fs.mkdirSync(path);
+  } catch (e) {
+    if (e.code != 'EEXIST'){
+      throw e;
+    }
+  }
+}
+
+makeSureDirectoryExists('./data');
+makeSureDirectoryExists('./data/test-cases');
+makeSureDirectoryExists('./data/build-packages');
 
 module.exports = app;

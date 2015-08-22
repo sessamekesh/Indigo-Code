@@ -117,4 +117,7 @@ BuildServerManager.prototype.getBuildServerList = function () {
     return tr;
 };
 
+/**
+ * @type {BuildServerManager}
+ */
 exports.BuildServerManager = new BuildServerManager();
