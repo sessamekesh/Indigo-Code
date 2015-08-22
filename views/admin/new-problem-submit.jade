@@ -5,5 +5,10 @@ extends ./index
 
 block content
    p Success! The new problem has been created.
-   p TODO KAM: Add in the link to edit the new problem
-   p TODO KAM: Add in a link to add a new problem
+   p It will not be visible by users until the following steps are met:
+   ol
+      li At least one user visible test case is added
+      li At least one sample solution is uploaded that passes all tests
+   p.
+      Test cases and sample solutions can be added from the problem page itself. Go to
+      #[a(href="/competition/" + compId + "/problem/" + problemId) the problem page] to add test cases.

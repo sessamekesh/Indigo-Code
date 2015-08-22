@@ -3,6 +3,7 @@
  */
 
 var db = require('./db');
+var ProblemData = require('./problem_dao').ProblemData;
 
 /**
  *
@@ -173,6 +174,39 @@ exports.create_competition = function (comp_data, cb) {
                 } else {
                     cb(null, new exports.CompData(res.insertId, comp_data.name, comp_data.start_date,
                         comp_data.end_date, comp_data.time_penalty, comp_data.max_team_size));
+                }
+            }
+        );
+    }
+};
+
+/**
+ * Get all of the problems in the given competition
+ * @param compId {number}
+ * @param cb {function (err: Error|null, res: Array.<ProblemData>?)}
+ */
+exports.getProblemsInCompetition = function (compId, cb) {
+    if (isNaN(compId)) {
+        cb(new Error('No competition with given ID found'));
+    } else {
+        db.owl_query(
+            'SELECT id, name, comp_id, default_time_limit_ms, valid FROM problem WHERE comp_id = ?;',
+            [compId],
+            function (err, res) {
+                if (err) {
+                    cb(err);
+                } else {
+                    cb(null, res.map(
+                        function (rsl) {
+                            return new ProblemData(
+                                rsl['id'],
+                                rsl['name'],
+                                rsl['comp_id'],
+                                rsl['default_time_limit_ms'],
+                                !!rsl['valid'][0]
+                            );
+                        }
+                    ));
                 }
             }
         );

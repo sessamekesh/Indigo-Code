@@ -4,6 +4,7 @@
 
 var general_layer = require('../general/index');
 var CompetitionDescription = require('../../models/CompetitionDescription');
+var compDao = require('../../dao/competition_dao');
 
 exports.get = function (req, res) {
     exports.fill_data(req, {
@@ -33,9 +34,19 @@ exports.fill_data = function (req, data, cb) {
     data.comp_data = req.comp_data;
 
     // TODO KAM: Fill in problems here
+    compDao.getProblemsInCompetition(req.comp_data.id, function (err, res) {
+        if (err) {
+            console.log('AN ERROR OCCURRED FETCHING PROBLEMS: ' + err.message);
+        }
 
+        data.problemList = res.filter(function (problem) {
+            return problem.isValid || data.user_data.is_admin;
+        });
 
-    general_layer.fill_data(req, data, function (new_data) {
-        cb(new_data);
+        data.problemList = data.problemList || [];
+
+        general_layer.fill_data(req, data, function (new_data) {
+            cb(new_data);
+        });
     });
 };

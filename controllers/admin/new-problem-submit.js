@@ -49,29 +49,31 @@ exports.post = function (req, res) {
                 console.log(req.files['problem_description']);
                 var description = req.files['problem_description'];
                 if (description.extension === 'jade') {
-                    // Before moving file, attempt to compile it...
-                    try {
-                        var renderFunction = jade.compileFile(description.path, { pretty: false });
-                        renderFunction(newProblemData);
+                    var newLocation = '../views/problem/descriptions/' + problemId + '.jade';
+                    var jadeDest = fs.createWriteStream(newLocation);
+                    var jadeSource = fs.createReadStream(description.path);
 
-                        var newLocation = '../views/problem/descriptions/' + problemId + '.jade';
-                        var jadeDest = fs.createWriteStream(newLocation);
-                        var jadeSource = fs.createReadStream(description.path);
-                        jadeSource.pipe(jadeDest);
-                        jadeSource.on('end', function () {
-                            fs.unlink(description.path, function (delete_file_error) {
-                                delete_file_error && (console.log(
-                                    'new-problem-submit.js: Error deleting file '
-                                      + description.path
-                                      + ' - '
-                                      + delete_file_error.message));
-                            });
-                            callback(null, { path: newLocation, type: description.extension });
+                    jadeSource.pipe(jadeDest);
+                    jadeSource.on('end', function () {
+                        fs.unlink(description.path, function (delete_file_error) {
+                            delete_file_error && (console.log(
+                                'new-problem-submit.js: Error deleting file '
+                                  + description.path
+                                  + ' - '
+                                  + delete_file_error.message));
                         });
-                    } catch (e) {
-                        // Could not be compiled
-                        callback(new Error('Invalid JADE file provided'));
-                    }
+
+                        try {
+                            var renderFunction = jade.compileFile(newLocation, { pretty: false });
+                            renderFunction(newProblemData);
+
+                            callback(null, { path: newLocation, type: description.extension });
+                        } catch (e) {
+                            // Could not be compiled
+                            callback(new Error('Invalid JADE file provided'));
+                            fs.unlink(newLocation);
+                        }
+                    });
                 } else {
                     // TODO KAM: Be a bit more picky about what file types are uploaded, mkay?
                     newLocation = '../views/problem/descriptions/' + problemId + '.' + description.extension;
@@ -84,12 +86,21 @@ exports.post = function (req, res) {
                                 'new-problem-submit.js: Error deleting file '
                                 + description.path
                                 + ' - '
-                                + delete_file_error.message));
+                                + delete_file_error.message
+                            ));
                         });
                         callback(null, { path: newLocation, type: description.extension });
                     });
                 }
             } else {
+                fs.unlink(description.path, function (delete_file_error) {
+                    delete_file_error && (console.log(
+                        'new-problem-submit.js: Error deleting file '
+                        + description.path
+                        + ' - '
+                        + delete_file_error.message
+                    ));
+                });
                 callback(new Error('No problem description file provided!'));
             }
         }
@@ -99,14 +110,15 @@ exports.post = function (req, res) {
         // If there was an error, delete the problem created
         if (err) {
             problemId && problemDAO.removeProblem(problemId, function () {});
+            res.status(400).render('./error.jade', err);
+        } else {
             res.status(201).render('./admin/new-problem-submit.jade', {
                 title: 'New problem successfully created',
                 subtitle: 'Problem ' + problemData.name,
                 redirect_url: '/admin',
-                problemId: problemId
+                problemId: problemId,
+                compId: problemData.compId
             });
-        } else {
-            res.send('No error happened');
         }
     });
 };

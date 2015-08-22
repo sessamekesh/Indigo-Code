@@ -14,3 +14,9 @@ block sidebar
    .list-group
    b Problems
    .list-group
+      each problem in problemList
+         .list-group-item(class=((user_data.is_admin && !problem.isValid) ? "list-group-item-danger" : undefined))
+            a(href="/competition/" + comp_data.id + "/problem/" + problem.id)= problem.name
+            a(href="/competition/" + comp_data.id + "/problem/" + problem.id + "/submissions") &nbsp;(Submissions)
+            if (user_data.is_admin)
+               a(href="/competition/" + comp_data.id + "/problem/" + problem.id + "/edit") &nbsp;(Edit)

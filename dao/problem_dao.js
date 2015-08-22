@@ -73,6 +73,36 @@ exports.insertProblem = function (problemData, callback) {
 };
 
 /**
+ * Get data for the problem with the specified ID
+ * @param problemId {number}
+ * @param callback {function (err: Error, problemData: ProblemData)}
+ */
+exports.getProblemData = function (problemId, callback) {
+    if (isNaN(parseInt(problemId))) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else {
+        db.owl_query('SELECT id, name, comp_id, default_time_limit_ms, valid FROM problem WHERE id=?;',
+            [problemId],
+            function (err, res) {
+                if (err) {
+                    callback(err);
+                } else if (res.length != 1) {
+                    callback(new Error('No record found with given ID'));
+                } else {
+                    callback(null, new exports.ProblemData(
+                        res[0]['id'],
+                        res[0]['name'],
+                        res[0]['comp_id'],
+                        res[0]['default_time_limit_ms'],
+                        !!res[0]['valid'][0]
+                    ));
+                }
+            }
+        );
+    }
+};
+
+/**
  * Removes the given problem from the database
  * @param problemId {number}
  * @param callback {function (err: Error, res: bool)} True if an item was successfully removed, false otherwise
