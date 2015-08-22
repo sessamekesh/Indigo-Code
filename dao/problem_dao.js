@@ -28,6 +28,21 @@ exports.ProblemData = function (id, name, compId, defaultTimeLimit, isValid) {
 };
 
 /**
+ * Represents a database entry concerning test case data
+ * @param id {number|null} Unique ID of the test case
+ * @param problemId {number} Unique ID of the problem to which this test case is attached
+ * @param isVisibleDuringCompetition {boolean}
+ * @param comparisonSystemName {string} Name of the comparison system to be used (must be supported on build server!)
+ * @constructor
+ */
+exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comparisonSystemName) {
+    this.id = id;
+    this.problemId = problemId;
+    this['isVisibleDuringCompetition'] = isVisibleDuringCompetition;
+    this['comparisonSystemName'] = comparisonSystemName;
+};
+
+/**
  * Validate that the problem data in this object is complete and ready to insert into the database
  * @return {boolean}
  */
@@ -105,7 +120,7 @@ exports.getProblemData = function (problemId, callback) {
 /**
  * Removes the given problem from the database
  * @param problemId {number}
- * @param callback {function (err: Error, res: bool)} True if an item was successfully removed, false otherwise
+ * @param callback {function (err: Error=, res: bool=)} True if an item was successfully removed, false otherwise
  */
 exports.removeProblem = function (problemId, callback) {
     if (isNaN(parseInt(problemId)) || problemId < 0) {
@@ -118,5 +133,38 @@ exports.removeProblem = function (problemId, callback) {
                 callback(null, removeResult.affectedRows > 0);
             }
         });
+    }
+};
+
+/**
+ * Provide the data for the test cases attached to this problem
+ * @param problemId {number}
+ * @param callback {function (err: Error=, res: Array.<*>=)}
+ */
+exports.getAttachedTestCases = function (problemId, callback) {
+    if (isNaN(parseInt(problemId)) || problemId < 0) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else {
+        db.owl_query(
+            'SELECT id, problem_id, visible_during_competition, comparison_system_name FROM ' +
+            'test_case WHERE problem_id = ?;',
+            [problemId],
+            function (err, res) {
+                if (err) {
+                    callback (err);
+                } else {
+                    callback(null, res.map(
+                        function (row) {
+                            return new exports.TestCaseData(
+                                row['id'],
+                                row['problem_id'],
+                                row['visible_during_competition'],
+                                row['comparison_system_name']
+                            );
+                        }
+                    ));
+                }
+            }
+        );
     }
 };

@@ -1,0 +1,24 @@
+//
+   Created by Kamaron on 8/22/2015.
+
+extends ../competition/index
+
+block content
+   if (user_data['is_admin'])
+      a.btn.btn-primary(href="/competition/" + comp_data.id + "/problem/" + problemData.id + "/new-test-case") Add Test Case
+      br
+   table.table.table-hover
+      tr
+         if (user_data['is_admin'])
+            th
+         th ID
+         th Data
+         th Comparison System
+      each testCase in testCases
+         tr
+            if (user_data['is_admin'])
+               td
+                  a.btn.btn-danger(href="/competition/" + comp_data.id + "/problem/" + problemData.id + "/remove-test-case") X
+            td= testCase.id
+            td BUTTON
+            td BUTTON

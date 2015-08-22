@@ -1,0 +1,34 @@
+//
+   Created by Kamaron on 8/22/2015.
+
+extends ../competition/index
+
+block content
+   if pageErrors.isFatal()
+      h1 Errors were found, please correct them before continuing
+   form#new_test_case_form.form-horizontal(method="post", action="/competition/" + comp_data.id + "/problem/" + problemData.id + "/new-test-case-submit", enctype="multipart/form-data")
+      fieldset
+         legend Test Case Data
+         .form-group
+            label.col-md-4.control-label(for="comparison_system_name") Comparison System
+            .col-md-4
+               input#comp_sys_name.form-control.input-md(name="comp_sys_name", type="text", placeholder="whaleshark_diff_0.1.1", required="")
+               // TODO KAM: I'd love to, on lose focus, check against attached build systems to see if this could be supported
+            span.col-md-4.help-block= pageErrors.getError('comp_sys_name')
+         .form-group
+            label.col-md-4.control-label(for="is_visible") Visible
+            .col-md-4
+               input#is_visible.form-control.input-md(name="is_visible", type="checkbox")
+            span.col-md-4.help-block= pageErrors.getError('is_visible')
+         .form-group
+            label.col-md-4.control-label(for="test_input") Test Input
+            .col-md-4
+               input#test_input.form-control.input-md(type="file", name="test_input")
+            span.col-md-4.help-block= pageErrors.getError('test_input')
+         .form-group
+            label.col-md-4.control-label(for="test_expected") Expected Output
+            .col-md-4
+               input#test_expected.form-control.input-md(type="file", name="test_expected")
+            span.col-md-4.help-block= pageErrors.getError('test_input')
+         .form-group
+            input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")
