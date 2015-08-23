@@ -93,8 +93,8 @@ function makeSureDirectoryExists(path) {
   }
 }
 
-makeSureDirectoryExists('./data');
-makeSureDirectoryExists('./data/test-cases');
-makeSureDirectoryExists('./data/build-packages');
+makeSureDirectoryExists('../data');
+makeSureDirectoryExists('../data/test-cases');
+makeSureDirectoryExists('../data/build-packages');
 
 module.exports = app;

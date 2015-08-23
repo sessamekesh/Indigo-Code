@@ -7,7 +7,8 @@ var db = require('./db');
 exports.ERRORS = {
     EMPTY_PROBLEM_DATA: 'Problem data provided is empty',
     INCOMPLETE_PROBLEM_DATA: 'Problem data provided is incomplete or malformed',
-    INVALID_PROBLEM_ID: 'Problem ID provided is invalid'
+    INVALID_PROBLEM_ID: 'Problem ID provided is invalid',
+    INVALID_COMPARISON_SYSTEM_NAME: 'Comparison system name is invalid'
 };
 
 /**
@@ -162,6 +163,36 @@ exports.getAttachedTestCases = function (problemId, callback) {
                                 row['comparison_system_name']
                             );
                         }
+                    ));
+                }
+            }
+        );
+    }
+};
+
+/**
+ * Add a new test case to the database, following the test case data given
+ * @param testCaseData {exports.TestCaseData}
+ * @param callback {function (err: Error=, res: exports.TestCaseData=)}
+ */
+exports.createTestCase = function (testCaseData, callback) {
+    if (isNaN(parseInt(testCaseData.problemId))) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else if (!testCaseData.comparisonSystemName) {
+        callback(new Error(exports.ERRORS.INVALID_COMPARISON_SYSTEM_NAME));
+    } else {
+        db.owl_query(
+            'INSERT INTO test_case (problem_id, visible_during_competition, comparison_system_name) VALUES (?, ?, ?);',
+            [testCaseData.problemId, !!testCaseData.isVisibleDuringCompetition, testCaseData.comparisonSystemName],
+            function (err, res) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, new exports.TestCaseData(
+                        res.insertId,
+                        testCaseData.problemId,
+                        !!testCaseData.isVisibleDuringCompetition,
+                        testCaseData.comparisonSystemName
                     ));
                 }
             }

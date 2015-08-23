@@ -25,8 +25,6 @@ var jade = require('jade');
  */
 exports.post = function (req, res) {
 
-    console.log(req.files);
-
     var testPageData;
     var file = req.files["new-desc-file"];
 

@@ -20,5 +20,6 @@ block content
                td
                   a.btn.btn-danger(href="/competition/" + comp_data.id + "/problem/" + problemData.id + "/remove-test-case") X
             td= testCase.id
-            td BUTTON
-            td BUTTON
+            td
+               .btn.btn-primary Show
+            td= testCase.comparisonSystemName

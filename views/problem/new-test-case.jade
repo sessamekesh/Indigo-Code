@@ -10,10 +10,10 @@ block content
       fieldset
          legend Test Case Data
          .form-group
-            label.col-md-4.control-label(for="comparison_system_name") Comparison System
+            label.col-md-3.control-label(for="comparison_system_name") Comparison System
+            a.col-md-1#compareHelp ?
             .col-md-4
                input#comp_sys_name.form-control.input-md(name="comp_sys_name", type="text", placeholder="whaleshark_diff_0.1.1", required="")
-               // TODO KAM: I'd love to, on lose focus, check against attached build systems to see if this could be supported
             span.col-md-4.help-block= pageErrors.getError('comp_sys_name')
          .form-group
             label.col-md-4.control-label(for="is_visible") Visible
@@ -32,3 +32,8 @@ block content
             span.col-md-4.help-block= pageErrors.getError('test_input')
          .form-group
             input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")
+   p Currently Active Comparison Systems
+   ol
+      - for(cs in compareSystems) {
+         li= compareSystems[cs] + ' (' + cs + ')'
+      - }

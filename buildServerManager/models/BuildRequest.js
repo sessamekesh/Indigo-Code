@@ -134,9 +134,9 @@ BuildRequest.prototype.validate = function (result_callback) {
             //  The required files are /data/test-cases/[ID]/input.txt and .../expected.txt
 
             async.every(this.testCases.map(function (tc) {
-                return './data/test-cases/' + tc.id + '/input.txt';
+                return '../data/test-cases/' + tc.id + '/input.txt';
             }).concat(this.testCases.map(function (tc) {
-                return './data/test-cases/' + tc.id + '/expected.txt';
+                return '../data/test-cases/' + tc.id + '/expected.txt';
             })),
                 function (item, cb) {
                     fs.lstat(item, function (lstatErr, lstatRes) {
@@ -201,7 +201,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
             // Perform the packaging operation...
             async.series({
                 createStageDirectory: function (cb) {
-                    fs.mkdir('./data/build-packages/' + this.id, cb);
+                    fs.mkdir('../data/build-packages/' + this.id, cb);
                 }.bind(this),
                 createMetadataFile: function (cb) {
 
@@ -217,7 +217,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
                         })
                     };
 
-                    fs.write('./data/build-packages/' + this.id + '/info.json',
+                    fs.write('../data/build-packages/' + this.id + '/info.json',
                         JSON.stringify(metadata),
                         cb
                     );
@@ -225,30 +225,30 @@ BuildRequest.prototype.buildPackage = function (callback) {
                 moveSourceFile: function (cb) {
                     // lol sourceSource that's a silly name
                     var sourceSource = fs.createReadStream(this.sourceLocation);
-                    var sourceDest = fs.createWriteStream('./data/build-pacakges/' + this.id + '/source');
+                    var sourceDest = fs.createWriteStream('../data/build-pacakges/' + this.id + '/source');
 
                     sourceSource.pipe(sourceDest);
                     sourceSource.on('end', cb);
                     sourceSource.on('error', cb);
                 }.bind(this),
                 createTestCasesDirectory: function (cb) {
-                    fs.mkdir('./data/build-packages/' + this.id + '/test-cases', cb);
+                    fs.mkdir('../data/build-packages/' + this.id + '/test-cases', cb);
                 }.bind(this),
                 moveTestCases: function (cb) {
                     async.every(
                         this.testCases,
                         function (element, eleCb) {
                             // Move the test case 'element'
-                            var tcIn = fs.createReadStream('./data/test-cases/' + element.id + '/input.txt');
-                            var tcInDest = fs.createWriteStream('./data/build-packages/' + this.id + '/test-cases/' + element.id + '.in');
+                            var tcIn = fs.createReadStream('../data/test-cases/' + element.id + '/input.txt');
+                            var tcInDest = fs.createWriteStream('../data/build-packages/' + this.id + '/test-cases/' + element.id + '.in');
                             tcIn.pipe(tcInDest);
                             tcIn.on('error', function (err) {
                                 console.log('Error moving test case ' + element.id + ': ' + err.message);
                                 eleCb(false);
                             });
                             tcIn.on('end', function () {
-                                var tcExpected = fs.createReadStream('./data/test-cases/' + element.id + '/expected.txt');
-                                var tcExpectedDest = fs.createWriteStream('./data/build-packages/' + this.id + '/test-cases/' + element.id + '.out');
+                                var tcExpected = fs.createReadStream('../data/test-cases/' + element.id + '/expected.txt');
+                                var tcExpectedDest = fs.createWriteStream('../data/build-packages/' + this.id + '/test-cases/' + element.id + '.out');
                                 tcExpected.pipe(tcExpectedDest);
                                 tcExpected.on('error', function (err) {
                                     console.log('Error moving test case ' + element.id + ': ' + err.message);
@@ -267,12 +267,12 @@ BuildRequest.prototype.buildPackage = function (callback) {
                     )
                 }.bind(this),
                 makePackage: function (cb) {
-                    var tarStream = tar.pack('./data/build-packages/' + this.id);
-                    var outStream = fs.createWriteStream('./data/build-packages/' + this.id + '.tar');
+                    var tarStream = tar.pack('../data/build-packages/' + this.id);
+                    var outStream = fs.createWriteStream('../data/build-packages/' + this.id + '.tar');
                     tarStream.pipe(outStream);
 
                     tarStream.on('end', function () {
-                        this.buildPackageLocation = './data/build-packages/' + this.id + '.tar';
+                        this.buildPackageLocation = '../data/build-packages/' + this.id + '.tar';
                         cb();
                     }.bind(this));
                     tarStream.on('error', function (err) {
@@ -289,7 +289,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
                 }
 
                 // In any case, destroy the staging directory
-                rimraf('./data/build-packages/' + this.id, function (err) {
+                rimraf('../data/build-packages/' + this.id, function (err) {
                     if (err) {
                         console.log('Error destroying staging directory for build package ' + this.id, err.message);
                     }

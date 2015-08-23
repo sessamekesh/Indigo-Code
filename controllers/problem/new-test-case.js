@@ -5,6 +5,11 @@
 var getBaseData = require('./index').fill_data;
 var RegistrationPageErrorCollection = require('../../models/RegistrationPageErrorCollection');
 
+/**
+ * @type {BuildServerManager}
+ */
+var BuildManager;
+
 exports.get = function (req, res) {
     // Only allow access to this page if admin!
     if (req.user_data['is_admin'] === true) {
@@ -29,6 +34,14 @@ exports.fill_data = function (req, data, cb) {
     data.pageErrors = data.pageErrors || new RegistrationPageErrorCollection();
 
     getBaseData(req, data, function (newData) {
+        newData.compareSystems = {};
+        BuildManager.getBuildServerList().forEach(function (element) {
+            element.getCachedComparisonSystems().forEach(function (csys) {
+                newData.compareSystems[csys.id] = csys.name;
+            });
+        });
         cb(newData);
     });
 };
+
+BuildManager = require('../../buildServerManager/BuildServerManager').BuildServerManager;
