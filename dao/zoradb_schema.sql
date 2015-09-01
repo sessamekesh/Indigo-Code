@@ -35,6 +35,8 @@
 -- Table structure for table `allowed_language`
 --
 
+DROP DATABASE IF EXISTS zoradb;
+
 CREATE DATABASE zoradb;
 USE zoradb;
 DROP TABLE IF EXISTS `allowed_language`;
@@ -99,7 +101,7 @@ CREATE TABLE `problem` (
   `name` varchar(25) NOT NULL,
   `comp_id` int(11) NOT NULL,
   `default_time_limit_ms` int(11) NOT NULL DEFAULT '5000',
-  `valid` bit(1) NOT NULL DEFAULT b`0`,
+  `valid` bit(1) NOT NULL DEFAULT b'0',
   PRIMARY KEY (`id`),
   KEY `FK_PROB_COMP_idx` (`comp_id`),
   CONSTRAINT `FK_PROB_COMP` FOREIGN KEY (`comp_id`) REFERENCES `competition` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE
