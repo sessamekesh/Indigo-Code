@@ -10,7 +10,7 @@ Development is happening on this branch from now on.
 
 I'm working to on the third iteration of the framework, using Node.js, Express.js, Angular.js, Jade, and MySQL.
 
-Development on this third iteration began March 30th, 2015. It was being actively developed July 11th, 2015.
+Development on this third iteration began March 30th, 2015. It was being actively developed September 1st, 2015.
 If the current date is much later than that, then I'm sorry that this project has become stale. Version 0.2 worked as of
 March 2015 very smoothly, just make sure that you have all the required technologies (g++, java, etc.)
 installed to use the actual submission server.
