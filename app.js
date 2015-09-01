@@ -24,7 +24,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(multer({
-  dest: '../uploads/',
+  dest: './uploads/',
   limits: {
     fields: 200,
     fileSize: config.maxFileSize
@@ -93,8 +93,9 @@ function makeSureDirectoryExists(path) {
   }
 }
 
-makeSureDirectoryExists('../data');
-makeSureDirectoryExists('../data/test-cases');
-makeSureDirectoryExists('../data/build-packages');
+makeSureDirectoryExists('./data');
+makeSureDirectoryExists('./data/test-cases');
+makeSureDirectoryExists('./data/build-packages');
+makeSureDirectoryExists('./views/problem/descriptions');
 
 module.exports = app;

@@ -49,7 +49,7 @@ exports.post = function (req, res) {
                 console.log(req.files['problem_description']);
                 var description = req.files['problem_description'];
                 if (description.extension === 'jade') {
-                    var newLocation = '../views/problem/descriptions/' + problemId + '.jade';
+                    var newLocation = './views/problem/descriptions/' + problemId + '.jade';
                     var jadeDest = fs.createWriteStream(newLocation);
                     var jadeSource = fs.createReadStream(description.path);
 
@@ -76,7 +76,7 @@ exports.post = function (req, res) {
                     });
                 } else {
                     // TODO KAM: Be a bit more picky about what file types are uploaded, mkay?
-                    newLocation = '../views/problem/descriptions/' + problemId + '.' + description.extension;
+                    newLocation = './views/problem/descriptions/' + problemId + '.' + description.extension;
                     var otherDest = fs.createWriteStream(newLocation);
                     var otherSource = fs.createReadStream(description.path);
                     otherSource.pipe(otherDest);

@@ -34,8 +34,8 @@ exports.post = function (req, res) {
     //  will use when it goes to render this file.
     testPageData = new CompetitionDescription(req.session.new_comp_data);
 
-    var testPath = '../views/competition/descriptions/' + req.session.new_comp_data.id + '_t.jade';
-    var newPath = '../views/competition/descriptions/' + req.session.new_comp_data.id + '.jade';
+    var testPath = './views/competition/descriptions/' + req.session.new_comp_data.id + '_t.jade';
+    var newPath = './views/competition/descriptions/' + req.session.new_comp_data.id + '.jade';
 
     // Copy file to new location
     var source;

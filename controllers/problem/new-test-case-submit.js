@@ -64,11 +64,11 @@ exports.post = function (req, res) {
                 );
             },
             makeDirectory: function (callback) {
-                fs.mkdir('../data/test-cases/' + data.testCaseData.id, callback);
+                fs.mkdir('./data/test-cases/' + data.testCaseData.id, callback);
             },
             moveInputFile: function (callback) {
                 var inSource = fs.createReadStream(tcInFile.path);
-                inSource.pipe(fs.createWriteStream('../data/test-cases/' + data.testCaseData.id + '/input.txt'));
+                inSource.pipe(fs.createWriteStream('./data/test-cases/' + data.testCaseData.id + '/input.txt'));
                 inSource.on('end', callback);
                 inSource.on('error', callback);
 
@@ -76,7 +76,7 @@ exports.post = function (req, res) {
             },
             moveExpectedFile: function (callback) {
                 var exSource = fs.createReadStream(tcExFile.path);
-                exSource.pipe(fs.createWriteStream('../data/test-cases/' + data.testCaseData.id + '/expected.txt'));
+                exSource.pipe(fs.createWriteStream('./data/test-cases/' + data.testCaseData.id + '/expected.txt'));
                 exSource.on('end', callback);
                 exSource.on('error', callback);
 
