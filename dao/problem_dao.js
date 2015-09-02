@@ -9,7 +9,8 @@ exports.ERRORS = {
     INCOMPLETE_PROBLEM_DATA: 'Problem data provided is incomplete or malformed',
     INVALID_PROBLEM_ID: 'Problem ID provided is invalid',
     INVALID_COMPARISON_SYSTEM_NAME: 'Comparison system name is invalid',
-    INVALID_BUILD_SYSTEM_NAME: 'Build system name is invalid'
+    INVALID_BUILD_SYSTEM_NAME: 'Build system name is invalid',
+    INVALID_FILENAME: 'Filename provided is invalid'
 };
 
 /**
@@ -61,12 +62,14 @@ exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comp
  * @param id {number|null} Unique ID of te sample solution
  * @param problemId {number} Unique ID of the problem to which this sample solution is attached
  * @param buildSystemName {string} Name of the build system to be used (must be supported on build server!)
+ * @param originalFilename {string} Java! Oh, Java!
  * @constructor
  */
-exports.SampleSolutionData = function (id, problemId, buildSystemName) {
+exports.SampleSolutionData = function (id, problemId, buildSystemName, originalFilename) {
     this.id = id;
     this.problemId = problemId;
     this.buildSystemName = buildSystemName;
+    this.originalFilename = originalFilename;
 };
 
 /**
@@ -234,7 +237,8 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
                         return new exports.SampleSolutionData(
                             row['id'],
                             row['problem_id'],
-                            row['build_system_name']
+                            row['build_system_name'],
+                            row['original_filename']
                         );
                     }));
                 }
@@ -253,10 +257,12 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
         callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
     } else if (!sampleSolutionData.buildSystemName) {
         callback(new Error(exports.ERRORS.INVALID_BUILD_SYSTEM_NAME));
+    } else if (!sampleSolutionData.originalFilename) {
+        callback(new Error(exports.ERRORS.INVALID_FILENAME));
     } else {
         db.owl_query(
-            'INSERT INTO sample_solution (problem_id, build_system_name) VALUES (?, ?);',
-            [sampleSolutionData.problemId, sampleSolutionData.buildSystemName],
+            'INSERT INTO sample_solution (problem_id, build_system_name, original_filename) VALUES (?, ?, ?);',
+            [sampleSolutionData.problemId, sampleSolutionData.buildSystemName, sampleSolutionData.originalFilename],
             function (err, res) {
                 if (err) {
                     callback(err);
@@ -264,7 +270,8 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
                     callback(null, new exports.SampleSolutionData(
                         res['insertId'],
                         sampleSolutionData.problemId,
-                        sampleSolutionData.buildSystemName
+                        sampleSolutionData.buildSystemName,
+                        sampleSolutionData.originalFilename
                     ));
                 }
             }

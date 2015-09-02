@@ -85,7 +85,8 @@ exports.post = function (req, res) {
                     new problemDao.SampleSolutionData(
                         null,
                         req['problemData']['id'],
-                        req['body']['build_system_name']
+                        req['body']['build_system_name'],
+                        solnFile.originalname
                     ), function (dberr, dbres) {
                         data['sampleSolutionData'] = dbres;
                         callback(dberr, dbres);
@@ -108,7 +109,7 @@ exports.post = function (req, res) {
                 console.log('An error occurred storing the sample solution:', aserr.message);
                 res.status(500).render('./error', {
                     message: aserr.message,
-                    err: aserr
+                    error: aserr
                 });
             } else {
                 exports.fill_data(req, data, function (newData) {

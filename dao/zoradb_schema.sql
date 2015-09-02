@@ -205,6 +205,7 @@ CREATE TABLE `sample_solution` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `problem_id` int(11) NOT NULL,
   `build_system_name` varchar(45) NOT NULL,
+  `original_filename` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_SAMPLE_SOLUTION_PROBLEM_idx` (`problem_id`),
   CONSTRAINT `FK_SAMPLE_SOLUTION_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE

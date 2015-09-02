@@ -189,7 +189,6 @@ BuildRequest.prototype.validate = function (result_callback) {
 
 /**
  * Builds the package for this build request, and sends it to a staging area.
- * Builds the package for this build request, and sends it to a staging area.
  *  Notifies caller (via callback) of location of package in staging area
  * @param callback {function (err: Error=, res: string=)}
  */
