@@ -61,15 +61,25 @@ exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comp
  * Represents a database entry concerning sample solution data
  * @param id {number|null} Unique ID of te sample solution
  * @param problemId {number} Unique ID of the problem to which this sample solution is attached
- * @param buildSystemName {string} Name of the build system to be used (must be supported on build server!)
+ * @param languageId {number} Unique ID of the language in which this sample solution is written
  * @param originalFilename {string} Java! Oh, Java!
  * @constructor
  */
-exports.SampleSolutionData = function (id, problemId, buildSystemName, originalFilename) {
+exports.SampleSolutionData = function (id, problemId, languageId, originalFilename) {
     this.id = id;
     this.problemId = problemId;
-    this.buildSystemName = buildSystemName;
+    this.languageId = languageId;
     this.originalFilename = originalFilename;
+};
+
+exports.SubmissionData = function (id, teamId, problemId, result, timestamp, notes, affectsScore) {
+    this.id = id;
+    this.teamId = teamId;
+    this.problemId = problemId;
+    this.result = result;
+    this.timestamp = timestamp;
+    this.notes = notes;
+    this.affectsScore = affectsScore;
 };
 
 /**
@@ -108,7 +118,7 @@ exports.insertProblem = function (problemData, callback) {
 /**
  * Get data for the problem with the specified ID
  * @param problemId {number}
- * @param callback {function (err: Error, problemData: ProblemData)}
+ * @param callback {function (err: Error=, problemData: exports.ProblemData=)}
  */
 exports.getProblemData = function (problemId, callback) {
     if (isNaN(parseInt(problemId))) {
@@ -227,7 +237,7 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
         callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
     } else {
         db.owl_query(
-            'SELECT id, problem_id, build_system_name FROM sample_solution WHERE problem_id = ?;',
+            'SELECT id, problem_id, language_id, original_filename FROM sample_solution WHERE problem_id = ?;',
             [problemId],
             function (err, res) {
                 if (err) {
@@ -237,7 +247,7 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
                         return new exports.SampleSolutionData(
                             row['id'],
                             row['problem_id'],
-                            row['build_system_name'],
+                            row['language_id'],
                             row['original_filename']
                         );
                     }));
@@ -249,20 +259,20 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
 
 /**
  * Add a new sample solution to the database, using provided data
- * @param sampleSolutionData {SampleSolutionData}
- * @param callback {function (err: Error=, newSampleSolutionData: SampleSolutionData=)}
+ * @param sampleSolutionData {exports.SampleSolutionData}
+ * @param callback {function (err: Error=, newSampleSolutionData: exports.SampleSolutionData=)}
  */
 exports.createSampleSolution = function (sampleSolutionData, callback) {
     if (isNaN(parseInt(sampleSolutionData.problemId))) {
         callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
-    } else if (!sampleSolutionData.buildSystemName) {
+    } else if (!sampleSolutionData.languageId) {
         callback(new Error(exports.ERRORS.INVALID_BUILD_SYSTEM_NAME));
     } else if (!sampleSolutionData.originalFilename) {
         callback(new Error(exports.ERRORS.INVALID_FILENAME));
     } else {
         db.owl_query(
-            'INSERT INTO sample_solution (problem_id, build_system_name, original_filename) VALUES (?, ?, ?);',
-            [sampleSolutionData.problemId, sampleSolutionData.buildSystemName, sampleSolutionData.originalFilename],
+            'INSERT INTO sample_solution (problem_id, language_id, original_filename) VALUES (?, ?, ?);',
+            [sampleSolutionData.problemId, sampleSolutionData.languageId, sampleSolutionData.originalFilename],
             function (err, res) {
                 if (err) {
                     callback(err);
@@ -270,11 +280,15 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
                     callback(null, new exports.SampleSolutionData(
                         res['insertId'],
                         sampleSolutionData.problemId,
-                        sampleSolutionData.buildSystemName,
+                        sampleSolutionData.languageId,
                         sampleSolutionData.originalFilename
                     ));
                 }
             }
         );
     }
+};
+
+exports.createSubmission = function (submissionData, callback) {
+
 };

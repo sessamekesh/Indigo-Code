@@ -59,8 +59,8 @@ exports.post = function (req, res) {
         errorList.addError('sample_solution_source', 'No solution file found!');
     }
 
-    if (!req['body']['build_system_name']) {
-        errorList.addError('build_system_name', 'No build system specified!');
+    if (!req['body']['build_system_id']) {
+        errorList.addError('build_system_id', 'No build system specified!');
     }
 
     var data = {
@@ -85,7 +85,7 @@ exports.post = function (req, res) {
                     new problemDao.SampleSolutionData(
                         null,
                         req['problemData']['id'],
-                        req['body']['build_system_name'],
+                        req['body']['build_system_id'],
                         solnFile.originalname
                     ), function (dberr, dbres) {
                         data['sampleSolutionData'] = dbres;

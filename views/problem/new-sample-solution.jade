@@ -10,11 +10,16 @@ block content
       fieldset
          legend Sample Solution Data
          .form-group
-            label.col-md-3.control-label(for="build_system_name") Build System
+            label.col-md-3.control-label(for="build_system_id") Build System
             a.col-md-1#buildHelp ?
             .col-md-4
-               input#build_system_name.form-control.input-md(name="build_system_name", type="text", placeholder="whaleshark_python-2.7.9_0.1.1", required="")
-            span.col-md-4.help-block= pageErrors.getError('build_system_name')
+               select#build_system_id.form-control(name="build_system_id")
+                     - for (bs in buildSystems) {
+                        - if (buildSystems.hasOwnProperty(bs)) {
+                           option(value=bs)= buildSystems[bs]
+                        - }
+                     - }
+            span.col-md-4.help-block= pageErrors.getError('build_system_id')
          .form-group
             label.col-md-4.control-label(for="sample_solution_source") Source Code
             .col-md-4
@@ -25,5 +30,7 @@ block content
    p Currently Active Build Systems
    ol
       - for (bs in buildSystems) {
-         li= buildSystems[bs] + ' (' + bs + ')'
+         - if (buildSystems.hasOwnProperty(bs)) {
+            li= buildSystems[bs] + ' (' + bs + ')'
+         - }
       - }

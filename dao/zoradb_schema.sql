@@ -44,7 +44,7 @@ DROP TABLE IF EXISTS `allowed_language`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `allowed_language` (
   `problem_id` int(11) NOT NULL,
-  `language_id` int(11) NOT NULL,
+  `language_id` varchar(55) NOT NULL,
   `time_limit_ms` int(11) DEFAULT NULL,
   PRIMARY KEY (`problem_id`,`language_id`),
   KEY `FK_LANG_PROB_LANG_idx` (`language_id`),
@@ -79,13 +79,10 @@ DROP TABLE IF EXISTS `language`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `language` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(45) NOT NULL,
-  `build_notes` varchar(150) NOT NULL,
-  `build_system_name` varchar(45) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `build_system_name_UNIQUE` (`build_system_name`),
-  UNIQUE KEY `name_UNIQUE` (`name`)
+  `id` varchar(55) NOT NULL,
+  `name` varchar(55) NOT NULL,
+  `notes` varchar(250) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores keys for language supported by competition website instance. In order for a language to be available, the key must also be accepted by a submission server.';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -140,7 +137,7 @@ CREATE TABLE `submission` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `team_id` int(11) NOT NULL,
   `problem_id` int(11) NOT NULL,
-  `language_id` int(11) NOT NULL,
+  `language_id` varchar(55) NOT NULL,
   `result` varchar(7) NOT NULL,
   `timestamp` datetime NOT NULL,
   `notes` varchar(400) NOT NULL,
@@ -204,11 +201,13 @@ DROP TABLE IF EXISTS `sample_solution`;
 CREATE TABLE `sample_solution` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `problem_id` int(11) NOT NULL,
-  `build_system_name` varchar(45) NOT NULL,
+  `language_id` varchar(55) NOT NULL,
   `original_filename` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_SAMPLE_SOLUTION_PROBLEM_idx` (`problem_id`),
-  CONSTRAINT `FK_SAMPLE_SOLUTION_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `FK_SAMPLE_SOLUTION_LANGUAGE_idx` (`language_id`),
+  CONSTRAINT `FK_SAMPLE_SOLUTION_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_SAMPLE_SOLUTION_LANGUAGE` FOREIGN KEY (`language_id`) REFERENCES `language` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores atomic metadata about a sample solution - actual sample solution data is stored in directory structure.';
 
 
