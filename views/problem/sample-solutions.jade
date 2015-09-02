@@ -1,0 +1,25 @@
+//
+   Created by kamaron on 9/1/15.
+
+extends ../competition/index
+
+block content
+   if (user_data['is_admin'])
+      a.btn.btn-primary(href="/competition/" + comp_data['id'] + '/problem/' + problemData['id'] + '/new-sample-solution') Add Sample Solution
+      br
+   table.table.table-hover
+      tr
+         if (user_data['is_admin'])
+            th
+         th ID
+         th Data
+         th Build System
+      each sampleSolution in sampleSolutions
+         tr
+            if (user_data['is_admin'])
+                  td
+                     a.btn.btn-danger(href="/competition/" + comp_data['id'] + "/problem/" + problemData['id'] + "/remove-sample-solution?id=" + sampleSolution.id) X
+                  td= sampleSolution.id
+                  td
+                     .btn.btn-primary Show
+                  td= sampleSolution.buildSystemName

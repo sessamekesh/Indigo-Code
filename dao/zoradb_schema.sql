@@ -190,9 +190,26 @@ CREATE TABLE `test_case` (
   `comparison_system_name` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_TEST_CASE_PROBLEM_idx` (`problem_id`),
-  CONSTRAINT `FK_TEST_CASE_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `FK_TEST_CASE_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores atomic metadata about a test case - actual test case data is stored in directory structure. comparison_system_name is a link to a key that exists on the build servers - if the build server does not support it, the test case will throw an IE (internal server error) until removed.';
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sample_solution`
+--
+
+DROP TABLE IF EXISTS `sample_solution`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sample_solution` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `problem_id` int(11) NOT NULL,
+  `build_system_name` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_SAMPLE_SOLUTION_PROBLEM_idx` (`problem_id`),
+  CONSTRAINT `FK_SAMPLE_SOLUTION_PROBLEM` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores atomic metadata about a sample solution - actual sample solution data is stored in directory structure.';
+
 
 --
 -- Table structure for table `user`

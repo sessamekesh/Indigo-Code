@@ -65,11 +65,15 @@ exports.post = function (req, res) {
 
                         try {
                             var renderFunction = jade.compileFile(newLocation, { pretty: false });
-                            renderFunction(newProblemData);
+                            renderFunction({
+                                problemList: [],
+                                problemData: problemData
+                            });
 
                             callback(null, { path: newLocation, type: description.extension });
                         } catch (e) {
                             // Could not be compiled
+                            console.log('Invalid JADE file:', e.message);
                             callback(new Error('Invalid JADE file provided'));
                             fs.unlink(newLocation);
                         }
@@ -110,7 +114,7 @@ exports.post = function (req, res) {
         // If there was an error, delete the problem created
         if (err) {
             problemId && problemDAO.removeProblem(problemId, function () {});
-            res.status(400).render('./error.jade', err);
+            res.status(400).render('./error.jade', { error: err, message: err.message } );
         } else {
             res.status(201).render('./admin/new-problem-submit.jade', {
                 title: 'New problem successfully created',

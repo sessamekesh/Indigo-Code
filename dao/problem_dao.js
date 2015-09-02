@@ -29,6 +29,18 @@ exports.ProblemData = function (id, name, compId, defaultTimeLimit, isValid) {
 };
 
 /**
+ * Validate that the problem data in this object is complete and ready to insert into the database
+ * @return {boolean}
+ */
+exports.ProblemData.prototype.isComplete = function () {
+    return (!isNaN(parseInt(this.id)) || this.id === null)
+        && !!this.name
+        && !isNaN(parseInt(this.compId))
+        && !isNaN(parseInt(this.defaultTimeLimit))
+        && (this.isValid === true || this.isValid === false);
+};
+
+/**
  * Represents a database entry concerning test case data
  * @param id {number|null} Unique ID of the test case
  * @param problemId {number} Unique ID of the problem to which this test case is attached
@@ -44,15 +56,16 @@ exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comp
 };
 
 /**
- * Validate that the problem data in this object is complete and ready to insert into the database
- * @return {boolean}
+ * Represents a database entry concerning sample solution data
+ * @param id {number|null} Unique ID of te sample solution
+ * @param problemId {number} Unique ID of the problem to which this sample solution is attached
+ * @param buildSystemName {string} Name of the build system to be used (must be supported on build server!)
+ * @constructor
  */
-exports.ProblemData.prototype.isComplete = function () {
-    return (!isNaN(parseInt(this.id)) || this.id === null)
-        && !!this.name
-        && !isNaN(parseInt(this.compId))
-        && !isNaN(parseInt(this.defaultTimeLimit))
-        && (this.isValid === true || this.isValid === false);
+exports.SampleSolutionData = function (id, problemId, buildSystemName) {
+    this['id'] = id;
+    this['problemId'] = problemId;
+    this['buildSystemName'] = buildSystemName;
 };
 
 /**
@@ -140,7 +153,7 @@ exports.removeProblem = function (problemId, callback) {
 /**
  * Provide the data for the test cases attached to this problem
  * @param problemId {number}
- * @param callback {function (err: Error=, res: Array.<*>=)}
+ * @param callback {function (err: Error=, res: Array.<TestCaseData>=)}
  */
 exports.getAttachedTestCases = function (problemId, callback) {
     if (isNaN(parseInt(problemId)) || problemId < 0) {
@@ -194,6 +207,35 @@ exports.createTestCase = function (testCaseData, callback) {
                         !!testCaseData.isVisibleDuringCompetition,
                         testCaseData.comparisonSystemName
                     ));
+                }
+            }
+        );
+    }
+};
+
+/**
+ * Provide data for the sample solutions in this problem
+ * @param problemId {number}
+ * @param callback {function (err: Error=, result: Array.<SampleSolutionData>=)}
+ */
+exports.getAttachedSampleSolutions = function (problemId, callback) {
+    if (isNaN(parseInt(problemId))) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else {
+        db.owl_query(
+            'SELECT id, problem_id, build_system_name FROM sample_solution WERE problem_id = ?;',
+            [problemId],
+            function (err, res) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, res.map(function (row) {
+                        return new exports.SampleSolutionData(
+                            res['id'],
+                            res['problem_id'],
+                            res['build_system_name']
+                        );
+                    }));
                 }
             }
         );
