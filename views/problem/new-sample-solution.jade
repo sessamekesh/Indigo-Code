@@ -1,0 +1,29 @@
+//
+   Created by kamaron on 9/1/15.
+
+extends ../competition/index
+
+block content
+   if pageErrors.isFatal()
+      h1 Errors were found, please correct them before continuing
+   form#new_sample_submission_form.form-horizontal(method="post", action="/competition/" + comp_data['id'] + "/problem/" + problemData['id'] + "/new-sample-solution", enctype="multipart/form-data")
+      fieldset
+         legend Sample Solution Data
+         .form-group
+            label.col-md-3.control-label(for="build_system_name") Build System
+            a.col-md-1#buildHelp ?
+            .col-md-4
+               input#build_system_name.form-control.input-md(name="build_system_name", type="text", placeholder="whaleshark_python-2.7.9_0.1.1", required="")
+            span.col-md-4.help-block= pageErrors.getError('build_system_name')
+         .form-group
+            label.col-md-4.control-label(for="sample_solution_source") Source Code
+            .col-md-4
+               input#sample_solution_source.form-control.input-md(type="file", name="sample_solution_source")
+            span.col-md-4.help-block= pageErrors.getError('sample_solution_source')
+         .form-group
+            input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")
+   p Currently Active Build Systems
+   ol
+      - for (bs in buildSystems) {
+         li= buildSystems[bs] + ' (' + bs + ')'
+      - }

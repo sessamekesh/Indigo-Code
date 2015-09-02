@@ -8,7 +8,8 @@ exports.ERRORS = {
     EMPTY_PROBLEM_DATA: 'Problem data provided is empty',
     INCOMPLETE_PROBLEM_DATA: 'Problem data provided is incomplete or malformed',
     INVALID_PROBLEM_ID: 'Problem ID provided is invalid',
-    INVALID_COMPARISON_SYSTEM_NAME: 'Comparison system name is invalid'
+    INVALID_COMPARISON_SYSTEM_NAME: 'Comparison system name is invalid',
+    INVALID_BUILD_SYSTEM_NAME: 'Build system name is invalid'
 };
 
 /**
@@ -63,9 +64,9 @@ exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comp
  * @constructor
  */
 exports.SampleSolutionData = function (id, problemId, buildSystemName) {
-    this['id'] = id;
-    this['problemId'] = problemId;
-    this['buildSystemName'] = buildSystemName;
+    this.id = id;
+    this.problemId = problemId;
+    this.buildSystemName = buildSystemName;
 };
 
 /**
@@ -223,7 +224,7 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
         callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
     } else {
         db.owl_query(
-            'SELECT id, problem_id, build_system_name FROM sample_solution WERE problem_id = ?;',
+            'SELECT id, problem_id, build_system_name FROM sample_solution WHERE problem_id = ?;',
             [problemId],
             function (err, res) {
                 if (err) {
@@ -231,11 +232,40 @@ exports.getAttachedSampleSolutions = function (problemId, callback) {
                 } else {
                     callback(null, res.map(function (row) {
                         return new exports.SampleSolutionData(
-                            res['id'],
-                            res['problem_id'],
-                            res['build_system_name']
+                            row['id'],
+                            row['problem_id'],
+                            row['build_system_name']
                         );
                     }));
+                }
+            }
+        );
+    }
+};
+
+/**
+ * Add a new sample solution to the database, using provided data
+ * @param sampleSolutionData {SampleSolutionData}
+ * @param callback {function (err: Error=, newSampleSolutionData: SampleSolutionData=)}
+ */
+exports.createSampleSolution = function (sampleSolutionData, callback) {
+    if (isNaN(parseInt(sampleSolutionData.problemId))) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else if (!sampleSolutionData.buildSystemName) {
+        callback(new Error(exports.ERRORS.INVALID_BUILD_SYSTEM_NAME));
+    } else {
+        db.owl_query(
+            'INSERT INTO sample_solution (problem_id, build_system_name) VALUES (?, ?);',
+            [sampleSolutionData.problemId, sampleSolutionData.buildSystemName],
+            function (err, res) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, new exports.SampleSolutionData(
+                        res['insertId'],
+                        sampleSolutionData.problemId,
+                        sampleSolutionData.buildSystemName
+                    ));
                 }
             }
         );

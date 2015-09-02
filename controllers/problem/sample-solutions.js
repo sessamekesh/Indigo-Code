@@ -11,8 +11,8 @@ var problemDao = require('../../dao/problem_dao');
 var BuildManager;
 
 exports.get = function (req, res) {
-    // Only allow access to this page if admin!
-    if (req['user_data']['is_admin'] === true) {
+    // Only allow access to this page if admin, or the competition has ended!
+    if (req['user_data']['is_admin'] === true || req['comp_data']['end_date'] < Date.now()) {
         exports.fill_data(req, {
             title: 'Sample Solutions',
             redirect_to: '/competition/' + req['comp_data']['id'] + '/problem/' + req['problemData']['id'] + '/sample-solutions'

@@ -95,6 +95,7 @@ function makeSureDirectoryExists(path) {
 
 makeSureDirectoryExists('./data');
 makeSureDirectoryExists('./data/test-cases');
+makeSureDirectoryExists('./data/sample-solutions');
 makeSureDirectoryExists('./data/build-packages');
 makeSureDirectoryExists('./views/problem/descriptions');
 

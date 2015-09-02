@@ -38,7 +38,7 @@ exports.post = function (req, res) {
     // Errors have been checked, either send back error or accept
     if (errorList.isFatal()) {
         exports.fill_data(req, data, function (newData) {
-            res.status(200).render('./problem/new-test-case', newData);
+            res.status(400).render('./problem/new-test-case', newData);
         });
     } else {
         // Add the test case, in background attempt validation
@@ -81,7 +81,7 @@ exports.post = function (req, res) {
                 exSource.on('error', callback);
 
                 fs.unlink(tcExFile.path);
-            }
+            } //TODO: attemptValidate: function (callback)
         }, function(aserr) {
             if (aserr) {
                 console.log('An error occurred storing the test case:', aserr.message);
