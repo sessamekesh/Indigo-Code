@@ -53,8 +53,8 @@ exports.ProblemData.prototype.isComplete = function () {
 exports.TestCaseData = function (id, problemId, isVisibleDuringCompetition, comparisonSystemName) {
     this.id = id;
     this.problemId = problemId;
-    this['isVisibleDuringCompetition'] = isVisibleDuringCompetition;
-    this['comparisonSystemName'] = comparisonSystemName;
+    this.isVisibleDuringCompetition = isVisibleDuringCompetition;
+    this.comparisonSystemName = comparisonSystemName;
 };
 
 /**
@@ -72,15 +72,29 @@ exports.SampleSolutionData = function (id, problemId, languageId, originalFilena
     this.originalFilename = originalFilename;
 };
 
-exports.SubmissionData = function (id, teamId, problemId, result, timestamp, notes, affectsScore) {
+/**
+ * @param id {number|null}
+ * @param teamId {number}
+ * @param problemId {number}
+ * @param languageId {string}
+ * @param result {string}
+ * @param timestamp {number}
+ * @param notes {string}
+ * @param affectsScore {boolean}
+ * @constructor
+ */
+var SubmissionData = function (id, teamId, problemId, languageId, result, timestamp, notes, affectsScore) {
     this.id = id;
     this.teamId = teamId;
     this.problemId = problemId;
+    this.languageId = languageId;
     this.result = result;
     this.timestamp = timestamp;
     this.notes = notes;
     this.affectsScore = affectsScore;
 };
+
+exports.SubmissionData = SubmissionData;
 
 /**
  * Insert a problem into the database
@@ -186,7 +200,7 @@ exports.getAttachedTestCases = function (problemId, callback) {
                             return new exports.TestCaseData(
                                 row['id'],
                                 row['problem_id'],
-                                row['visible_during_competition'],
+                                !!row['visible_during_competition'][0],
                                 row['comparison_system_name']
                             );
                         }
@@ -289,6 +303,67 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
     }
 };
 
+/**
+ * @param submissionData {SubmissionData}
+ * @param callback {function (err: Error=, result: SubmissionData=)}
+ */
 exports.createSubmission = function (submissionData, callback) {
+    db.owl_query(
+        'INSERT INTO submission (team_id, problem_id, language_id, result, timestamp, notes, affects_score) '
+        + 'VALUES (?, ?, ?, ?, ?, ?, ?);',
+        [
+            submissionData.teamId, submissionData.problemId, submissionData.languageId,
+            submissionData.result, submissionData.timestamp, submissionData.notes,
+            submissionData.affectsScore
+        ],
+        function (dberr, dbres) {
+            if (dberr) {
+                callback(dberr);
+            } else {
+                callback(null, new SubmissionData(
+                    dbres.insertId,
+                    submissionData.teamId,
+                    submissionData.problemId,
+                    submissionData.languageId,
+                    submissionData.result,
+                    submissionData.timestamp,
+                    submissionData.notes,
+                    submissionData.affectsScore
+                ));
+            }
+        }
+    );
+};
 
+/**
+ * @param problemId {number}
+ * @param languageId {string}
+ * @param callback {function (err: Error=, res: number=)}
+ */
+exports.getTimeLimit = function (problemId, languageId, callback) {
+    if (isNaN(problemId)) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else if (!languageId) {
+        callback(new Error('Language ID missing'));
+    } else {
+        db.owl_query(
+            'SELECT time_limit_ms FROM allowed_language WHERE problem_id = ? AND language_id = ?;',
+            [problemId, languageId],
+            function (dberr, dbres) {
+                if (dberr) {
+                    callback(dberr);
+                } else if (dbres.length === 0) {
+                    exports.getProblemData(problemId, function (perr, pres) {
+                        if (perr) {
+                            callback(perr);
+                        } else {
+                            callback(null, pres.defaultTimeLimit);
+                        }
+                    });
+                } else {
+                    callback(dbres[0]['time_limit_ms']);
+                }
+            }
+        );
+    }
 };

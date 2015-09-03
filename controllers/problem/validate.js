@@ -29,30 +29,101 @@ exports.get = function (req, res) {
         redirect_to: '/competition/' + req.comp_data.id + '/problem/' + req.problemData.id + '/validate'
     }, function (newData) {
 
-        async.waterfall([
-            // Get sample solutions
-            function (callback) {
-                problemDao.getAttachedSampleSolutions(req['problemData']['id'], callback);
-            }
-            // Run all sample solutions
-            , function (sampleSolutions, callback) {
-                async.map(sampleSolutions, function(sampleSolution, callback) {
-                    // Run the sample solution given as a full on build request!
-                    //  Finally, an opportunity to test the system!
-                    callback(new Error('The validation step has not yet been created!'));
+        // Get sample solutions to test
 
-                    // callback(null, BuildResult);
-                }, callback);
-            }
-        ], function (err, results) {
-            if (err) {
+        // For general use with the problem, get
+        // -Which test cases are needed
+        // -What comparisons systems are needed (from test cases)
+
+        problemDao.getAttachedTestCases(req['problemData']['id'], function (tcerr, tcres) {
+            if (tcerr) {
                 res.status(500).render('./error', {
-                    error: err,
-                    message: err.message
+                    error: tcerr,
+                    message: tcerr.message
                 });
             } else {
-                newData.results = results;
-                res.render('./validate', newData);
+                var compareSystemsNeeded = tcres.map(function (tc) {
+                    return tc['comparisonSystemName'];
+                });
+                var testCases = tcres;
+
+                // For each sample solution, build a packaging request object with...
+                // -Submission ID (create submission)
+                // -Which build system to use
+                // -What the time limit on said build system is
+                // -The source location (in data/sample-solutions)
+                // -The original filename
+                problemDao.getAttachedSampleSolutions(req['problemData']['id'], function (sserr, ssres) {
+                    if (sserr) {
+                        res.status(500).render('./error', {
+                            error: sserr,
+                            message: sserr.message
+                        });
+                    } else {
+                        async.map(ssres, function (item, callback) {
+                            async.series([
+                                // 0: Create submission, get submission ID, get build system to use
+                                function (callback) {
+                                    problemDao.createSubmission(new problemDao.SubmissionData(
+                                            null,
+                                            req['team_data']['id'],
+                                            req['problemData']['id'],
+                                            item.languageId,
+                                            '',
+                                            (new Date()).getTime(),
+                                            '',
+                                            false
+                                        )
+                                    , callback);
+                                }
+                                // 1: Get the time limit for the given build system
+                                , function (callback) {
+                                    problemDao.getTimeLimit(req['problemData']['id'], item.languageId, callback);
+                                }
+                                // 2: Get the source location and original filename
+                                , function (callback) {
+                                    callback(null, {
+                                        sourceLocation: './data/sample-solutions/' + item.id + '/source',
+                                        originalName: item.originalFilename
+                                    });
+                                }
+                            ], callback);
+                        }, function (err, results) {
+                            if (err) {
+                                res.status(500).render('./error', {
+                                    error: err,
+                                    message: err.message
+                                });
+                            } else {
+                                // Now our results are all stored, create build requests for each one
+                                async.map(results, function (item, callback) {
+                                    var br = new BuildRequest(
+                                        item[0].id,
+                                        item[0].languageId,
+                                        compareSystemsNeeded,
+                                        item[2].originalName,
+                                        testCases,
+                                        item[1],
+                                        item[2].sourceLocation
+                                    );
+
+                                    br.buildPackage(callback);
+                                }, function (err, buildPackageLocations) {
+                                    if (err) {
+                                        res.status(500).render('./error', {
+                                            error: err,
+                                            message: err.message
+                                        });
+                                    } else {
+                                        // The build package has been made!
+                                        console.log(JSON.stringify(buildPackageLocations));
+                                        res.status(200).render('./problem/validate.jade', newData);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
         });
     });

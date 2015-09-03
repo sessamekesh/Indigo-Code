@@ -216,7 +216,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
                         })
                     };
 
-                    fs.write('./data/build-packages/' + this.id + '/info.json',
+                    fs.writeFile('./data/build-packages/' + this.id + '/info.json',
                         JSON.stringify(metadata),
                         cb
                     );
@@ -224,7 +224,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
                 moveSourceFile: function (cb) {
                     // lol sourceSource that's a silly name
                     var sourceSource = fs.createReadStream(this.sourceLocation);
-                    var sourceDest = fs.createWriteStream('./data/build-pacakges/' + this.id + '/source');
+                    var sourceDest = fs.createWriteStream('./data/build-packages/' + this.id + '/source');
 
                     sourceSource.pipe(sourceDest);
                     sourceSource.on('end', cb);
@@ -295,7 +295,7 @@ BuildRequest.prototype.buildPackage = function (callback) {
                 }.bind(this));
             }.bind(this));
         }
-    });
+    }.bind(this));
 };
 
 exports.BuildRequest = BuildRequest;

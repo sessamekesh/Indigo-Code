@@ -11,6 +11,8 @@ var ServerData;
 var BuildConstraints;
 var BuildServerStatus;
 
+var languageDao = require('../../dao/language_dao');
+
 /**
  * Establish a connection with a build server, via Indigo Code Buildserver v0.1 standard
  * @param hostname {String} Hostname of build server
@@ -183,6 +185,20 @@ BuildServer.prototype.getBuildSystems = function (cb) {
             this._serverData.buildSystem(function (err, systems) {
                 if (systems) me._buildSystemCache = systems;
                 cb (err, systems);
+
+                for (var i = 0; i < systems.length; i++) {
+                    languageDao.createLanguageEntry(
+                        new languageDao.LanguageData(
+                            systems[i].id,
+                            systems[i].name,
+                            systems[i].description
+                        ), function (dberr) {
+                            if (dberr) {
+                                console.log('Error recording build system in database:', dberr.message);
+                            }
+                        }
+                    );
+                }
             });
         } else {
             this.refresh(function (err) {
