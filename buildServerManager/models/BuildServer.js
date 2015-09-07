@@ -5,6 +5,8 @@
  */
 
 var rest = require('restler');
+var request = require('request');
+var fs = require('fs');
 
 var BuildSystemData;
 var ServerData;
@@ -373,6 +375,68 @@ BuildServer.prototype.getComparisonSystemSync = function (comparisonSystemId) {
 
         return null;
     }
+};
+
+/**
+ * Attempt to perform the build on this build server.
+ * @param buildRequest {BuildRequest}
+ * @param onPerformBuild {function (err: Error=, resultsURI: string=)}
+ */
+BuildServer.prototype.performBuild = function (buildRequest, onPerformBuild) {
+    var me = this;
+
+    // Perform the REST request to the build server
+    // We'll need the file size... grumble grumble.
+    var endpoint = 'http://' + me._hostname + ':' + me._port + me._apiRootPath + '/build';
+    request.post({
+        url: endpoint,
+        formData: {
+            buildSystemName: buildRequest.buildSystem.id,
+            comparisonSystemsRequired: buildRequest.comparisonSystemList.map(function (cs) { return cs['id']; }),
+            buildPackage: fs.createReadStream(buildRequest.packageFileLocation)
+        }
+    }, function (reqError, reqResponse, reqBody) {
+        if (reqError) {
+            console.log('Error making request:', reqError.message);
+            onPerformBuild(new Error('Error making the request - check logs'));
+        } else {
+            if (reqResponse.statusCode === 202) {
+                // Success!
+                console.log('Successfully submitted build!');
+                var results = JSON.parse(reqBody);
+                onPerformBuild(
+                    null,
+                    results['results']
+                );
+            } else if (reqResponse.statusCode === 420) {
+                // Enhance your calm (build queue is full)
+                console.log('Build queue is full. Cannot build on this build server');
+                onPerformBuild(
+                    new Error('Build queue is full. Cannot build on this build server.')
+                );
+            } else if (reqResponse.statusCode === 400) {
+                // Invalid entry. Check build server specification
+                console.log('Invalid entry, check build server specification and data sent?', reqBody.error);
+                onPerformBuild(
+                    new Error('Invalid entry, check build server specification and data sent', reqBody.error)
+                );
+            } else if (reqResponse.statusCode === 500) {
+                // Unknown server error
+                console.log('Unexpected server error!', reqBody.error);
+                onPerformBuild(
+                    new Error('Unexpected server error on build server:', reqBody.error)
+                );
+            } else {
+                // ???
+                console.log('Who the hell knows? An unknown status code was returned. Here\'s your data:');
+                console.log('Status code:', reqResponse.statusCode);
+                console.log('Body:', JSON.stringify(reqBody));
+                onPerformBuild(
+                    new Error('Completely unknown error sending build (does not conform to standard):', JSON.stringify(reqBody))
+                );
+            }
+        }
+    });
 };
 
 exports.BuildServer = BuildServer;

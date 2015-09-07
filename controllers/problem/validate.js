@@ -9,7 +9,8 @@
 var getBaseData = require('./index').fill_data;
 var problemDao = require('../../dao/problem_dao');
 var async = require('async');
-var BuildRequest = require('../../buildServerManager/models/BuildRequest').BuildRequest;
+var BuildPackage = require('../../buildServerManager/models/BuildPackage').BuildPackage;
+var BuildServerManager = require('../../buildServerManager/BuildServerManager').BuildServerManager;
 
 /**
  * Fill in data required for this page (and any page that builds on this page)
@@ -96,30 +97,38 @@ exports.get = function (req, res) {
                                 });
                             } else {
                                 // Now our results are all stored, create build requests for each one
-                                async.map(results, function (item, callback) {
-                                    var br = new BuildRequest(
-                                        item[0].id,
-                                        item[0].languageId,
-                                        compareSystemsNeeded,
-                                        item[2].originalName,
-                                        testCases,
-                                        item[1],
-                                        item[2].sourceLocation
-                                    );
-
-                                    br.buildPackage(callback);
-                                }, function (err, buildPackageLocations) {
-                                    if (err) {
-                                        res.status(500).render('./error', {
-                                            error: err,
-                                            message: err.message
-                                        });
-                                    } else {
-                                        // The build package has been made!
-                                        console.log(JSON.stringify(buildPackageLocations));
-                                        res.status(200).render('./problem/validate.jade', newData);
+                                var buildRequests = results.map(function (item) {
+                                        return new BuildPackage(
+                                            item[0].id,
+                                            item[0].languageId,
+                                            compareSystemsNeeded,
+                                            item[2].originalName,
+                                            testCases,
+                                            item[1],
+                                            item[2].sourceLocation
+                                        )
                                     }
-                                });
+                                );
+                                for (var i = 0; i < buildRequests.length; i++) {
+                                    BuildServerManager.requestBuild(
+                                        buildRequests[i],
+                                        function (onSendError) { // On sent to build server
+                                            // TODO: Notify, via WebSocket, that the request is sent
+                                            console.log('Request was sent to a build server', JSON.stringify(onSendError));
+                                        },
+                                        function (onResultError, result) { // On receive result
+                                            if (result) {
+                                                // TODO: Notify, via WebSocket, that the result is obtained
+                                                console.log('Result Received!', JSON.stringify(result), JSON.stringify(onResultError));
+                                            } else {
+                                                // An error must have happened.
+                                                console.log('An error must have happened', JSON.stringify(onResultError));
+                                            }
+                                        }
+                                    );
+                                }
+
+                                res.status(200).render('./problem/validate.jade', newData);
                             }
                         });
                     }

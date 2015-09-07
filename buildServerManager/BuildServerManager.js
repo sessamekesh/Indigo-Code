@@ -2,11 +2,16 @@
  * Created by Kamaron on 7/12/2015.
  *
  * Maintains a registry of all attached BuildServers
- *
- * TODO KAM: This is where your build requests should go... Handle all that stuff here
  */
 
 var config = require('../config').config;
+var BuildResult = require('./models/BuildResult').BuildResult;
+var RESULTS = require('./models/BuildResult').RESULTS;
+var BuildRequest = require('./models/BuildRequest').BuildRequest;
+
+var request = require('request');
+
+var DELAY_BETWEEN_BUILD_ATTEMPTS = 500;
 
 /**
  * @constructor
@@ -27,6 +32,11 @@ var BuildServerManager = function () {
      * @private
      */
     this._reconnectAttempts = {};
+
+    /**
+     * @type {Array.<BuildRequest>}
+     */
+    this.buildQueue = [];
 };
 
 /**
@@ -115,6 +125,203 @@ BuildServerManager.prototype.getBuildServerList = function () {
         }
     }
     return tr;
+};
+
+/**
+ * Identify which attached BuildServers can perform the given bulid
+ * @param br {BuildRequest}
+ * @param callback {function (err: Error=, buildServers: Array.<BuildServer>=)}
+ */
+BuildServerManager.prototype.enumerateValidBuildServers = function (br, callback) {
+    /** @type {Array.<BuildServer>} */
+    var validServers = [];
+    for (var buildServer in this._registeredBuildServers) {
+        if (this._registeredBuildServers.hasOwnProperty(buildServer) && this._registeredBuildServers[buildServer].getBuildSystemSync(br.buildSystem.id)) {
+            validServers.push(this._registeredBuildServers[buildServer]);
+        }
+    }
+
+    // Now, limit the valid servers by which ones contain all of the required comparison systems
+    validServers = validServers.filter(function (server) {
+        var isValid = true;
+        for (var i = 0; i < br.comparisonSystemList.length; i++) {
+            if (!server.getComparisonSystemSync(br.comparisonSystemList[i].id)) {
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    });
+
+    callback(null, validServers);
+};
+
+/**
+ * Request to perform a build, invoking the given callbacks when the build is sent or received to/from the build server
+ *  the onSend method may optionally send an error. Both onSend and onResultReceived will always be invoked!
+ * @param br {BuildPackage} A build request to perform
+ * @param onSend {function (err: Error=)} Invoked when the package is sent to the build server
+ * @param onResultReceived {function (err: Error=, result: BuildResult=)} Invoked when the response is received
+ */
+BuildServerManager.prototype.requestBuild = function (br, onSend, onResultReceived) {
+
+    var me = this;
+
+    // Build the package
+    if (br.buildPackageLocation) {
+        finishSuccessfully();
+    } else {
+        br.buildPackage(function (be, packageLocation) {
+            if (be) {
+                console.log('Error building package:', be.message);
+                onSend(be);
+                onResultReceived(be, new BuildResult(
+                    RESULTS.INTERNAL_SERVER_ERROR, 'Could not build package', {}
+                ));
+            } else {
+                finishSuccessfully();
+            }
+        });
+    }
+
+    function finishSuccessfully() {
+        // Build package is ready to queue, make a BuildRequest object from it and go
+        var buildRequest = new BuildRequest(
+            br.buildSystem,
+            br.comparisonSystems,
+            br.buildPackageLocation,
+            onSend,
+            onResultReceived
+        );
+
+        me.buildQueue.push(buildRequest);
+
+        // One build request in, one build request attempt to be reported
+        me.attemptOneBuild();
+    }
+};
+
+/**
+ * Invoke to attempt to perform a build.
+ * Continue to invoke until all builds have been performed.
+ */
+BuildServerManager.prototype.attemptOneBuild = function () {
+    var me = this;
+
+    if (this.buildQueue.length === 0) {
+        return;
+    }
+
+    var buildRequest = this.buildQueue.shift();
+
+    if (buildRequest.buildPerformed) {
+        return;
+    }
+
+    if (buildRequest.requestSent) {
+        this.buildQueue.push(buildRequest);
+        return;
+    }
+
+    this.enumerateValidBuildServers(buildRequest, function (err, buildServers) {
+        if (err) {
+            console.log('Error enumerating build servers for', buildRequest.packageFileLocation, ':', err.message);
+            buildRequest.onSend(err);
+            buildRequest.onReceiveResult(err, new BuildResult(
+                RESULTS.INTERNAL_SERVER_ERROR,
+                'Could not enumerate valid build servers',
+                {}
+            ));
+        } else if (buildServers.length === 0) {
+            console.log('No valid build server available for', buildRequest.packageFileLocation);
+            buildRequest.onSend(
+                new Error('No valid build server available')
+            );
+            buildRequest.onReceiveResult(new Error('No valid build server available'), new BuildResult(
+                RESULTS.INTERNAL_SERVER_ERROR,
+                'No build server can perform your build - notify admin and try again',
+                {}
+            ));
+        } else {
+            for (var buildServer in buildServers) {
+                if (buildServers.hasOwnProperty(buildServer)) {
+                    buildServers[buildServer].performBuild(
+                        buildRequest,
+                        function (pberr, buildResultsURI) {
+                            if (pberr) {
+                                console.log('Failed to request build:', pberr.message);
+                                me.buildQueue.push(buildRequest);
+                                buildRequest.requestSent = false;
+                                setTimeout(me.attemptOneBuild.bind(me), DELAY_BETWEEN_BUILD_ATTEMPTS);
+                            } else {
+                                console.log('Build request success! Results location:', buildResultsURI);
+                                buildRequest.onSend();
+
+                                // TODO KAM: Remove this pointless spinning, there's obviously some race
+                                //  condition somewhere
+                                var tehnow = Date.now();
+                                while (Date.now() < (tehnow + 1000)) {}
+                                request({
+                                    method: 'GET',
+                                    uri: buildResultsURI
+                                }, function (resErr, resResponse, resBody) {
+                                    if (resErr) {
+                                        console.log('Error fetching result of build', buildResultsURI, ':', resErr.message);
+                                        // TODO KAM: Perhaps try again?
+                                    } else {
+                                        buildRequest.buildPerformed = true;
+                                        console.log(resBody);
+                                        if (resResponse.statusCode === 404) {
+                                            console.log('Build with given ID not found!', buildResultsURI, resBody);
+                                            buildRequest.onReceiveResult(
+                                                new Error('Build with given ID not found! Check logs'),
+                                                new BuildResult(
+                                                    RESULTS.INTERNAL_SERVER_ERROR,
+                                                    'Build with given ID not found! Notify admin',
+                                                    {}
+                                                )
+                                            );
+                                        } else if (resResponse.statusCode === 500) {
+                                            console.log('Unknown error on build server while obtaining data!', resBody);
+                                            buildRequest.onReceiveResult(
+                                                new Error('Obtaining build result on build server failed!'),
+                                                new BuildResult(
+                                                    RESULTS.INTERNAL_SERVER_ERROR,
+                                                    'Obtaining build result on build server failed! Notify admin',
+                                                    {}
+                                                )
+                                            );
+                                        } else if (resResponse.statusCode === 200) {
+                                            var successfulResponse = JSON.parse(resBody);
+                                            buildRequest.onReceiveResult(
+                                                null,
+                                                new BuildResult(
+                                                    successfulResponse['resultCode'],
+                                                    successfulResponse['notes'],
+                                                    successfulResponse['optionalParams']
+                                                )
+                                            );
+                                        } else {
+                                            console.log('Something seriously wrong happened in retrieving results for build', buildResultsURI, resBody, resResponse.statusCode);
+                                            buildRequest.onReceiveResult(
+                                                new Error('Something seriously wrong happened in retrieving results for build'),
+                                                new BuildResult(
+                                                    RESULTS.INTERNAL_SERVER_ERROR,
+                                                    'Something seriously wrong happened, notify an admin',
+                                                    {}
+                                                )
+                                            );
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    );
+                    buildRequest.requestSent = true;
+                }
+            }
+        }
+    });
 };
 
 /**
