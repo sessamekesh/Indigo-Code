@@ -308,12 +308,13 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
  * @param callback {function (err: Error=, result: SubmissionData=)}
  */
 exports.createSubmission = function (submissionData, callback) {
+    console.log(submissionData.timestamp);
     db.owl_query(
         'INSERT INTO submission (team_id, problem_id, language_id, result, timestamp, notes, affects_score) '
-        + 'VALUES (?, ?, ?, ?, ?, ?, ?);',
+        + 'VALUES (?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?);',
         [
             submissionData.teamId, submissionData.problemId, submissionData.languageId,
-            submissionData.result, submissionData.timestamp, submissionData.notes,
+            submissionData.result, submissionData.timestamp / 1000, submissionData.notes,
             submissionData.affectsScore
         ],
         function (dberr, dbres) {
