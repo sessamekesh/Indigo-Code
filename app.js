@@ -8,11 +8,14 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var index_data_loader = require('./controllers/general/index');
 var multer = require('multer');
-var config = require('./config');
 
+var config = require('./config');
 var general_route = require('./routes/general');
 
 var app = express();
+
+var SocketManager = require('./websockets/SocketConnectionManager').SocketManager;
+var SocketNamespace = require('./websockets/models/SocketNamespace').SocketNamespace;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

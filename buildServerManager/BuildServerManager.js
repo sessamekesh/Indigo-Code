@@ -8,8 +8,11 @@ var config = require('../config').config;
 var BuildResult = require('./models/BuildResult').BuildResult;
 var RESULTS = require('./models/BuildResult').RESULTS;
 var BuildRequest = require('./models/BuildRequest').BuildRequest;
+var SocketManager = require('../websockets/SocketConnectionManager').SocketManager;
+var SocketNamespace = require('../websockets/models/SocketNamespace').SocketNamespace;
 
 var request = require('request');
+var async = require('async');
 
 var DELAY_BETWEEN_BUILD_ATTEMPTS = 500;
 

@@ -8,6 +8,7 @@
 
 var getBaseData = require('./index').fill_data;
 var problemDao = require('../../dao/problem_dao');
+var submissionDao = require('../../dao/submission_dao');
 var async = require('async');
 var BuildPackage = require('../../buildServerManager/models/BuildPackage').BuildPackage;
 var BuildServerManager = require('../../buildServerManager/BuildServerManager').BuildServerManager;
@@ -43,10 +44,17 @@ exports.get = function (req, res) {
                     message: tcerr.message
                 });
             } else {
+                newData.testCases = tcres;
                 var compareSystemsNeeded = tcres.map(function (tc) {
                     return tc['comparisonSystemName'];
                 });
                 var testCases = tcres;
+
+                newData.buildList = [];
+
+                newData.include_scripts = newData.include_scripts || [];
+                newData.include_scripts.push('https://cdn.socket.io/socket.io-1.3.5.js');
+                newData.include_scripts.push('/js/build-results-listener.js');
 
                 // For each sample solution, build a packaging request object with...
                 // -Submission ID (create submission)
@@ -65,7 +73,7 @@ exports.get = function (req, res) {
                             async.series([
                                 // 0: Create submission, get submission ID, get build system to use
                                 function (callback) {
-                                    problemDao.createSubmission(new problemDao.SubmissionData(
+                                    submissionDao.createSubmission(new submissionDao.SubmissionData(
                                             null,
                                             req['team_data']['id'],
                                             req['problemData']['id'],
@@ -88,6 +96,10 @@ exports.get = function (req, res) {
                                         originalName: item.originalFilename
                                     });
                                 }
+                                // 3: Get the ID of the sample solution
+                                , function (callback) {
+                                    callback(null, item.id);
+                                }
                             ], callback);
                         }, function (err, results) {
                             if (err) {
@@ -97,6 +109,9 @@ exports.get = function (req, res) {
                                 });
                             } else {
                                 // Now our results are all stored, create build requests for each one
+                                /**
+                                 * @type {Array.<BuildPackage>}
+                                 */
                                 var buildRequests = results.map(function (item) {
                                         return new BuildPackage(
                                             item[0].id,
@@ -110,6 +125,13 @@ exports.get = function (req, res) {
                                     }
                                 );
                                 for (var i = 0; i < buildRequests.length; i++) {
+
+                                    // Report this to the newData for use in the page
+                                    newData.buildList.push({
+                                        sampleSolutionID: results[i][3],
+                                        submissionID: buildRequests[i].id
+                                    });
+
                                     BuildServerManager.requestBuild(
                                         buildRequests[i],
                                         function (onSendError) { // On sent to build server

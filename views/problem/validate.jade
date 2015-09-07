@@ -7,6 +7,32 @@ block content
    table.table.table-hover
       tr
          th SampleID
-         each testCase in [1, 2, 3, 4, 5]
-            th= 'Test ' + testCase
-      // TODO KAM: Finish this out
+         each testCase in testCases
+            th= 'Test ' + testCase.id
+      each build in buildList
+         tr(id='submission_' + build.submissionID)
+            td= build.sampleSolutionID + ' (submission ' + build.submissionID + ')'
+            each testCase in testCases
+               td= 'Building...'
+   br
+   table.table.table-hover
+      tr
+         th Key
+         th Test Case...
+         th Test Case...
+      tr.success
+         td Successful Build
+         td Success!
+         td Success!
+      tr.danger
+         td Failed Build
+         td Failed...
+         td Success!
+      tr
+         td Pending Build
+         td Pending...
+         td Success!
+      tr.info
+         td Failed Build (no penalty)
+         td Server Error
+         td Success!
