@@ -280,6 +280,23 @@ exports.createSampleSolution = function (sampleSolutionData, callback) {
 };
 
 /**
+ * Remove a sample solution from the database
+ * @param sampleSolutionId {number}
+ * @param callback {function (err: Error=)}
+ */
+exports.removeSampleSolution = function (sampleSolutionId, callback) {
+    if (isNaN(parseInt(sampleSolutionId))) {
+        callback(new Error('Invalid sample solution ID', sampleSolutionId));
+    } else {
+        db.owl_query(
+            'DELETE FROM sample_solution WHERE id = ? LIMIT 1;',
+            [sampleSolutionId],
+            callback
+        );
+    }
+};
+
+/**
  * @param problemId {number}
  * @param languageId {string}
  * @param callback {function (err: Error=, res: number=)}
