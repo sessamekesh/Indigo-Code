@@ -130,6 +130,8 @@ exports.get = function (req, res) {
                                         )
                                     }
                                 );
+
+                                var nValidBuilds = 0;
                                 for (var i = 0; i < buildRequests.length; i++) {
 
                                     // Report this to the newData for use in the page
@@ -147,7 +149,6 @@ exports.get = function (req, res) {
                                             },
                                             function (onResultError, result) { // On receive result
                                                 if (result) {
-                                                    // TODO: Notify, via WebSocket, that the result is obtained
                                                     submissionDao.updateSubmission(
                                                         results[idx][0].id,
                                                         result['result'],
@@ -165,6 +166,18 @@ exports.get = function (req, res) {
                                                                         optionalParams: result['optionalParams']
                                                                     }]
                                                                 });
+                                                                if (result['result'] === 'AC') {
+                                                                    nValidBuilds++;
+                                                                }
+
+                                                                if (idx === buildRequests.length - 1) {
+                                                                    console.log('Problem', req['problemData']['id'], 'set to validity', nValidBuilds === buildRequests.length);
+                                                                    problemDao.setProblemValidity(req['problemData']['id'], nValidBuilds === buildRequests.length, function (pverr) {
+                                                                        if (pverr) {
+                                                                            console.log('Error setting validity of problem:', pverr.message);
+                                                                        }
+                                                                    });
+                                                                }
                                                             }
                                                         }
                                                     );

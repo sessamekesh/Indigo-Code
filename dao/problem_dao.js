@@ -311,3 +311,21 @@ exports.getTimeLimit = function (problemId, languageId, callback) {
         );
     }
 };
+
+/**
+ * Set whether or not a problem is valid, based on the validation step
+ * @param problemId {number}
+ * @param isValid {boolean}
+ * @param callback {function (err: Error=)}
+ */
+exports.setProblemValidity = function (problemId, isValid, callback) {
+    if (isNaN(parseInt(problemId))) {
+        callback(new Error(exports.ERRORS.INVALID_PROBLEM_ID));
+    } else {
+        db.owl_query(
+            'UPDATE problem SET valid = ? WHERE id = ?;',
+            [isValid, problemId],
+            callback
+        );
+    }
+};
