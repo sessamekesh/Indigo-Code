@@ -70,7 +70,7 @@ exports.getSubmissionData = function (submissionID, callback) {
         callback(new Error('No submission ID provided'));
     } else {
         db.owl_query(
-            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp), notes, affects_score FROM submission WHERE id = ?;',
+            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE id = ?;',
             [submissionID],
             function (dberr, dbres) {
                 if (dberr) {
@@ -86,7 +86,7 @@ exports.getSubmissionData = function (submissionID, callback) {
                             dbres[0]['problem_id'],
                             dbres[0]['language_id'],
                             dbres[0]['result'],
-                            dbres[0]['timestamp'],
+                            dbres[0]['timestamp'] * 1000,
                             dbres[0]['notes'],
                             dbres[0]['affects_score'][0]
                         )
@@ -119,6 +119,40 @@ exports.updateSubmission = function (submissionId, result, notes, affectsScore, 
                     callback(new Error('No submission found with the given ID', submissionId));
                 } else {
                     callback();
+                }
+            }
+        );
+    }
+};
+
+/**
+ * Gets the submissions attached to the problem specified
+ * @param problemId {number}
+ * @param callback {function (err: Error=, results: Array.<SubmissionData>=)}
+ */
+exports.getSubmissionsInProblem = function (problemId, callback) {
+    if (isNaN(parseInt(problemId))) {
+        callback(new Error('No problem ID provided'));
+    } else {
+        db.owl_query(
+            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE problem_id = ?;',
+            [problemId],
+            function (dberr, dbres) {
+                if (dberr) {
+                    callback(dberr);
+                } else {
+                    callback(null, dbres.map(function (row) {
+                        return new SubmissionData(
+                            row['id'],
+                            row['team_id'],
+                            row['problem_id'],
+                            row['language_id'],
+                            row['result'],
+                            row['timestamp'] * 1000,
+                            row['notes'],
+                            row['affects_score'][0]
+                        )
+                    }));
                 }
             }
         );

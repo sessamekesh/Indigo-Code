@@ -1,0 +1,34 @@
+//
+   Created by kamaron on 9/8/15.
+
+extends ../competition/index
+
+block content
+   table.table.table-hover
+      tr
+         th Key
+      tr.success
+         td Successful Build
+      tr.danger
+         td Failed Build
+      tr
+         td Pending Build
+      tr.info
+         td Failed Build (no penalty)
+   table.table.table-hover
+      tr
+         th ID
+         th Team
+         th Server Time
+         th Language
+         th Results
+      each submission in submissions
+         tr(id='submission_' + submission.id)
+            td= submission.id
+            td
+               p= team_data.team_name
+               i= team_data.team_tagline || 'No Tagline'
+            td= new Date(submission.timestamp).toUTCString()
+            td= languages[submission.languageId].name
+            td
+               a.btn.btn-primary(id='submission_' + submission.id + '_result')= submission.result || 'Building...'

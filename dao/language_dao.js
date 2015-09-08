@@ -49,7 +49,7 @@ var createLanguageEntry = function (languageData, callback) {
     db.owl_query(
         'INSERT INTO language (id, name, notes) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), notes=VALUES(notes);',
         [languageData.id, languageData.name, languageData.notes],
-        function (dberr, dbres) {
+        function (dberr) {
             callback(dberr, new LanguageData(
                 languageData.id,
                 languageData.name,
