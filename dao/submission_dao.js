@@ -96,3 +96,31 @@ exports.getSubmissionData = function (submissionID, callback) {
         )
     }
 };
+
+/**
+ * Update the submission with the given ID to have the given results (performed when a build finishes)
+ * @param submissionId {number} The ID of the submission in question
+ * @param result {string}
+ * @param notes {string}
+ * @param affectsScore {boolean=}
+ * @param callback {function (err: Error=)}
+ */
+exports.updateSubmission = function (submissionId, result, notes, affectsScore, callback) {
+    if (isNaN(parseInt(submissionId))) {
+        callback(new Error('No submission ID provided to updateSubmission method'));
+    } else {
+        db.owl_query(
+            'UPDATE submission SET result=?, notes=?, affects_score=? WHERE id=?;',
+            [result || 'ISE', notes || '', affectsScore || false, submissionId],
+            function (dberr, dbres) {
+                if (dberr) {
+                    callback(dberr);
+                } else if (dbres.affectedRows === 0) {
+                    callback(new Error('No submission found with the given ID', submissionId));
+                } else {
+                    callback();
+                }
+            }
+        );
+    }
+};

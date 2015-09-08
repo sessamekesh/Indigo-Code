@@ -13,6 +13,8 @@ var async = require('async');
 var BuildPackage = require('../../buildServerManager/models/BuildPackage').BuildPackage;
 var BuildServerManager = require('../../buildServerManager/BuildServerManager').BuildServerManager;
 
+var BuildResultsSocket = require('../../websockets/routes/build-result').Namespace;
+
 /**
  * Fill in data required for this page (and any page that builds on this page)
  * @param req Request object
@@ -53,8 +55,12 @@ exports.get = function (req, res) {
                 newData.buildList = [];
 
                 newData.include_scripts = newData.include_scripts || [];
+                newData.include_stylesheets = newData.include_stylesheets || [];
+
                 newData.include_scripts.push('https://cdn.socket.io/socket.io-1.3.5.js');
                 newData.include_scripts.push('/js/build-results-listener.js');
+                newData.include_scripts.push('/jquery-ui/jquery-ui.js');
+                newData.include_stylesheets.push('/jquery-ui/jquery-ui.css');
 
                 // For each sample solution, build a packaging request object with...
                 // -Submission ID (create submission)
@@ -132,22 +138,44 @@ exports.get = function (req, res) {
                                         submissionID: buildRequests[i].id
                                     });
 
-                                    BuildServerManager.requestBuild(
-                                        buildRequests[i],
-                                        function (onSendError) { // On sent to build server
-                                            // TODO: Notify, via WebSocket, that the request is sent
-                                            console.log('Request was sent to a build server', JSON.stringify(onSendError));
-                                        },
-                                        function (onResultError, result) { // On receive result
-                                            if (result) {
-                                                // TODO: Notify, via WebSocket, that the result is obtained
-                                                console.log('Result Received!', JSON.stringify(result), JSON.stringify(onResultError));
-                                            } else {
-                                                // An error must have happened.
-                                                console.log('An error must have happened', JSON.stringify(onResultError));
+                                    (function (idx) {
+                                        BuildServerManager.requestBuild(
+                                            buildRequests[i],
+                                            function (onSendError) { // On sent to build server
+                                                // TODO: Notify, via WebSocket, that the request is sent
+                                                console.log('Request was sent to a build server', JSON.stringify(onSendError));
+                                            },
+                                            function (onResultError, result) { // On receive result
+                                                if (result) {
+                                                    // TODO: Notify, via WebSocket, that the result is obtained
+                                                    submissionDao.updateSubmission(
+                                                        results[idx][0].id,
+                                                        result['result'],
+                                                        result['notes'],
+                                                        null,
+                                                        function (userr) {
+                                                            if (userr) {
+                                                                console.log('Error updating submission:', userr.message);
+                                                            } else {
+                                                                BuildResultsSocket.fireServerEvent('get results', {
+                                                                    results: [{
+                                                                        id: results[idx][0].id,
+                                                                        result: result['result'],
+                                                                        notes: result['notes'],
+                                                                        optionalParams: result['optionalParams']
+                                                                    }]
+                                                                });
+                                                            }
+                                                        }
+                                                    );
+                                                    console.log('Result Received!', JSON.stringify(result), JSON.stringify(onResultError));
+                                                } else {
+                                                    // An error must have happened.
+                                                    console.log('An error must have happened', JSON.stringify(onResultError));
+                                                }
                                             }
-                                        }
-                                    );
+                                        );
+                                    })(i);
                                 }
 
                                 res.status(200).render('./problem/validate.jade', newData);

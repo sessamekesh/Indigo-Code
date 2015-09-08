@@ -11,30 +11,46 @@
  * @param jq {jQuery}
  * @constructor
  */
-var BuildResultsRow = function (jq) {
+var BuildResultsRow = function (submissionID) {
     /**
      * @type {jQuery}
      * @private
      */
-    this._element = jq;
+    this._element = $('#submission_' + submissionID);
+
+    /**
+     * @type {jQuery}
+     * @private
+     */
+    this._resultsDiv = $('#submission_' + submissionID + '_result');
+
+    /**
+     * @type {*|jQuery|HTMLElement}
+     * @private
+     */
+    this._notesDialog = $('<div>');
 
     /**
      * @type {boolean}
      * @private
      */
-    this._success = $(jq).hasClass('success');
+    this._success = this._element.hasClass('success');
 
     /**
      * @type {boolean}
      * @private
      */
-    this._failed = $(jq).hasClass('danger');
+    this._failed = this._element.hasClass('danger');
 
     /**
      * @type {boolean}
      * @private
      */
-    this._noPenalty = $(jq).hasClass('info');
+    this._noPenalty = this._element.hasClass('info');
+
+    this._resultsDiv.on('click', function () {
+        this._notesDialog.dialog();
+    }.bind(this));
 };
 
 /**
@@ -56,24 +72,55 @@ BuildResultsRow.prototype._strip = function () {
         this._element.removeClass('success');
         this._success = false;
     }
+
+    this._notesDialog.html('');
+    this._notesDialog.prop('title', 'Pending...');
+    this._resultsDiv.text('Pending...');
 };
 
 /**
  * Mark this row as success
  */
-BuildResultsRow.prototype.success = function () {
+BuildResultsRow.prototype.success = function (result) {
     this._strip();
     this._element.addClass('success');
     this._success = true;
+
+    this._resultsDiv.text('Correct Answer');
+
+    this._notesDialog.html('<p>' + result.notes + '</p>');
+    this._notesDialog.prop('title', 'Correct Answer');
 };
 
 /**
  * Mark this row as failed
  */
-BuildResultsRow.prototype.failed = function () {
+BuildResultsRow.prototype.failed = function (result) {
     this._strip();
     this._element.addClass('danger');
     this._failed = true;
+
+    var resultText = '';
+
+    switch (result.result) {
+        case 'WA':
+            resultText = 'Wrong Answer';
+            break;
+        case 'TLE':
+            resultText = 'Time Limit Exceeded';
+            break;
+        case 'RE':
+            resultText = 'Runtime Error';
+            break;
+        default:
+            resultText = 'Corrupt Response (fail)';
+            break;
+    }
+
+    this._notesDialog.prop('title', resultText);
+    this._resultsDiv.text(resultText);
+
+    this._notesDialog.html('<p>' + result.notes + '</p>');
 };
 
 /**
@@ -86,14 +133,32 @@ BuildResultsRow.prototype.pending = function () {
 /**
  * Mark this row as failed, with no penalty
  */
-BuildResultsRow.prototype.noPenalty = function () {
+BuildResultsRow.prototype.noPenalty = function (result) {
     this._strip();
     this._element.addClass('info');
     this._noPenalty = true;
+
+    var resultText = '';
+
+    switch (result.result) {
+        case 'ISE':
+            resultText = 'Internal Server Error';
+            break;
+        case 'BE':
+            resultText = 'Build Error';
+            break;
+        default:
+            resultText = 'Corrupt Response (fail, no penalty)';
+            break;
+    }
+
+    this._notesDialog.prop('title', resultText);
+    this._resultsDiv.text(resultText);
+
+    this._notesDialog.html('<p>' + result.notes + '</p>');
 };
 
 $(function () {
-    // TODO KAM: You really shouldn't do this... You're going to want to generate this.
     var socket = io('http://' + window.location.hostname + ':' + window.location.port + '/build-results');
 
     var jqs = $('tr[id*="submission_"]');
@@ -107,7 +172,7 @@ $(function () {
     jqs.each(function (idx, element) {
         var newId = parseInt(element.id.substr(element.id.indexOf('submission_') + 'submission_'.length));
         submissionIDs.push(newId);
-        submissionRows[newId] = new BuildResultsRow(element);
+        submissionRows[newId] = new BuildResultsRow(newId);
     });
 
     socket.emit('get results', {
@@ -128,24 +193,23 @@ $(function () {
                             submissionRows[id].pending();
                             break;
                         case 'AC':
-                            submissionRows[id].success();
+                            submissionRows[id].success(msg.results[i]);
                             break;
                         case 'RE':
                         case 'WA':
                         case 'TLE':
-                            submissionRows[id].failed();
+                            submissionRows[id].failed(msg.results[i]);
                             break;
                         case 'ISE':
                         case 'BE':
-                            submissionRows[id].noPenalty();
+                            submissionRows[id].noPenalty(msg.results[i]);
                             break;
                         default:
-                            console.log('Unknown result', msg.results[i].result);
+                            console.log('Unknown result', msg.results[i]);
                             break;
                     }
                 }
             }
-
         } else {
             console.log('???', msg);
         }
