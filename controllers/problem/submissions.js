@@ -24,7 +24,10 @@ exports.get = function (req, res) {
  */
 exports.fill_data = function (req, data, callback) {
     getBaseData(req, data || {}, function (newData) {
-        submissionDao.getSubmissionsInProblem(req['problemData']['id'], function (dberr, dbres) {
+        newData.offset = (req.query.page || 0) * 25;
+        newData.page = req.query.page || 0;
+        submissionDao.getSubmissionsInProblem(req['problemData']['id'], newData.offset, 25, function (dberr, dbres) {
+            console.log(dbres);
             if (dberr) {
                 console.log('Could not get submissions for problem ' + req['problemData']['id'], ':', dberr.message);
                 newData.submissions = [];

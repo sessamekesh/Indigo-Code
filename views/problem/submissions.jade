@@ -32,3 +32,7 @@ block content
             td= languages[submission.languageId].name
             td
                a.btn.btn-primary(id='submission_' + submission.id + '_result')= submission.result || 'Building...'
+   if !isNaN(parseInt(page))
+      if page > 0
+         a.btn.btn-primary(href="/competition/" + comp_data.id + "/problem/" + problemData.id + "/submissions?page=" + (parseInt(page) - 1)) Previous
+      a.btn.btn-primary(href="/competition/" + comp_data.id + "/problem/" + problemData.id + "/submissions?page=" + (parseInt(page) + 1)) Next

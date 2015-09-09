@@ -128,33 +128,43 @@ exports.updateSubmission = function (submissionId, result, notes, affectsScore, 
 /**
  * Gets the submissions attached to the problem specified
  * @param problemId {number}
+ * @param offset {number|null}
+ * @param count {number|null}
  * @param callback {function (err: Error=, results: Array.<SubmissionData>=)}
  */
-exports.getSubmissionsInProblem = function (problemId, callback) {
+exports.getSubmissionsInProblem = function (problemId, offset, count, callback) {
     if (isNaN(parseInt(problemId))) {
         callback(new Error('No problem ID provided'));
+    } else if (!isNaN(parseInt(offset)) && !isNaN(parseInt(count))) {
+        db.owl_query(
+            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE problem_id = ? ORDER BY id LIMIT ?, ?;',
+            [problemId, parseInt(offset), parseInt(count)],
+            onResult
+        );
     } else {
         db.owl_query(
             'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE problem_id = ?;',
             [problemId],
-            function (dberr, dbres) {
-                if (dberr) {
-                    callback(dberr);
-                } else {
-                    callback(null, dbres.map(function (row) {
-                        return new SubmissionData(
-                            row['id'],
-                            row['team_id'],
-                            row['problem_id'],
-                            row['language_id'],
-                            row['result'],
-                            row['timestamp'] * 1000,
-                            row['notes'],
-                            row['affects_score'][0]
-                        )
-                    }));
-                }
-            }
+            onResult
         );
+    }
+
+    function onResult (dberr, dbres) {
+        if (dberr) {
+            callback(dberr);
+        } else {
+            callback(null, dbres.map(function (row) {
+                return new SubmissionData(
+                    row['id'],
+                    row['team_id'],
+                    row['problem_id'],
+                    row['language_id'],
+                    row['result'],
+                    row['timestamp'] * 1000,
+                    row['notes'],
+                    row['affects_score'][0]
+                )
+            }));
+        }
     }
 };
