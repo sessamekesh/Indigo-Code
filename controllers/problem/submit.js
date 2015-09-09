@@ -110,13 +110,21 @@ exports.post = function (req, res) {
                                                             console.log('Error on receive result:', onResultReceivedError.message);
                                                         }
 
-                                                        resultsSocket.fireServerEvent('get results', {
-                                                            results: [{
-                                                                id: buildResult['id'],
+                                                        submissionDao.updateSubmission(csres.id, buildResult['result'], buildResult['notes'], true, function (userr) {
+                                                            if (userr) {
+                                                                console.log('Error updating submission:', csres.id, ':', userr.message);
+                                                            }
+
+                                                            var rss = [{
+                                                                id: csres['id'],
                                                                 result: buildResult['result'],
                                                                 notes: buildResult['notes'],
                                                                 optionalParams: buildResult['optionalParams']
-                                                            }]
+                                                            }];
+                                                            console.log(rss);
+                                                            resultsSocket.fireServerEvent('get results', {
+                                                                results: rss
+                                                            });
                                                         });
                                                     }
                                                 );
