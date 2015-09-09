@@ -34,6 +34,7 @@ exports.SubmissionData = SubmissionData;
  * @param callback {function (err: Error=, result: SubmissionData=)}
  */
 exports.createSubmission = function (submissionData, callback) {
+    // TODO KAM: You need to also update the score here.
     db.owl_query(
         'INSERT INTO submission (team_id, problem_id, language_id, result, timestamp, notes, affects_score) '
         + 'VALUES (?, ?, ?, ?, FROM_UNIXTIME(?), ?, ?);',
@@ -106,6 +107,7 @@ exports.getSubmissionData = function (submissionID, callback) {
  * @param callback {function (err: Error=)}
  */
 exports.updateSubmission = function (submissionId, result, notes, affectsScore, callback) {
+    // TODO KAM: You need to also update the score here
     if (isNaN(parseInt(submissionId))) {
         callback(new Error('No submission ID provided to updateSubmission method'));
     } else {

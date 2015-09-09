@@ -12,6 +12,8 @@ block sidebar
    hr
    b Competition Links
    .list-group
+      .list-group-item
+         a(href="/competition/" + comp_data.id + "/scoreboard") Scoreboard
    b Problems
    .list-group
       each problem in problemList

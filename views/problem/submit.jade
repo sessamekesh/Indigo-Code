@@ -1,0 +1,29 @@
+//
+   Created by kamaron on 9/8/15.
+
+extends ../competition/index
+
+block content
+   form.form-horizontal#new-submission-form(method='post', action='/competition/' + comp_data.id + '/problem/' + problemData.id + '/submit', enctype="multipart/form-data")
+      .form-group
+         label.col-md-4.control-label(for='problem_name') Problem
+         .col-md-4
+            p#problem_name(name='problem_name')= problemData.name
+      .form-group
+         label.col-md-3.control-label(for='build_system_id') Build System
+         a.col-md-1#buildHelp ?
+         .col-md-4
+            select#build_system_id.form-control(name='build_system_id')
+               - for (bs in buildSystems) {
+                  - if (buildSystems.hasOwnProperty(bs)) {
+                     option(value=bs)= buildSystems[bs]
+                  - }
+               - }
+         span.col-md-4.help-block= pageErrors.getError('build_system_id')
+      .form-group
+         label.col-md-4.control-label(for='source_code') Source Code
+         .col-md-4
+            input#source_code.form-control.input-md(type='file', name='source_code')
+         span.col-md-4.help-block= pageErrors.getError('source_code')
+      .form-group
+         input.btn.btn-primary.col-md-offset-4#submit(type='submit', value='Submit')

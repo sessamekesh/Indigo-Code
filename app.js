@@ -100,6 +100,7 @@ makeSureDirectoryExists('./data');
 makeSureDirectoryExists('./data/test-cases');
 makeSureDirectoryExists('./data/sample-solutions');
 makeSureDirectoryExists('./data/build-packages');
+makeSureDirectoryExists('./data/source-code');
 makeSureDirectoryExists('./views/problem/descriptions');
 
 module.exports = app;

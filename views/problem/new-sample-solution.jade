@@ -27,10 +27,3 @@ block content
             span.col-md-4.help-block= pageErrors.getError('sample_solution_source')
          .form-group
             input.btn.btn-primary.col-md-offset-4#submit(type="submit", value="Submit")
-   p Currently Active Build Systems
-   ol
-      - for (bs in buildSystems) {
-         - if (buildSystems.hasOwnProperty(bs)) {
-            li= buildSystems[bs] + ' (' + bs + ')'
-         - }
-      - }

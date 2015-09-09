@@ -370,7 +370,7 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
                                 res[0].id,
                                 res[0].comp_id,
                                 res[0].name,
-                                res[0].team_tagline,
+                                res[0].tagline,
                                 res[0].is_admin[0],
                                 res[0].public_code,
                                 ares.map(function (a) { return a.user_id })
@@ -410,7 +410,8 @@ exports.getAdminTeamMembers = function (comp_id, cb) {
                         mySQL_result.id,
                         mySQL_result.username,
                         mySQL_result.is_admin[0],
-                        mySQL_result.public_facing);
+                        mySQL_result.public_facing
+                    );
                 }));
             }
         });
