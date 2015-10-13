@@ -37,7 +37,16 @@ exports.fill_data = function (req, data, cb) {
     data = data || {};
 
     // Get page errors from session, if they exist, or just create a new, empty object.
-    data.page_errors = req.session.new_comp_errors || new RegistrationPageErrorCollection();
+    data.page_errors = new RegistrationPageErrorCollection();
+
+    if (req.session.new_comp_errors) {
+        for (var page_err in req.session.new_comp_errors.errors) {
+            if (req.session.new_comp_errors.errors.hasOwnProperty(page_err)) {
+                data.page_errors.addError(page_err, req.session.new_comp_errors.errors[page_err]);
+            }
+        }
+    }
+
     req.session.new_comp_errors = null;
 
     // TODO KIP: Insert in data that was valid
