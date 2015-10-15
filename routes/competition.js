@@ -4,6 +4,7 @@
 
 var express = require('express');
 var problem_router = require('./problem');
+var competition_assets_router = require('./competition-assets');
 var fs = require('fs');
 var user_dao = require('../dao/user_dao');
 var competition_dao = require('../dao/competition_dao');
@@ -105,6 +106,7 @@ router.use('/:id', function (req, res, next) {
 
 // Anything under directory '/problem' goes to problem router
 router.use('/:id/problem', problem_router);
+router.use('/:id/asset', competition_assets_router);
 
 // Add router endpoints here...
 var controllers = fs.readdirSync(__dirname + '/../controllers/competition');
