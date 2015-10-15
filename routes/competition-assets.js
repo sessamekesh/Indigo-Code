@@ -4,7 +4,6 @@
 
 var express = require('express');
 var fs = require('fs');
-var staticfile = require('node-static');
 
 var router = express.Router();
 

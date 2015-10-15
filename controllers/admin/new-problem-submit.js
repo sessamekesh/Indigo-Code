@@ -81,6 +81,16 @@ exports.post = function (req, res) {
                 } else if (description.extension === 'pdf') {
                     // Copy PDF file over.
                     // TODO KAM: Copy over to competition assets directory
+                    newLocation = './data/competition-assets/' + req.body.comp_id + '/pdesc-' + problemId + '.pdf';
+                    var pdfDest = fs.createWriteStream(newLocation);
+                    var pdfSource = fs.createReadStream(description.path);
+                    pdfSource.pipe(pdfDest);
+                    pdfSource.on('end', function () {
+                        fs.unlink(description.path, function (dfe) {
+                            dfe && (console.log('new-problem-submit.js: Error deleting file ' + description.path, dfe));
+                        });
+                        callback(null, { path: newLocation, type: 'pdf' });
+                    });
                 } else {
                     // TODO KAM: Be a bit more picky about what file types are uploaded, mkay?
                     newLocation = './views/problem/descriptions/' + problemId + '.' + description.extension;
