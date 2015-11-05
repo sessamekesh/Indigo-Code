@@ -55,6 +55,7 @@ exports.post = function (req, res) {
                         new_data.message = err2.message;
                         res.render('./error', new_data);
                     } else {
+                        // Go back to management page
                         res.redirect('/admin/manage-buildserver-connections');
                     }
                 });
