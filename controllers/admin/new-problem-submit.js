@@ -43,8 +43,8 @@ exports.post = function (req, res) {
         }, function (newProblemData, callback) {
             problemId = newProblemData.id;
             problemData = newProblemData;
-            // Find and move the problem description file to a staging area
-            // TODO KAM
+            // Find and move the problem description file to a staging area.
+            //  As of now, we support PDF and JADE files.
             if (req.files['problem_description']) {
                 console.log(req.files['problem_description']);
                 var description = req.files['problem_description'];
@@ -58,25 +58,38 @@ exports.post = function (req, res) {
                         fs.unlink(description.path, function (delete_file_error) {
                             delete_file_error && (console.log(
                                 'new-problem-submit.js: Error deleting file '
-                                  + description.path
-                                  + ' - '
-                                  + delete_file_error.message));
+                                + description.path
+                                + ' - '
+                                + delete_file_error.message));
                         });
 
                         try {
-                            var renderFunction = jade.compileFile(newLocation, { pretty: false });
+                            var renderFunction = jade.compileFile(newLocation, {pretty: false});
                             renderFunction({
                                 problemList: [],
                                 problemData: problemData
                             });
 
-                            callback(null, { path: newLocation, type: description.extension });
+                            callback(null, {path: newLocation, type: description.extension});
                         } catch (e) {
                             // Could not be compiled
                             console.log('Invalid JADE file:', e.message);
                             callback(new Error('Invalid JADE file provided'));
                             fs.unlink(newLocation);
                         }
+                    });
+                } else if (description.extension === 'pdf') {
+                    // Copy PDF file over.
+                    // TODO KAM: Copy over to competition assets directory
+                    newLocation = './data/competition-assets/' + req.body.comp_id + '/pdesc-' + problemId + '.pdf';
+                    var pdfDest = fs.createWriteStream(newLocation);
+                    var pdfSource = fs.createReadStream(description.path);
+                    pdfSource.pipe(pdfDest);
+                    pdfSource.on('end', function () {
+                        fs.unlink(description.path, function (dfe) {
+                            dfe && (console.log('new-problem-submit.js: Error deleting file ' + description.path, dfe));
+                        });
+                        callback(null, { path: newLocation, type: 'pdf' });
                     });
                 } else {
                     // TODO KAM: Be a bit more picky about what file types are uploaded, mkay?

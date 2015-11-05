@@ -2,6 +2,8 @@
  * Created by Kamaron on 8/21/2015.
  */
 
+var fs = require('fs');
+
 var ProblemDescription = require('../../models/ProblemDescription').ProblemDescription;
 var competitionLayer = require('../competition/index');
 
@@ -17,7 +19,27 @@ exports.get = function (req, res) {
     }, function (newData) {
         newData.problemDescription = new ProblemDescription(newData.problemData);
 
-        res.render('./problem/descriptions/' + req.problemData.id + '.jade', newData);
+        fs.stat('./problem/descriptions/' + req.problemData.id + '.jade', function (fse, fsd) {
+            if (fse || !fsd.isFile()) {
+                // If no JADE file exists, look for other types. Say, PDF?
+                fs.stat('./data/competition-assets/' + req.comp_data.id + '/pdesc-' + req.problemData.id + '.pdf', function (pdfe, pdfr) {
+                    if (pdfe || !pdfr.isFile()) {
+                        // Error
+                        res.render('./error', {
+                            error: new Error('Could not find description file - notify admin'),
+                            message: 'Could not find description file - notify admin'
+                        });
+                    } else {
+                        // Serve the generic JADE file, with the description PDF...
+                        newData['description-type'] = 'pdf';
+                        res.render('./problem/default-description', newData);
+                    }
+                });
+            } else {
+                // Serve the jade file...
+                res.render('./problem/descriptions/' + req.problemData.id + '.jade', newData);
+            }
+        });
     });
 };
 

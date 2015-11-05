@@ -29,7 +29,7 @@ nav.navbar.navbar-default.navbar-static-top
               input(type="hidden", name="redirect", value=('/'))
               input.btn.btn-default(type="submit", value="Logout", name="logout")
         if user_data.is_admin === true
-          p.nav.navbar-right.navbar-text="hello, Sir "+user_data.username
+          p.nav.navbar-right.navbar-text="Hello, "+user_data.username + " the Wise"
         else
           p.nav.navbar-right.navbar-text=user_data.username
       

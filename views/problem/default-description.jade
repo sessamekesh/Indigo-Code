@@ -1,0 +1,10 @@
+//
+   Created by kamaron on 10/14/15.
+
+extends ../competition/index
+
+block content
+   object(width="100%" height="1200px" data="/competition/" + comp_data.id + '/asset/pdesc-' + problemData.id + '.pdf')
+      p Your browser does not support HTML5 object tags - you should stop that.
+      | To access the problem statement, visit
+      a(href="/competition/" + comp_data.id + "/asset/pdesc-" + problemData.id + ".pdf") here
