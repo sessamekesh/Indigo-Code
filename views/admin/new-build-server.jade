@@ -1,0 +1,21 @@
+//
+   Created by Kamaron on 7/11/2015.
+
+extends ./index
+
+block content
+   form.form-horizontal(method="post" action="/admin/new-build-server")
+      fieldset
+         legend New Buildserver Connection
+         .form-group
+            label.col-md-4.control-label(for="ip_address") IP Address:
+            .col-md-4
+               input#ip_address.form-control.input-md(name="ip_address", type="text" placeholder="192.168.1.101" required="")
+         .form-group
+            label.col-md-4.control-label(for="port_number") Port:
+            .col-md-4
+               input#port_number.form-control.input-md(name="port_number" type="text" placeholder="80" required="")
+         .form-group
+            .col-md-4
+            .col-md-4
+               input#submit.btn.btn-primary(type="submit" name="submit" value="Submit")
