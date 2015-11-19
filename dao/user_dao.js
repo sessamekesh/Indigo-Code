@@ -88,16 +88,21 @@ exports.UserParticipation = function(userData, compData, teamData) {
  *                              before it begins, add problem, test cases, etc.
  * @param public_code {boolean} Does this team provide its code to other users after the competition?
  * @param user_ids {Array<number>} List of user IDs of the users on this team
+ * @param score {number} The score of this team
+ * @param time_penalty {number} The time penalty this team has accrued
  * @constructor
  */
-exports.TeamData = function (id, comp_id, team_name, team_tagline, is_admin, public_code, user_ids) {
+exports.TeamData = function (id, comp_id, team_name, team_tagline, is_admin, public_code, user_ids, score, time_penalty) {
     this.id = id;
     this.comp_id = comp_id;
-    this.team_name = team_name;
+    this.team_name = team_name
     this.team_tagline = team_tagline || ''; // Optional parameter
     this.is_admin = (is_admin == null) ? false : !!is_admin;
     this.public_code = (public_code == null) ? true : !!public_code;
     this.user_ids = user_ids || [];
+
+    this.score = score || 0;
+    this.time_penalty = time_penalty || 0;
 };
 
 /**
@@ -338,6 +343,33 @@ exports.addUser = function (user_data, password, cb) {
 };
 
 /**
+ * Retrieves information about the team with the given ID
+ * @param team_id {number}
+ * @param cb {function(err: Error=, exports.TeamData=)}
+ */
+exports.getTeam = function (team_id, cb) {
+    if (isNaN(parseInt(team_id))) {
+        cb(new Error('Must provide a valid integer team ID'));
+    } else {
+        db.owl_query('SELECT id, comp_id, name, tagline, is_admin, public_code, score, time_penalty FROM team WHERE id = ?;',
+            [team_id],
+            function (dberr, dbres) {
+                if (dberr) {
+                    cb(dberr);
+                } else if (dbres.length === 0) {
+                    cb(new Error('No team with given ID found'));
+                } else {
+                    cb(null, new exports.TeamData(
+                        dbres[0].id, dbres[0].comp_id, dbres[0].name, dbres[0].tagline,
+                        dbres[0].is_admin, dbres[0].public_code, dbres[0].score, dbres[0].time_penalty
+                    ));
+                }
+            }
+        );
+    }
+};
+
+/**
  * Retrieves the team data of the team to which a user belongs for a given competition
  * @param user_id {number} ID of user in question
  * @param comp_id {number} ID of the competition in question
@@ -352,6 +384,7 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
     } else if (true || sensitive === true) {
         // This may be changed, if I decide there is sensitive data in a team. I don't think there is.
         db.owl_query('SELECT team.id, team.comp_id, team.name, team.tagline, team.is_admin, team.public_code '
+            + ', team.score, team.time_penalty '
             + 'FROM user_team LEFT JOIN team ON team.id = user_team.team_id '
             + 'WHERE user_team.user_id = ? AND team.comp_id = ?;',
             [user_id, comp_id],
@@ -373,7 +406,9 @@ exports.getTeamOfUser = function (user_id, comp_id, sensitive, cb) {
                                 res[0].tagline,
                                 res[0].is_admin[0],
                                 res[0].public_code,
-                                ares.map(function (a) { return a.user_id })
+                                ares.map(function (a) { return a.user_id }),
+                                res[0].score,
+                                res[0].time_penalty
                             ));
                         }
                     });
@@ -588,7 +623,8 @@ exports.create_team = function (team_data, cb) {
                         team_data.team_tagline,
                         team_data.is_admin,
                         team_data.public_code,
-                        team_data.user_ids
+                        team_data.user_ids,
+                        0, 0
                     ), 0);
                 }
             }
@@ -672,7 +708,8 @@ exports.getUserParticipation = function (userData, cb) {
         db.owl_query('SELECT c.id AS compID, c.name AS compName, c.start_date AS compStartDate, '
             + 'c.end_date AS compEndDate, c.max_team_size AS compMaxTeamSize, c.time_penalty AS compTimePenalty, '
             + 't.id AS teamID, t.name AS teamName, t.tagline AS teamTagline, t.is_admin AS teamIsAdmin, '
-            + 't.public_code AS teamPublicCode FROM user_team LEFT JOIN team AS t ON user_team.team_id = t.id '
+            + 't.public_code AS teamPublicCode, t.score AS teamScore, t.time_penalty AS teamTimePenalty '
+            + 'FROM user_team LEFT JOIN team AS t ON user_team.team_id = t.id '
             + 'LEFT JOIN competition AS c ON c.id = t.comp_id WHERE user_team.user_id = ?;', [userData.id],
             function (err, res) {
                 if (err) {
@@ -698,7 +735,9 @@ exports.getUserParticipation = function (userData, cb) {
                                 row.teamTagline,
                                 row.teamIsAdmin,
                                 row.teamPublicCode,
-                                [] // TODO KAM: Really, should you have an empty array here?
+                                [], // TODO KAM: Really, should you have an empty array here?
+                                row.teamScore,
+                                t.teamTimePenalty
                             )
                         );
                     }));

@@ -90,6 +90,7 @@ exports.post = function (req, res) {
                             'We fight for the User',
                             true,
                             true,
+                            0, 0
                             [req.session.user_data.id]
                         ), function (berr, bres) {
                             if (berr) {

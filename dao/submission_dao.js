@@ -3,6 +3,10 @@
  */
 
 var db = require('./db');
+var competition_dao = require('./competition_dao');
+var user_dao = require('./user_dao');
+
+var async = require('async');
 
 /**
  * @param id {number|null}
@@ -107,7 +111,6 @@ exports.getSubmissionData = function (submissionID, callback) {
  * @param callback {function (err: Error=)}
  */
 exports.updateSubmission = function (submissionId, result, notes, affectsScore, callback) {
-    // TODO KAM: You need to also update the score here
     if (isNaN(parseInt(submissionId))) {
         callback(new Error('No submission ID provided to updateSubmission method'));
     } else {
@@ -120,12 +123,130 @@ exports.updateSubmission = function (submissionId, result, notes, affectsScore, 
                 } else if (dbres.affectedRows === 0) {
                     callback(new Error('No submission found with the given ID', submissionId));
                 } else {
-                    callback();
+                    db.owl_query(
+                        'SELECT team_id FROM submission WHERE id=?;',
+                        [submissionId],
+                        function (siderr, sidres) {
+                            if (siderr) {
+                                callback (siderr);
+                            } else {
+                                exports.updateTeamScore(sidres[0].team_id, callback);
+                            }
+                        }
+                    );
                 }
             }
         );
     }
 };
+
+/**
+ * @param teamID {number}
+ * @param callback {function (err: Error=, results: TeamData=)}
+ */
+exports.updateTeamScore = function (teamID, callback) {
+    async.waterfall([
+        // Get competition data
+        function (callback) {
+            db.owl_query('SELECT comp_id FROM team WHERE id = ?;', [teamID], function (dberr, dbres) {
+                if (dberr) { callback(dberr); }
+                else if (dbres.length == 0) { callback(new Error('No team found with given ID')); }
+                else {
+                    competition_dao.get_competition_data(dbres[0]['comp_id'], callback);
+                }
+            });
+        },
+
+        // Get all problems in the competition
+        function (compData, callback) {
+            competition_dao.getProblemsInCompetition(compData.id, function (pcerr, pcres) {
+                if (pcerr) { callback(pcerr); }
+                else {
+                    callback(null, {
+                        compData: compData,
+                        probList: pcres
+                    });
+                }
+            });
+        },
+
+        // For each problem in the competition
+        function (data, callback) {
+            async.map(data.probList,
+                function (problem, scoreCallback) {
+                    async.waterfall([
+                        // Get the first AC solution within competition timeframe
+                        function (accallback) {
+                            db.owl_query('SELECT timestamp FROM submission WHERE team_id = ? AND problem_id = ? AND result = \'AC\' ORDER BY timestamp ASC LIMIT 1;',
+                                [teamID, problem.id],
+                                accallback
+                            );
+                        },
+
+                        // If none exist, score = 0, time penalty = 0;
+                        function (lastSubmissionTime, accallback) {
+                            if (lastSubmissionTime.length === 0) {
+                                accallback(null, {
+                                    score: 0,
+                                    time_penalty: 0,
+                                    incorrect_submission_penalty: 0
+                                });
+                            } else {
+                                // If one exists, score = 1, time penalty = (seconds into competition of first submission)
+                                var score = 1;
+                                var timep = (new Date(lastSubmissionTime[0].timestamp) - new Date(data.compData.start_date)) / 1000;
+
+                                // For every incorrect submission after competition start but before first AC submission, add
+                                //  on TIME_PENALTY seconds to incorrect submission penalty
+                                db.owl_query('SELECT COUNT(*) AS ct FROM submission WHERE team_id = ? AND problem_id = ? AND '
+                                    + '(result = \'re\' OR result=\'tle\' OR result=\'wa\') AND timestamp < ?;',
+                                    [teamID, problem.id, lastSubmissionTime[0].timestamp],
+                                    function (cterr, ctres) {
+                                        if (cterr) { accallback(cterr); }
+                                        else {
+                                            accallback(null, {
+                                                score: score,
+                                                time_penalty: timep,
+                                                incorrect_submission_penalty: ctres[0].ct
+                                            });
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    ], scoreCallback);
+                },
+                function (err, results) {
+                    if (err) { callback (err); }
+                    else {
+                        callback(null, {
+                            compData: data.compData,
+                            probList: data.probList,
+                            results: results
+                        });
+                    }
+                }
+            );
+        },
+
+        // Update score = sum of scores returned, time penalty = maximum time penalty plus sum of incorrect submission penalties
+    ], function (err, result) {
+        var score = result.results.map(function (a) { return a.score; }).reduce(function (a, b) { return a + b; });
+        var base_time_penalty = Math.max.apply(Math, result.results.map(function (a) { return a.time_penalty; }));
+        var addtl_time_penalty = result.results.map(function (a) { return a.incorrect_submission_penalty; }).reduce(function (a, b) { return a + b; });
+
+        db.owl_query('UPDATE team SET score = ?, time_penalty = ? WHERE id = ?;',
+            [score, base_time_penalty + addtl_time_penalty, teamID],
+            function (dberr, dbres) {
+                if (dberr) {
+                    callback (dberr);
+                } else {
+                    user_dao.getTeam(teamID, callback);
+                }
+            }
+        );
+    });
+}
 
 /**
  * Gets the submissions attached to the problem specified

@@ -26,8 +26,8 @@ block content
          tr(id='submission_' + submission.id)
             td= submission.id
             td
-               p= team_data.team_name
-               i= team_data.team_tagline || 'No Tagline'
+               p= submission.teamId
+               i= submission.teamId
             td= new Date(submission.timestamp).toUTCString()
             td= languages[submission.languageId].name
             td
