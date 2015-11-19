@@ -106,27 +106,6 @@ CREATE TABLE `problem` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `scoreboard`
---
-
-DROP TABLE IF EXISTS `scoreboard`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `scoreboard` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `comp_id` int(11) NOT NULL,
-  `team_id` int(11) NOT NULL,
-  `score` int(11) NOT NULL,
-  `time_penalty` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_SCORE_COMP_idx` (`comp_id`),
-  KEY `FK_SCORE_TEAM_idx` (`team_id`),
-  CONSTRAINT `FK_SCORE_COMP` FOREIGN KEY (`comp_id`) REFERENCES `competition` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_SCORE_TEAM` FOREIGN KEY (`team_id`) REFERENCES `team` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains cached values of scores throughout a competition. Reduce MySQL access load and complexity. I''m totally not optimizing any of this stuff for database access, so I might as well at least try to reduce the amount of work MySQL has to do.';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `submission`
 --
 
@@ -166,6 +145,8 @@ CREATE TABLE `team` (
   `tagline` varchar(300) NOT NULL DEFAULT '"About three things I was absolutely positive: First, Edward was a vampire. Second, there was a part of him - and I didn''t know how dominant that part might be - that thirsted for my blood. And third, I was unconditionally and irrevocably in love with him."',
   `is_admin` bit(1) NOT NULL DEFAULT b'0',
   `public_code` bit(1) NOT NULL DEFAULT b'1',
+  `score` int(11) NOT NULL DEFAULT 0,
+  `time_penalty` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQUE_TEAM_NAME` (`name`,`comp_id`),
   KEY `IDX_COMP_ID` (`comp_id`),
@@ -266,6 +247,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON zoradb.* TO 'zora'@'localhost';
 --
 INSERT INTO competition (name, start_date, end_date, max_team_size, time_penalty) VALUES (
   "Test Competition" ,"2012-01-01", "2020-01-01", 3, 300
-)
+);
 
 -- Dump completed on 2015-05-21 22:17:00
