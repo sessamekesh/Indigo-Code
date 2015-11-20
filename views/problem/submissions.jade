@@ -26,10 +26,10 @@ block content
          tr(id='submission_' + submission.id)
             td= submission.id
             td
-               p= submission.teamId
-               i= submission.teamId
-            td= new Date(submission.timestamp).toUTCString()
-            td= languages[submission.languageId].name
+               p= submission.teamName
+               i= submission.teamTagline
+            td= new Date(submission.serverTime).toUTCString()
+            td= languages[submission.languageID] ? languages[submission.languageID].name : 'UNKNOWN'
             td
                a.btn.btn-primary(id='submission_' + submission.id + '_result')= submission.result || 'Building...'
    if !isNaN(parseInt(page))

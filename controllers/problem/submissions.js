@@ -32,6 +32,8 @@ exports.fill_data = function (req, data, callback) {
                 console.log('Could not get submissions for problem ' + req['problemData']['id'], ':', dberr.message);
                 newData.submissions = [];
             } else {
+                // DB result is back, with submissions.
+                // Need to get team names as well.
                 newData.submissions = dbres;
             }
 
@@ -56,11 +58,11 @@ exports.fill_data = function (req, data, callback) {
                 async.forEach(
                     newData.submissions,
                     function (submission, cb) {
-                        languageDao.getLanguageData(submission.languageId, function (glderr, gldres) {
+                        languageDao.getLanguageData(submission.languageID, function (glderr, gldres) {
                             if (glderr) {
                                 console.log('Could not get information about language', submission.languageId, ':', glderr.message);
                             } else {
-                                newData.languages[submission.languageId] = gldres[0];
+                                newData.languages[submission.languageID] = gldres[0];
                             }
 
                             cb();

@@ -32,6 +32,29 @@ var SubmissionData = function (id, teamId, problemId, languageId, result, timest
 
 exports.SubmissionData = SubmissionData;
 
+/**
+ *
+ * @param id {number} Integer ID of the submission in question
+ * @param teamName {string} Name of the team who made this submission
+ * @param teamTagline {string} Tagline of the team who made this submission
+ * @param serverTime {number} UNIX timestamp (ms) when this submission was made
+ * @param languageID {string} Language ID (identified on the BuildServer)
+ * @param result {string}
+ * @param notes {string}
+ * @param affectsScore {bool} True if the submission actually affects the final score
+ * @constructor
+ */
+exports.SubmissionRenderData = function (id, teamName, teamTagline, serverTime, languageID, result, notes, affectsScore) {
+    this.id = id;
+    this.teamName = teamName;
+    this.teamTagline = teamTagline;
+    this.serverTime = serverTime;
+    this.languageID = languageID;
+    this.results = result;
+    this.notes = notes;
+    this.affectsScore = affectsScore;
+};
+
 
 /**
  * @param submissionData {SubmissionData}
@@ -246,27 +269,27 @@ exports.updateTeamScore = function (teamID, callback) {
             }
         );
     });
-}
+};
 
 /**
  * Gets the submissions attached to the problem specified
  * @param problemId {number}
  * @param offset {number|null}
  * @param count {number|null}
- * @param callback {function (err: Error=, results: Array.<SubmissionData>=)}
+ * @param callback {function (err: Error=, results: Array.<SubmissionRenderData>=)}
  */
 exports.getSubmissionsInProblem = function (problemId, offset, count, callback) {
     if (isNaN(parseInt(problemId))) {
         callback(new Error('No problem ID provided'));
     } else if (!isNaN(parseInt(offset)) && !isNaN(parseInt(count))) {
         db.owl_query(
-            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE problem_id = ? ORDER BY id LIMIT ?, ?;',
+            'SELECT S.id, T.name AS teamName, T.tagline AS teamTagline, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission S JOIN team T ON S.team_id = T.id WHERE problem_id = ? ORDER BY S.id LIMIT ?, ?;',
             [problemId, parseInt(offset), parseInt(count)],
             onResult
         );
     } else {
         db.owl_query(
-            'SELECT id, team_id, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission WHERE problem_id = ?;',
+            'SELECT S.id, T.name AS teamName, T.tagline AS teamTagline, problem_id, language_id, result, UNIX_TIMESTAMP(timestamp) AS timestamp, notes, affects_score FROM submission S JOIN team T ON S.team_id = T.id WHERE problem_id = ?;',
             [problemId],
             onResult
         );
@@ -277,13 +300,13 @@ exports.getSubmissionsInProblem = function (problemId, offset, count, callback) 
             callback(dberr);
         } else {
             callback(null, dbres.map(function (row) {
-                return new SubmissionData(
+                return new exports.SubmissionRenderData(
                     row['id'],
-                    row['team_id'],
-                    row['problem_id'],
+                    row['teamName'],
+                    row['teamTagline'],
+                    row['timestamp'] * 1000,
                     row['language_id'],
                     row['result'],
-                    row['timestamp'] * 1000,
                     row['notes'],
                     row['affects_score'][0]
                 )

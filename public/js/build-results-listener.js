@@ -8,7 +8,7 @@
  */
 
 /**
- * @param jq {jQuery}
+ * @param submissionID {number}
  * @constructor
  */
 var BuildResultsRow = function (submissionID) {
