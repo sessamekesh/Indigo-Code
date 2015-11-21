@@ -346,3 +346,40 @@ exports.setProblemValidity = function (problemId, isValid, callback) {
         );
     }
 };
+
+/**
+ *
+ * @param teamId {number} ID of team in question
+ * @param compId {number} ID of competition in question.
+ *                          Strictly speaking, not necessary, since this information is associated with team.
+ * @param cb {function (err: Error=, Array.<Object>=)} Callback. TODO: Don't just return an object! You're better than that!
+ */
+exports.getProblemsSolvedByTeam = function (teamId, compId, cb) {
+    if (isNaN(parseInt(teamId))) {
+        cb(new Error('Need integer team ID'));
+    } else if (isNaN(parseInt(compId))) {
+        cb(new Error('Need integer competition ID'));
+    } else {
+        db.owl_query(
+            'SELECT P.name, '
+            + 'IF((SELECT COUNT(*) FROM submission S '
+            + '  LEFT JOIN team T ON S.team_id = T.id '
+            + '  WHERE result=\'AC\' AND T.id = ? '
+            + '  AND S.problem_id = P.id) > 0, 1, 0) AS \'solved\' '
+            + 'FROM problem P where P.comp_id = ?;',
+            [teamId, compId],
+            function (err, res) {
+                if (err) {
+                    cb(err);
+                } else {
+                    cb(null, res.map(function (row) {
+                        return {
+                            name: row['name'],
+                            solved: row['solved'] > 0
+                        };
+                    }));
+                }
+            }
+        );
+    }
+};

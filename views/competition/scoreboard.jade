@@ -5,7 +5,7 @@ block content
 	script= "var compID = " + comp_data.id + ";"
 	script= "var problemList = JSON.parse(htmlDecode(\'" + JSON.stringify(problems) + "\'));"
 	p This is the scoreboard. Debugging information may be placed here.
-	table#scoreboard_table.table.table-hover
+	table#scoreboard_table.table.table-hover.table-striped
 		tr
 			th #
 			th Team
@@ -13,17 +13,3 @@ block content
 			th Penalty
 			each problem in problems
 				th= problem.name
-		tr#one
-			td 1
-			td Kamaron
-			td 1
-			td 23
-			each problem in problems
-				td C
-		tr#two
-			td 2
-			td OtherDude
-			td 1
-			td 25
-			each problem in problems
-				td C

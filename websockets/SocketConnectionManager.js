@@ -53,7 +53,10 @@ SocketManager.prototype.registerNamespace = function (namespaceDesc) {
     }
 
     this.io.on('connection', function (socket) {
-        console.log('Connection formed!');
+        console.log('Connection formed to namespace', namespaceDesc.namespace);
+        socket.emit('connection', {
+            status: 'success'
+        });
     });
 
     var nsp = this.io.of(namespaceDesc.namespace);

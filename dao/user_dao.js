@@ -370,6 +370,35 @@ exports.getTeam = function (team_id, cb) {
 };
 
 /**
+ *
+ * @param compId {number} Competition ID for which to get all teams
+ * @param cb {function (err: Error=, Array.<TeamData>=)}
+ */
+exports.getTeamsInCompetition = function (compId, cb) {
+    if (isNaN(parseInt(compId))) {
+        cb(new Error('Could not get all teams in competition', compId, 'requires integer value'));
+    } else {
+        db.owl_query('SELECT id, comp_id, name, tagline, is_admin, public_code, score, time_penalty FROM team WHERE comp_id = ?;',
+            [compId],
+            function (dberr, dbres) {
+                if (dberr) {
+                    cb(dberr);
+                } else {
+                    //(id, name, start_date, end_date, time_penalty, max_team_size)
+                    cb(null, dbres.map(function (row) {
+                        return new exports.TeamData(
+                            row['id'], row['comp_id'], row['name'],
+                            row['tagline'], row['is_admin'], row['public_code'],
+                            [], row['score'], row['time_penalty']
+                        );
+                    }));
+                }
+            }
+        );
+    }
+};
+
+/**
  * Retrieves the team data of the team to which a user belongs for a given competition
  * @param user_id {number} ID of user in question
  * @param comp_id {number} ID of the competition in question

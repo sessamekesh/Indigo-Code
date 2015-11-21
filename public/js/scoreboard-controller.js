@@ -144,12 +144,10 @@ var ScoreboardController = (function () {
 
     /**
      * Update the score results row with data from the client side
-     * @param rank {number} Numeric rank of this row
      * @param resultsData {ScoreboardRenderData}
      */
-    ScoreResultsRow.prototype.update = function(rank, resultsData) {
+    ScoreResultsRow.prototype.update = function(resultsData) {
         this.renderData = resultsData;
-        this._rankElement.text(rank);
 
         this._teamNameElement.text(resultsData.teamName);
         this._teamTaglineElement.text(resultsData.teamTagline);
@@ -160,6 +158,13 @@ var ScoreboardController = (function () {
         for (var i = 0; i < resultsData.problemsSolved.length; ++i) {
             this._teamProblemElements[i].text(resultsData.problemsSolved[i].isSolved);
         }
+    };
+
+    /**
+     * @param rank {number} Rank (position) of whatever
+     */
+    ScoreResultsRow.prototype.updateRank = function (rank) {
+        this._rankElement.text(rank);
     };
 
     /**
@@ -263,7 +268,8 @@ var ScoreboardController = (function () {
             this._resultsRows.push(row);
         }
 
-        row.update(rank, data);
+        row.update(data);
+        row.updateRank(rank);
 
         if (this._updateTimeoutID) {
             clearTimeout(this._updateTimeoutID);
@@ -324,8 +330,10 @@ var ScoreboardController = (function () {
         });
 
         this._resultsRows[0].rowElement.insertBefore(this._resultsRows[1].rowElement);
+        this._resultsRows[0].updateRank(1);
         for (i = 1; i < this._resultsRows.length; ++i) {
-            this._resultsRows[1].rowElement.insertAfter(this._resultsRows[i].rowElement);
+            this._resultsRows[i].rowElement.insertAfter(this._resultsRows[i - 1].rowElement);
+            this._resultsRows[i].updateRank(i + 1);
         }
     };
 
@@ -337,13 +345,25 @@ var ScoreboardController = (function () {
             // HAAAACKKKK
             console.log('Comp ID not registered, trying again in 50 ms...');
         } else {
+            sb.Init(window.problemList);
+
             var socket = io('http://' + window.location.hostname + ':' + window.location.port + '/scoreboard/' + window.compID);
 
             socket.emit('request scores', {});
 
             // Attach socket listeners here...
-            socket.on('update score', function (msg) {
+            socket.on('update scores', function (msg) {
+                console.log('Update received:', msg);
+                if (msg['scoresList']) {
+                    for (var i = 0; i < msg['scoresList'].length; ++i) {
+                        sb.UpdateScore(msg['scoresList'][i]);
+                    }
+                }
+            });
 
+            socket.on('error', function (errMsg) {
+                console.log('Error from socket:', errMsg);
+                alert(errMsg.toString());
             });
         }
     };

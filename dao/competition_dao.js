@@ -149,6 +149,29 @@ exports.get_upcoming_competitions = function (cb) {
 };
 
 /**
+ * Get all competitions that may occur, past present and future
+ * @param cb {function (err: Error=, res: Array.<CompData>=)}
+ */
+exports.getAllCompetitions = function (cb) {
+    db.owl_query('SELECT id, name, start_date, end_date, time_penalty, max_team_size FROM competition;',
+        [],
+        function (dberr, dbres) {
+            if (dberr) {
+                cb(dberr);
+            } else {
+                cb(null, dbres.map(function (a) {
+                    return new exports.CompData(
+                        a['id'], a['name'],
+                        a['start_date'], a['end_date'],
+                        a['time_penalty'], a['max_team_size']
+                    );
+                }));
+            }
+        }
+    );
+};
+
+/**
  * Create a new database entry with a competition
  * @param comp_data {exports.CompData} Object containing competition data to be inserted
  * @param cb {function (Error=, exports.CompData=)}
