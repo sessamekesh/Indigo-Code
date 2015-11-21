@@ -324,17 +324,19 @@ var ScoreboardController = (function () {
             }
         }
 
-        // Step 4: Sort the results rows, put into DOM scoreboard in proper order
-        me._resultsRows.sort(function (l, r) {
-            return (r.renderData.score - l.renderData.score) || (l.renderData.timePenalty - r.renderData.timePenalty);
-        });
+        setTimeout(function () {
+            // Step 4: Sort the results rows, put into DOM scoreboard in proper order
+            me._resultsRows.sort(function (l, r) {
+                return (r.renderData.score - l.renderData.score) || (l.renderData.timePenalty - r.renderData.timePenalty);
+            });
 
-        me._resultsRows[0].rowElement.insertBefore(me._resultsRows[1].rowElement);
-        me._resultsRows[0].updateRank(1);
-        for (i = 1; i < me._resultsRows.length; ++i) {
-            me._resultsRows[i].rowElement.insertAfter(me._resultsRows[i - 1].rowElement);
-            me._resultsRows[i].updateRank(i + 1);
-        }
+            me._resultsRows[0].rowElement.insertBefore(me._resultsRows[1].rowElement);
+            me._resultsRows[0].updateRank(1);
+            for (i = 1; i < me._resultsRows.length; ++i) {
+                me._resultsRows[i].rowElement.insertAfter(me._resultsRows[i - 1].rowElement);
+                me._resultsRows[i].updateRank(i + 1);
+            }
+        }, fadeTime);
     };
 
     var sb = new Scoreboard();
