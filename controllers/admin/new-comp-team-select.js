@@ -37,6 +37,9 @@ exports.post = function (req, res) {
         redirect_url: '/admin/new-comp-team-select' // TODO KIP; This may not be wise, unless you use session data
     };
 
+    var comp_created = false;
+    var team_created = false;
+
     if (req.session.new_comp_errors) {
         console.log(req.session.new_comp_errors);
     }
@@ -83,6 +86,7 @@ exports.post = function (req, res) {
                         req.session.new_comp_errors = new RegistrationPageErrorCollection();
                         req.session.new_comp_errors.addError('general', aerr.message);
                     } else {
+                        comp_created = new_comp_data.id;
                         user_dao.create_team(new user_dao.TeamData(
                             null,
                             new_comp_data.id,
@@ -90,8 +94,9 @@ exports.post = function (req, res) {
                             'We fight for the User',
                             true,
                             true,
-                            0, 0
-                            [req.session.user_data.id]
+                            [req.session.user_data.id],
+                            0,
+                            0
                         ), function (berr, bres) {
                             if (berr) {
                                 req.session.new_comp_errors = req.session.new_comp_errors || new RegistrationPageErrorCollection();
@@ -100,8 +105,9 @@ exports.post = function (req, res) {
                                 req.session.new_comp_data = new_comp_data;
                                 data.comp_id = req.session.new_comp_data.id;
                                 console.log('Competition created, id: ' + req.session.new_comp_data.id);
-                                finish();
+                                team_created = req.session.new_comp_data.id;
                             }
+                            finish();
                         });
                     }
                 });
@@ -123,7 +129,7 @@ exports.post = function (req, res) {
                         req.session.new_comp_errors.addError('general', error_list[i].error);
                     }
                 }
-                res.redirect('/admin/new-comp');
+                finish();
             }
         } else {
             console.log('New competition ' + req.session.new_comp_data.name + ' already created, skipping creation...');
@@ -138,21 +144,41 @@ exports.post = function (req, res) {
     function finish() {
 
         // Get page errors from session, if they exist. If not, create a new, empty object
-        req.session.new_comp_errors = null;
-
-        data.comp_data = req.session.new_comp_data;
-
-        user_dao.getAdminTeamMembers(data.comp_data.id, function (aerr, admin_team) {
-            data.admins_list = [];
-            if (aerr) {
-                data.page_errors.addError('admin_team_list', 'Could not load list of admins: ' + aerr.message);
-            } else {
-                data.admins_list = admin_team;
+        if (req.session.new_comp_errors && req.session.new_comp_errors.isFatal()) {
+            if (team_created) {
+                user_dao.remove_team(team_created, function (tcerr) {
+                    if (tcerr) {
+                        console.log('Problem removing the team. Yep.', tcerr);
+                    }
+                });
             }
 
-            admin_layer.fill_data(req, data, function (new_data) {
-                res.render('./admin/new-comp-team-select.jade', new_data);
+            if (comp_created) {
+                comp_dao.removeCompetition(comp_created, function (ccerr) {
+                    if (ccerr) {
+                        console.log('Problem removing the created competition. Yep.', ccerr);
+                    }
+                })
+            }
+
+            res.redirect('/admin/new-comp');
+        } else {
+            req.session.new_comp_errors = null;
+
+            data.comp_data = req.session.new_comp_data;
+
+            user_dao.getAdminTeamMembers(data.comp_data.id, function (aerr, admin_team) {
+                data.admins_list = [];
+                if (aerr) {
+                    data.page_errors.addError('admin_team_list', 'Could not load list of admins: ' + aerr.message);
+                } else {
+                    data.admins_list = admin_team;
+                }
+
+                admin_layer.fill_data(req, data, function (new_data) {
+                    res.render('./admin/new-comp-team-select.jade', new_data);
+                });
             });
-        });
+        }
     }
 };

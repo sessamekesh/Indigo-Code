@@ -95,7 +95,7 @@ exports.UserParticipation = function(userData, compData, teamData) {
 exports.TeamData = function (id, comp_id, team_name, team_tagline, is_admin, public_code, user_ids, score, time_penalty) {
     this.id = id;
     this.comp_id = comp_id;
-    this.team_name = team_name
+    this.team_name = team_name;
     this.team_tagline = team_tagline || ''; // Optional parameter
     this.is_admin = (is_admin == null) ? false : !!is_admin;
     this.public_code = (public_code == null) ? true : !!public_code;
@@ -747,9 +747,14 @@ exports.getUserParticipation = function (userData, cb) {
     }
 };
 
-// TODO KIP: Do this.
+/**
+ * Delete a team from the database with the given ID
+ * @param team_id
+ * @param cb
+ */
 exports.remove_team = function (team_id, cb) {
-
+    if (isNaN(team_id)) cb(new Error('Cannot delete a team if not given a team ID'));
+    else db.owl_query('DELETE FROM team WHERE id = ? LIMIT 1;', [team_id], cb);
 };
 
 // TODO KIP: Do this.

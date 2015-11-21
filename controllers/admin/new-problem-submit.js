@@ -8,6 +8,17 @@ var ProblemData = problemDAO.ProblemData;
 var fs = require('fs');
 var jade = require('jade');
 
+// Make sure all of our data directories exist...
+function makeSureDirectoryExists(path) {
+    try {
+        fs.mkdirSync(path);
+    } catch (e) {
+        if (e.code != 'EEXIST'){
+            throw e;
+        }
+    }
+}
+
 /**
  * Receive a problem submission
  *  1) Register the Problem (maintain the ID, in case we need to delete it)
@@ -81,6 +92,7 @@ exports.post = function (req, res) {
                 } else if (description.extension === 'pdf') {
                     // Copy PDF file over.
                     // TODO KAM: Copy over to competition assets directory
+                    makeSureDirectoryExists('./data/competition-assets/' + req.body.comp_id);
                     newLocation = './data/competition-assets/' + req.body.comp_id + '/pdesc-' + problemId + '.pdf';
                     var pdfDest = fs.createWriteStream(newLocation);
                     var pdfSource = fs.createReadStream(description.path);

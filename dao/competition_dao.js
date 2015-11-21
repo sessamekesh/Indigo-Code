@@ -181,6 +181,16 @@ exports.create_competition = function (comp_data, cb) {
 };
 
 /**
+ *
+ * @param compID {number}
+ * @param cb {function (err: Error=)}
+ */
+exports.removeCompetition = function (compID, cb) {
+    if (isNaN(parseInt(compID))) cb(new Error('Cannot remove a competition where ID is not an integer'));
+    else db.owl_query('DELETE FROM competition WHERE id = ? LIMIT 1;', [compID], cb);
+};
+
+/**
  * Get all of the problems in the given competition
  * @param compId {number}
  * @param cb {function (err: Error|null, res: Array.<ProblemData>?)}
