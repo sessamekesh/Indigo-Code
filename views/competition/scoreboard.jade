@@ -1,4 +1,26 @@
 extends ./index
 
 block content
-	p This is where the scoreboard goes, and all stuff.
+	p This is the scoreboard. Debugging information may be placed here.
+	table#scoreboard_table.table.table-hover
+		tr
+			th #
+			th Team
+			th Score
+			th Penalty
+			each problem in problems
+				th= problem.name
+		tr#one
+			td 1
+			td Kamaron
+			td 1
+			td 23
+			each problem in problems
+				td C
+		tr#two
+			td 2
+			td OtherDude
+			td 1
+			td 25
+			each problem in problems
+				td C

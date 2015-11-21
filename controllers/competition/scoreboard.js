@@ -19,6 +19,15 @@ exports.get = function (req, res) {
 exports.fill_data = function(req, data, cb) {
 	comp_layer.fill_data(req, data, function (new_data) {
 		// TODO KAM: Get scoreboard data, pass on to new_data for use in scoreboard
-		cb(new_data);
+		compDao.getProblemsInCompetition(new_data.comp_data.id, function (gperr, gpres) {
+			if (gperr) {
+				console.log('Error fetching problems:', gperr);
+				new_data.problems = [];
+			} else {
+				new_data.problems = gpres;
+			}
+
+			cb(new_data);
+		});
 	});
 };

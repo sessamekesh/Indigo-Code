@@ -15,6 +15,7 @@ exports.ProblemSolvedRenderData = function (problemName, isSolved)  {
 
 /**
  * Represents a single row in the Scoreboard table on the client side
+ * @param teamID {number} Unique numeric ID of the team
  * @param teamName {string} Name of the team
  * @param teamTagline {string}
  * @param score {number}
@@ -22,7 +23,8 @@ exports.ProblemSolvedRenderData = function (problemName, isSolved)  {
  * @param problemsSolved {Array.<ProblemSolvedRenderData>}
  * @constructor
  */
-exports.ScoreboardRenderData = function (teamName, teamTagline, score, timePenalty, problemsSolved) {
+exports.ScoreboardRenderData = function (teamID, teamName, teamTagline, score, timePenalty, problemsSolved) {
+    this.teamID = teamID;
     this.teamName = teamName;
     this.teamTagline = teamTagline;
     this.score = score;
