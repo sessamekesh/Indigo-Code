@@ -1,6 +1,9 @@
 extends ./index
 
 block content
+	script= "function htmlDecode(input) { var e = document.createElement('div'); e.innerHTML = input; return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue; }"
+	script= "var compID = " + comp_data.id + ";"
+	script= "var problemList = JSON.parse(htmlDecode(\'" + JSON.stringify(problems) + "\'));"
 	p This is the scoreboard. Debugging information may be placed here.
 	table#scoreboard_table.table.table-hover
 		tr

@@ -125,7 +125,7 @@ var ScoreboardController = (function () {
         this._teamProblemElements = [];
 
         for (i = 0; i < problemList.length; ++i) {
-            this._teamProblemElements.push($('<td>', { id: 'score-data-team-' + teamID + '-problem-' + problemList[i].problemName }));
+            this._teamProblemElements.push($('<td>', { id: 'score-data-team-' + this.teamID + '-problem-' + problemList[i].problemName }));
         }
 
         /**
@@ -133,7 +133,7 @@ var ScoreboardController = (function () {
          */
         this.rowElement = $('<tr>', { id: 'score-row-' + this.teamID })
             .append(this._rankElement.text('#'))
-            .append($('<td>').append(this._teamNameElement.text('TEAM NAME')).append(this._teamTaglineElement).text('TEAM TAGLINE'))
+            .append($('<td>').append(this._teamNameElement.text('TEAM NAME')).append(this._teamTaglineElement.text('TEAM TAGLINE')))
             .append(this._teamScoreElement.text('SCORE'))
             .append(this._teamPenaltyElement.text('PENALTY'));
 
@@ -250,7 +250,7 @@ var ScoreboardController = (function () {
         }
 
         if (!row) {
-            row = new ScoreResultsRow(data.teamID, this._problemList);
+            row = new ScoreResultsRow(data, this._problemList);
             rank = this._resultsRows.length + 1;
 
             if (this._resultsRows.length === 0) {
@@ -268,6 +268,7 @@ var ScoreboardController = (function () {
         if (this._updateTimeoutID) {
             clearTimeout(this._updateTimeoutID);
         }
+
         this._updateTimeoutID = setTimeout(function () {
             me.SortRows();
             me._updateTimeoutID = null;
@@ -279,15 +280,78 @@ var ScoreboardController = (function () {
      *  their locations in the DOM. On a swap, perform blurring operations.
      */
     Scoreboard.prototype.SortRows = function() {
+        // Early out if there are one or less rows to sort
+        if (this._resultsRows.length <= 1) return;
+
+        /**
+         * @type {number}
+         */
+        var i;
+
+        /**
+         * @type {Scoreboard}
+         */
+        var me = this;
+
         // Step 1: Get a list of indices the length of our ScoreResultsRow array
+        var indices = [];
+
+        for (i = 0; i < this._resultsRows.length; ++i) {
+            indices.push(i);
+        }
+
         // Step 2: Sort those indices, by score and time penalty of corresponding row
-        // Step 3: Fade out results rows that are not properly placed
-        // Step 4: Put results rows in the proper place, also performing the .addAfter calls
-        // Step 5: Fade back in rows that were previously faded out
+        indices.sort(function (l, r) {
+            return (me._resultsRows[r].renderData.score - me._resultsRows[l].renderData.score)
+                || (me._resultsRows[l].renderData.timePenalty - me._resultsRows[r].renderData.timePenalty);
+        });
+
+        // Step 3: Fade out results rows that are not properly placed, fade back in after a period
+        for (i = 0; i < indices.length; ++i) {
+            if (indices[i] !== i) {
+                this._resultsRows[i].rowElement.fadeOut(fadeTime);
+                setTimeout((function (ii) {
+                    return function () {
+                        me._resultsRows[ii].rowElement.fadeIn(fadeTime);
+                    }
+                }(i)), fadeTime);
+            }
+        }
+
+        // Step 4: Sort the results rows, put into DOM scoreboard in proper order
+        this._resultsRows.sort(function (l, r) {
+            return (r.renderData.score - l.renderData.score) || (l.renderData.timePenalty - r.renderData.timePenalty);
+        });
+
+        this._resultsRows[0].rowElement.insertBefore(this._resultsRows[1].rowElement);
+        for (i = 1; i < this._resultsRows.length; ++i) {
+            this._resultsRows[1].rowElement.insertAfter(this._resultsRows[i].rowElement);
+        }
     };
 
+    var sb = new Scoreboard();
+
+    var tryAgain = function () {
+        if (!window.compID || !window.problemList) {
+            setTimeout(tryAgain, 50);
+            // HAAAACKKKK
+            console.log('Comp ID not registered, trying again in 50 ms...');
+        } else {
+            var socket = io('http://' + window.location.hostname + ':' + window.location.port + '/scoreboard/' + window.compID);
+
+            socket.emit('request scores', {});
+
+            // Attach socket listeners here...
+            socket.on('update score', function (msg) {
+
+            });
+        }
+    };
+    tryAgain();
+
     return {
-        Scoreboard: new Scoreboard(),
-        ScoreResultsRow: ScoreResultsRow
+        Scoreboard: sb,
+        ScoreResultsRow: ScoreResultsRow,
+        ScoreboardRenderData: ScoreboardRenderData
     };
 })();

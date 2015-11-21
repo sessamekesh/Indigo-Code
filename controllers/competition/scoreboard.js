@@ -27,6 +27,14 @@ exports.fill_data = function(req, data, cb) {
 				new_data.problems = gpres;
 			}
 
+			new_data.include_scripts = new_data.include_scripts || [];
+			new_data.include_stylesheets = new_data.include_stylesheets || [];
+
+			new_data.include_scripts.push('https://cdn.socket.io/socket.io-1.3.5.js');
+			new_data.include_scripts.push('/js/scoreboard-controller.js');
+			//new_data.include_scripts.push('/jquery-ui/jquery-ui.js');
+			//new_data.include_stylesheets.push('/jquery-ui/jquery-ui.css');
+
 			cb(new_data);
 		});
 	});
