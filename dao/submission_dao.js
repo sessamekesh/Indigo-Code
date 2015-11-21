@@ -6,6 +6,8 @@ var db = require('./db');
 var competition_dao = require('./competition_dao');
 var user_dao = require('./user_dao');
 
+var updateScoreboards = require('../websockets/routes/scoreboard').sendTeamScore;
+
 var async = require('async');
 
 /**
@@ -165,7 +167,7 @@ exports.updateSubmission = function (submissionId, result, notes, affectsScore, 
 
 /**
  * @param teamID {number}
- * @param callback {function (err: Error=, results: TeamData=)}
+ * @param callback {function (err: Error=, results: exports.TeamData=)}
  */
 exports.updateTeamScore = function (teamID, callback) {
     async.waterfall([
@@ -250,7 +252,7 @@ exports.updateTeamScore = function (teamID, callback) {
                     }
                 }
             );
-        },
+        }
 
         // Update score = sum of scores returned, time penalty = maximum time penalty plus sum of incorrect submission penalties
     ], function (err, result) {
@@ -264,7 +266,18 @@ exports.updateTeamScore = function (teamID, callback) {
                 if (dberr) {
                     callback (dberr);
                 } else {
-                    user_dao.getTeam(teamID, callback);
+                    user_dao.getTeam(teamID, function (gterr, gtres) {
+                        if (gterr) {
+                            callback(gterr);
+                        } else {
+                            callback(null, gtres);
+                        }
+
+                        // Also update all our scoreboards, while we're at it
+                        updateScoreboards(
+                            gtres, gtres.comp_id
+                        );
+                    });
                 }
             }
         );

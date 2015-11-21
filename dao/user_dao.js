@@ -361,7 +361,7 @@ exports.getTeam = function (team_id, cb) {
                 } else {
                     cb(null, new exports.TeamData(
                         dbres[0].id, dbres[0].comp_id, dbres[0].name, dbres[0].tagline,
-                        dbres[0].is_admin, dbres[0].public_code, dbres[0].score, dbres[0].time_penalty
+                        dbres[0].is_admin, dbres[0].public_code, [], dbres[0].score, dbres[0].time_penalty
                     ));
                 }
             }

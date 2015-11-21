@@ -46,58 +46,116 @@ compDao.getAllCompetitions(function (gacerr, gacres) {
  * @param compID {number}
  */
 function initSocket(socketNamespace, compID) {
-    socketNamespace.addClientEvent('request scores', function (socket, request) {
-        // Get list of results, send back to requesting socket.
-        userDao.getTeamsInCompetition(compID, function (dberr, dbres) {
-            if (dberr) {
-                console.log('Error teams for competition', compID, ':', dberr);
-                socket.emit('error', {
-                    'error': 'Could not read team scores from database.'
-                });
-            } else {
-                // Get which problem each team has solved...
-                async.map(
-                    dbres,
-                    function (row, cb) {
-                        probDao.getProblemsSolvedByTeam(
-                            row.id, compID,
-                            function (probsErr, probsRes) {
-                                if (probsErr) {
-                                    cb(probsErr);
-                                } else {
-                                    cb(null, new ScoreboardRenderData(
-                                        row.id,
-                                        row.team_name,
-                                        row.team_tagline,
-                                        row.score,
-                                        row.time_penalty,
-                                        probsRes.map(function (probRow) {
-                                            return new ProblemSolvedRenderData(
-                                                probRow['name'],
-                                                probRow['solved']
-                                            );
-                                        })
-                                    ));
-                                }
-                            }
-                        );
-                    },
-                    function (mapError, mapResult) {
-                        if (mapError) {
-                            console.log('Error mapping results:', mapError);
-                            socket.emit('error', {
-                                'error': 'Could not read team scores from database. Error in mapping problem set.'
-                            });
-                        } else {
-                            socket.emit('update scores', {
-                                scoresList: mapResult
-                            });
-                        }
-                    }
-                );
-            }
-        });
+    socketNamespace.addClientEvent('request scores', function (socket) {
+        requestScores(socket, compID);
     });
 
     SocketManager.registerNamespace(socketNamespace);
 }
+
+/**
+ * @param socket
+ * @param compID
+ */
+function requestScores (socket, compID) {
+    // Grab appropriate socket?
+
+    // Get list of results, send back to requesting socket.
+    userDao.getTeamsInCompetition(compID, function (dberr, dbres) {
+        if (dberr) {
+            console.log('Error teams for competition', compID, ':', dberr);
+            socket.emit('error', {
+                'error': 'Could not read team scores from database.'
+            });
+        } else {
+            // Get which problem each team has solved...
+            async.map(
+                dbres,
+                function (row, cb) {
+                    probDao.getProblemsSolvedByTeam(
+                        row.id, compID,
+                        function (probsErr, probsRes) {
+                            if (probsErr) {
+                                cb(probsErr);
+                            } else {
+                                cb(null, new ScoreboardRenderData(
+                                    row.id,
+                                    row.team_name,
+                                    row.team_tagline,
+                                    row.score,
+                                    row.time_penalty,
+                                    probsRes.map(function (probRow) {
+                                        return new ProblemSolvedRenderData(
+                                            probRow['name'],
+                                            probRow['solved']
+                                        );
+                                    })
+                                ));
+                            }
+                        }
+                    );
+                },
+                function (mapError, mapResult) {
+                    if (mapError) {
+                        console.log('Error mapping results:', mapError);
+                        socket.emit('error', {
+                            'error': 'Could not read team scores from database. Error in mapping problem set.'
+                        });
+                    } else {
+                        socket.emit('update scores', {
+                            scoresList: mapResult
+                        });
+                    }
+                }
+            );
+        }
+    });
+}
+
+/**
+ *
+ * @param teamData {TeamData}
+ * @param compID {number}
+ */
+exports.sendTeamScore = function(teamData, compID) {
+    probDao.getProblemsSolvedByTeam(
+        teamData.id, compID,
+        function (probsErr, probsRes) {
+            if (probsErr) {
+                cb(probsErr);
+            } else {
+                sendData(new ScoreboardRenderData(
+                    teamData.id,
+                    teamData.team_name,
+                    teamData.team_tagline,
+                    teamData.score,
+                    teamData.time_penalty,
+                    probsRes.map(function (probRow) {
+                        return new ProblemSolvedRenderData(
+                            probRow['name'],
+                            probRow['solved']
+                        );
+                    })
+                ));
+            }
+        }
+    );
+
+    var sendData = function(dt) {
+        // Get websocket, then send data over the wire.
+        var sbid = -1;
+        for (var i = 0; i < ScoreboardNamespaces.length; ++i) {
+            if (ScoreboardNamespaces[i].namespace === '/scoreboard/' + compID) {
+                sbid = i;
+            }
+        }
+
+        if (sbid === -1) {
+            console.log('Error sending scoreboard data: Could not find registered socket', ScoreboardNamespaces);
+        } else {
+            ScoreboardNamespaces[sbid].fireServerEvent('update scores', {
+                scoresList: [dt]
+            });
+        }
+    }
+};
